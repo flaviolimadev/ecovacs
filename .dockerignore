@@ -1,0 +1,49 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Laravel
+/storage/*.key
+/storage/logs/*
+!/storage/logs/.gitignore
+/public/hot
+/public/storage
+
+# Environment
+.env
+.env.backup
+.env.production
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+/coverage
+.phpunit.result.cache
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+
+# Build artifacts
+/public/build/
+/public/hot
+
+# Vendor (will be installed during build)
+vendor/
+
+# Temporary files
+*.log
+*.cache
+
