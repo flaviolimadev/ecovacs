@@ -167,6 +167,7 @@ class NetworkController extends Controller
         // Organizar dados
         $firstPurchaseData = $commissionsData->firstWhere('type', 'FIRST_PURCHASE');
         $subsequentPurchaseData = $commissionsData->firstWhere('type', 'SUBSEQUENT_PURCHASE');
+        $residualData = $commissionsData->firstWhere('type', 'RESIDUAL');
 
         // Buscar comissões por nível (para primeira compra)
         $firstPurchaseByLevel = DB::table('commissions')
@@ -196,6 +197,20 @@ class NetworkController extends Controller
             ->orderBy('level')
             ->get();
 
+        // Buscar comissões por nível (para comissões residuais)
+        $residualByLevel = DB::table('commissions')
+            ->where('user_id', $user->id)
+            ->where('type', 'RESIDUAL')
+            ->selectRaw("
+                level,
+                COUNT(*) as count,
+                SUM(amount) as total,
+                AVG(percentage) as percentage
+            ")
+            ->groupBy('level')
+            ->orderBy('level')
+            ->get();
+
         // Total geral de comissões
         $totalCommissions = $user->commissionsReceived()->sum('amount');
 
@@ -205,6 +220,7 @@ class NetworkController extends Controller
                     'total_earned' => (float) $totalCommissions,
                     'first_purchase_total' => (float) ($firstPurchaseData->total_earned ?? 0),
                     'subsequent_purchase_total' => (float) ($subsequentPurchaseData->total_earned ?? 0),
+                    'residual_total' => (float) ($residualData->total_earned ?? 0),
                     'total_commissions_count' => $user->commissionsReceived()->count(),
                 ],
                 'first_purchase' => [
@@ -231,6 +247,18 @@ class NetworkController extends Controller
                         ];
                     }),
                 ],
+                'residual' => [
+                    'total' => (float) ($residualData->total_earned ?? 0),
+                    'count' => $residualData->total_count ?? 0,
+                    'by_level' => $residualByLevel->map(function ($item) {
+                        return [
+                            'level' => $item->level,
+                            'percentage' => (float) $item->percentage,
+                            'count' => $item->count,
+                            'total' => (float) $item->total,
+                        ];
+                    }),
+                ],
                 'percentages_config' => [
                     'first_purchase' => [
                         ['level' => 1, 'percentage' => 15.00],
@@ -241,6 +269,11 @@ class NetworkController extends Controller
                         ['level' => 1, 'percentage' => 8.00],
                         ['level' => 2, 'percentage' => 2.00],
                         ['level' => 3, 'percentage' => 1.00],
+                    ],
+                    'residual' => [
+                        ['level' => 1, 'percentage' => 2.50],
+                        ['level' => 2, 'percentage' => 0.50],
+                        ['level' => 3, 'percentage' => 0.15],
                     ],
                 ],
             ],

@@ -19,6 +19,7 @@ interface CommissionData {
     total_earned: number;
     first_purchase_total: number;
     subsequent_purchase_total: number;
+    residual_total?: number;
     total_commissions_count: number;
   };
   first_purchase: {
@@ -41,12 +42,26 @@ interface CommissionData {
       total: number;
     }>;
   };
+  residual?: {
+    total: number;
+    count: number;
+    by_level: Array<{
+      level: number;
+      percentage: number;
+      count: number;
+      total: number;
+    }>;
+  };
   percentages_config: {
     first_purchase: Array<{
       level: number;
       percentage: number;
     }>;
     subsequent_purchase: Array<{
+      level: number;
+      percentage: number;
+    }>;
+    residual: Array<{
       level: number;
       percentage: number;
     }>;
@@ -238,12 +253,68 @@ const CommissionDetailsDialog = () => {
               </div>
             </Card>
 
+            {/* Comissões Residuais */}
+            <Card className="p-4 bg-gradient-to-br from-emerald-50 to-teal-100 border-emerald-200">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-semibold text-foreground">Comissões Residuais</h3>
+              </div>
+              
+              <div className="mb-4 p-3 bg-white/50 rounded-lg">
+                <p className="text-sm font-medium text-foreground mb-2">Total Ganho:</p>
+                <p className="text-2xl font-bold text-emerald-600">
+                  R$ {(data.summary.residual_total || 0).toFixed(2)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {data.residual?.count || 0} comissões recebidas
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Percent className="w-4 h-4" />
+                  Porcentagens por Nível:
+                </p>
+                {data.percentages_config.residual.map((config) => {
+                  const levelData = data.residual?.by_level.find(l => l.level === config.level);
+                  return (
+                    <div
+                      key={config.level}
+                      className="flex items-center justify-between p-2 bg-white/50 rounded"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-emerald-600">Nível {getLevelName(config.level)}:</span>
+                        <span className="text-lg font-bold text-foreground">{config.percentage}%</span>
+                      </div>
+                      <div className="text-right">
+                        {levelData ? (
+                          <>
+                            <p className="text-sm font-semibold text-green-600">
+                              R$ {levelData.total.toFixed(2)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {levelData.count} comissões
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            R$ 0,00
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
             {/* Informação Adicional */}
             <div className="p-3 bg-muted rounded-lg text-xs text-muted-foreground">
               <p className="font-semibold mb-1">ℹ️ Como funciona:</p>
               <ul className="space-y-1 ml-4">
                 <li>• <strong>Primeira Compra:</strong> Comissão recebida quando alguém da sua rede faz o primeiro investimento</li>
                 <li>• <strong>Compras Subsequentes:</strong> Comissão recebida quando alguém da sua rede faz investimentos adicionais</li>
+                <li>• <strong>Comissões Residuais:</strong> Comissão recebida sobre os rendimentos gerados pelos planos da sua rede</li>
                 <li>• <strong>Nível A:</strong> Indicados diretos (você indicou)</li>
                 <li>• <strong>Nível B:</strong> Indicados dos seus indicados</li>
                 <li>• <strong>Nível C:</strong> Indicados de nível 2</li>
