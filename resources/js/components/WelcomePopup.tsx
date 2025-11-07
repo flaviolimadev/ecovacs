@@ -14,20 +14,22 @@ const WelcomePopup = () => {
       <DialogContent className="max-w-sm p-0 gap-0 bg-white border-none rounded-2xl overflow-hidden">
         <DialogTitle className="sr-only">Bem-vindo à Ecovacs</DialogTitle>
         <DialogDescription className="sr-only">Ecovacs - Comissão de Desempenho</DialogDescription>
-        {/* Header */}
-        <div className="bg-[#0EA5E9] px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-white px-2 py-1 rounded">
-              <img src={ecovacsLogo} alt="Ecovacs Robotics" className="h-6" />
-            </div>
-          </div>
-          
-          <button 
-            onClick={() => setOpen(false)}
-            className="text-white hover:bg-white/20 rounded-full p-1 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+        
+        {/* Close Button - Absolute Position */}
+        <button 
+          onClick={() => setOpen(false)}
+          className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white rounded-full p-1.5 shadow-lg transition-colors"
+        >
+          <X className="w-5 h-5 text-gray-700" />
+        </button>
+
+        {/* Banner Logo */}
+        <div className="w-full h-48 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden">
+          <img 
+            src={ecovacsLogo} 
+            alt="Ecovacs Robotics" 
+            className="w-full h-full object-cover"
+          />
         </div>
 
         {/* Content */}
