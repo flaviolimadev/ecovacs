@@ -1,7 +1,29 @@
 import { Trophy, Target, Sparkles, Gift, Zap, Star } from "lucide-react";
+import { useState, useEffect } from "react";
 import GoalsSection from "./GoalsSection";
+import { networkAPI } from "@/lib/api";
 
 const FeatureCards = () => {
+  const [directNetworkVolume, setDirectNetworkVolume] = useState(0);
+
+  useEffect(() => {
+    const loadNetworkVolume = async () => {
+      try {
+        const response = await networkAPI.getStats();
+        const stats = response.data.data;
+        
+        // Volume direto = total_deposits do nível A (índice 0)
+        const levelA = stats.levels.find((level: any) => level.level === 1);
+        setDirectNetworkVolume(levelA?.total_deposits || 0);
+      } catch (error) {
+        console.error('Erro ao carregar volume direto:', error);
+        setDirectNetworkVolume(0);
+      }
+    };
+
+    loadNetworkVolume();
+  }, []);
+
   const handleTaskClick = () => {
     const goalsButton = document.querySelector('#goals-section-wrapper button');
     if (goalsButton instanceof HTMLElement) {
@@ -72,7 +94,7 @@ const FeatureCards = () => {
 
       {/* Hidden Goals modal trigger */}
       <div className="fixed -left-[9999px]" id="goals-section-wrapper">
-        <GoalsSection currentVolume={12500} />
+        <GoalsSection currentVolume={directNetworkVolume} />
       </div>
     </>
   );
