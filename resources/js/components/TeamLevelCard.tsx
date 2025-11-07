@@ -14,21 +14,27 @@ interface TeamLevelCardProps {
 
 const TeamLevelCard = ({ level, members, subtitle, totalDeposits, color, activeMembers, inactiveMembers }: TeamLevelCardProps) => {
   const colorClasses = {
-    yellow: "bg-yellow-100 border-yellow-200",
-    green: "bg-green-100 border-green-200",
-    red: "bg-red-100 border-red-200"
+    yellow: "bg-gradient-to-br from-blue-100 to-purple-100 border-blue-200",
+    green: "bg-gradient-to-br from-green-100 to-emerald-100 border-green-200",
+    red: "bg-gradient-to-br from-orange-100 to-pink-100 border-orange-200"
   };
 
   const textColorClasses = {
-    yellow: "text-yellow-700",
+    yellow: "text-blue-700",
     green: "text-green-700",
-    red: "text-red-700"
+    red: "text-orange-700"
+  };
+
+  const buttonColorClasses = {
+    yellow: "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700",
+    green: "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700",
+    red: "bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-600 hover:to-pink-700"
   };
 
   const hasStatusData = activeMembers !== undefined && inactiveMembers !== undefined;
 
   return (
-    <Card className={`${colorClasses[color]} border p-3 flex flex-col items-center justify-between h-full`}>
+    <Card className={`${colorClasses[color]} border p-3 flex flex-col items-center justify-between h-full hover:shadow-lg transition-shadow`}>
       <div className="text-center flex-1 w-full">
         <div className="text-3xl font-bold text-foreground mb-1">{members}</div>
         <p className={`text-[10px] leading-tight ${textColorClasses[color]} mb-2`}>
@@ -57,7 +63,7 @@ const TeamLevelCard = ({ level, members, subtitle, totalDeposits, color, activeM
       <Button 
         variant="default" 
         size="sm" 
-        className="w-full mt-3 bg-[#2C3E50] hover:bg-[#34495E] text-white h-8 text-xs"
+        className={`w-full mt-3 ${buttonColorClasses[color]} text-white h-8 text-xs font-semibold shadow-md`}
       >
         {level} nível
       </Button>
