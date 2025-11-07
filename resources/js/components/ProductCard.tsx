@@ -197,7 +197,7 @@ const ProductCard = ({ id, name, image, price, dailyIncome, duration, totalRetur
           ) : (
             <>
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Investir Agora
+              Alugar
             </>
           )}
         </Button>
@@ -207,9 +207,9 @@ const ProductCard = ({ id, name, image, price, dailyIncome, duration, totalRetur
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Investimento</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar Aluguel</AlertDialogTitle>
             <AlertDialogDescription className="space-y-3">
-              <p>Você está prestes a investir no plano:</p>
+              <p>Você está prestes a alugar o equipamento:</p>
               <div className="bg-muted p-3 rounded-lg space-y-2 text-sm">
                 <p className="font-semibold text-foreground">{name}</p>
                 <div className="flex justify-between">
@@ -225,13 +225,13 @@ const ProductCard = ({ id, name, image, price, dailyIncome, duration, totalRetur
                   <span className="font-bold">R$ {user?.balance ? user.balance.toFixed(2) : '0,00'}</span>
                 </div>
               </div>
-              <p className="text-xs">O valor será debitado do seu saldo disponível para investimento.</p>
+              <p className="text-xs">O valor será debitado do seu saldo disponível.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handlePurchase} className="bg-green-600 hover:bg-green-700">
-              Confirmar Investimento
+              Confirmar Aluguel
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
