@@ -1,25 +1,28 @@
 import { ArrowLeft, Wallet, AlertCircle, Info, Copy, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Withdraw = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [amount, setAmount] = useState("");
+  const [cpf, setCpf] = useState("");
   const [pixKey, setPixKey] = useState("");
   const [pixKeyType, setPixKeyType] = useState<"cpf" | "email" | "phone" | "random">("cpf");
   const [step, setStep] = useState<"input" | "confirmation">("input");
 
   const minAmount = 50;
   const fee = 0.10; // 10%
-  const availableBalance = 1250.50; // Mock balance
-  const hasWithdrawnToday = false; // Mock - would check from API
+  const availableBalance = user?.balance_withdrawn || 0;
+  const hasWithdrawnToday = false; // TODO: Verificar com API
 
   const getCurrentDateTime = () => {
     const now = new Date();
@@ -54,16 +57,20 @@ const Withdraw = () => {
     return getNumericAmount() - calculateFee();
   };
 
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    return value;
+  };
+
   const formatPixKey = (value: string, type: string) => {
     if (type === "cpf") {
-      const numbers = value.replace(/\D/g, '');
-      if (numbers.length <= 11) {
-        return numbers
-          .replace(/(\d{3})(\d)/, '$1.$2')
-          .replace(/(\d{3})(\d)/, '$1.$2')
-          .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-      }
-      return value;
+      return formatCPF(value);
     } else if (type === "phone") {
       const numbers = value.replace(/\D/g, '');
       if (numbers.length <= 11) {
@@ -76,8 +83,16 @@ const Withdraw = () => {
     return value;
   };
 
+  const handleCpfChange = (value: string) => {
+    setCpf(formatCPF(value));
+  };
+
   const handlePixKeyChange = (value: string) => {
     setPixKey(formatPixKey(value, pixKeyType));
+  };
+
+  const validateCPF = () => {
+    return cpf.replace(/\D/g, '').length === 11;
   };
 
   const validatePixKey = () => {
@@ -131,6 +146,15 @@ const Withdraw = () => {
       toast({
         title: "Saldo insuficiente",
         description: "Você não tem saldo disponível para este saque.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validateCPF()) {
+      toast({
+        title: "CPF inválido",
+        description: "Por favor, informe um CPF válido.",
         variant: "destructive",
       });
       return;
@@ -260,6 +284,26 @@ const Withdraw = () => {
                 </div>
               )}
 
+              {/* CPF Input */}
+              <div className="mt-4">
+                <Label htmlFor="cpf" className="text-xs text-muted-foreground">
+                  CPF *
+                </Label>
+                <Input
+                  id="cpf"
+                  type="text"
+                  placeholder="000.000.000-00"
+                  value={cpf}
+                  onChange={(e) => handleCpfChange(e.target.value)}
+                  maxLength={14}
+                  className="mt-1"
+                  disabled={!canWithdraw}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Informe seu CPF para identificação
+                </p>
+              </div>
+
               {/* PIX Key Type Selection */}
               <div className="mt-4">
                 <Label className="text-xs text-muted-foreground">Tipo de Chave PIX *</Label>
@@ -335,6 +379,7 @@ const Withdraw = () => {
                 !amount || 
                 getNumericAmount() < minAmount || 
                 getNumericAmount() > availableBalance ||
+                !validateCPF() ||
                 !validatePixKey()
               }
             >
@@ -367,7 +412,12 @@ const Withdraw = () => {
 
               <div className="space-y-3 bg-muted/30 rounded-lg p-4">
                 <div>
-                  <Label className="text-xs text-muted-foreground">Tipo de Chave</Label>
+                  <Label className="text-xs text-muted-foreground">CPF</Label>
+                  <p className="text-sm font-medium">{cpf}</p>
+                </div>
+                <div className="h-px bg-border" />
+                <div>
+                  <Label className="text-xs text-muted-foreground">Tipo de Chave PIX</Label>
                   <p className="text-sm font-medium">
                     {pixKeyType === "cpf" ? "CPF" : 
                      pixKeyType === "email" ? "E-mail" : 
