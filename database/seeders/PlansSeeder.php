@@ -13,9 +13,9 @@ class PlansSeeder extends Seeder
      */
     public function run(): void
     {
-        // Limpar tabela (apenas em dev)
-        Plan::truncate();
-
+        // ⚠️ NÃO usar truncate() - apagaria todos os planos e ciclos ativos!
+        // Usar firstOrCreate() para criar apenas se não existir
+        
         // Planos Padrão (DAILY - Rendimento Diário)
         $standardPlans = [
             [
@@ -135,18 +135,43 @@ class PlansSeeder extends Seeder
             ],
         ];
 
-        // Inserir planos padrão
+        // Inserir planos padrão (apenas se não existirem)
+        $createdStandard = 0;
         foreach ($standardPlans as $plan) {
-            Plan::create($plan);
+            $created = Plan::firstOrCreate(
+                ['name' => $plan['name']], // Buscar por nome
+                $plan // Dados completos se precisar criar
+            );
+            if ($created->wasRecentlyCreated) {
+                $createdStandard++;
+            }
         }
 
-        // Inserir planos ciclo
+        // Inserir planos ciclo (apenas se não existirem)
+        $createdCycle = 0;
         foreach ($cyclePlans as $plan) {
-            Plan::create($plan);
+            $created = Plan::firstOrCreate(
+                ['name' => $plan['name']], // Buscar por nome
+                $plan // Dados completos se precisar criar
+            );
+            if ($created->wasRecentlyCreated) {
+                $createdCycle++;
+            }
         }
 
-        $this->command->info('✅ ' . count($standardPlans) . ' planos padrão criados!');
-        $this->command->info('✅ ' . count($cyclePlans) . ' planos ciclo criados!');
-        $this->command->info('🎉 Total: ' . (count($standardPlans) + count($cyclePlans)) . ' planos cadastrados!');
+        if ($createdStandard > 0) {
+            $this->command->info('✅ ' . $createdStandard . ' planos padrão criados!');
+        } else {
+            $this->command->warn('ℹ️  Planos padrão já existem (nenhum criado)');
+        }
+
+        if ($createdCycle > 0) {
+            $this->command->info('✅ ' . $createdCycle . ' planos ciclo criados!');
+        } else {
+            $this->command->warn('ℹ️  Planos ciclo já existem (nenhum criado)');
+        }
+
+        $totalPlans = Plan::count();
+        $this->command->info('🎉 Total de planos no sistema: ' . $totalPlans);
     }
 }
