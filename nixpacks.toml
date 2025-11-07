@@ -2,25 +2,18 @@
 
 [phases.setup]
 nixPkgs = ['php82', 'php82Packages.composer', 'nodejs_20', 'postgresql']
-aptPkgs = ['libpq-dev']
 
 [phases.install]
 cmds = [
     'composer install --no-dev --optimize-autoloader --no-interaction',
-    'npm ci --include=dev'
+    'npm ci'
 ]
 
 [phases.build]
 cmds = [
-    'npm run build',
-    'php artisan config:cache',
-    'php artisan route:cache',
-    'php artisan view:cache'
+    'npm run build'
 ]
 
-[phases.start]
-cmd = 'chmod +x start.sh && ./start.sh'
-
 [start]
-cmd = 'chmod +x start.sh && ./start.sh'
+cmd = 'bash start.sh'
 
