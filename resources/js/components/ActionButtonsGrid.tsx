@@ -58,25 +58,25 @@ const ActionButtonsGrid = () => {
     {
       icon: RefreshCw,
       label: "Recarregar",
-      color: "bg-success",
+      color: "bg-gradient-to-br from-green-500 to-emerald-600",
       onClick: () => navigate("/deposit"),
     },
     {
       icon: Wallet,
       label: "Retirada",
-      color: "bg-warning",
+      color: "bg-gradient-to-br from-orange-500 to-red-500",
       onClick: () => navigate("/withdraw"),
     },
     {
       icon: Users,
       label: "Convidar",
-      color: "bg-purple",
+      color: "bg-gradient-to-br from-purple-500 to-pink-500",
       onClick: handleInvite,
     },
     {
       icon: Headphones,
       label: "Suporte",
-      color: "bg-primary",
+      color: "bg-gradient-to-br from-blue-500 to-cyan-500",
       onClick: () => {},
     },
   ];
@@ -89,10 +89,10 @@ const ActionButtonsGrid = () => {
           onClick={action.onClick}
           className="flex flex-col items-center gap-2 transition-transform hover:scale-105 active:scale-95"
         >
-          <div className={`${action.color} flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg`}>
+          <div className={`${action.color} flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg hover:shadow-xl transition-shadow`}>
             <action.icon className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xs text-foreground">{action.label}</span>
+          <span className="text-xs text-foreground font-medium">{action.label}</span>
         </button>
       ))}
     </div>
