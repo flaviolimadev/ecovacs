@@ -64,19 +64,19 @@ const ActionButtonsGrid = () => {
     {
       icon: Wallet,
       label: "Retirada",
-      color: "bg-gradient-to-br from-orange-500 to-red-500",
+      color: "bg-gradient-to-br from-yellow-500 to-amber-500",
       onClick: () => navigate("/withdraw"),
     },
     {
       icon: Users,
       label: "Convidar",
-      color: "bg-gradient-to-br from-purple-500 to-pink-500",
+      color: "bg-gradient-to-br from-blue-500 to-cyan-500",
       onClick: handleInvite,
     },
     {
       icon: Headphones,
       label: "Suporte",
-      color: "bg-gradient-to-br from-blue-500 to-cyan-500",
+      color: "bg-gradient-to-br from-purple-400 to-violet-500",
       onClick: () => {},
     },
   ];
