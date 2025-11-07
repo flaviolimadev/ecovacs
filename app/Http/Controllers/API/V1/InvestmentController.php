@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Investment\CreateInvestmentRequest;
 use App\Models\Plan;
 use App\Models\Cycle;
+use App\Models\Ledger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -96,9 +97,23 @@ class InvestmentController extends Controller
             ]);
 
             // 7. Deduzir valor do balance do usuário
+            $balanceBefore = $userBalance;
             $user->balance = $userBalance - $price;
             $user->total_invested = (float) $user->total_invested + $price;
             $user->save();
+
+            // 7.1. Registrar no extrato (Ledger)
+            Ledger::create([
+                'user_id' => $user->id,
+                'type' => 'INVESTMENT',
+                'reference_type' => Cycle::class,
+                'reference_id' => $cycle->id,
+                'description' => "Investimento no plano: {$plan->name}",
+                'amount' => $price,
+                'operation' => 'DEBIT',
+                'balance_before' => $balanceBefore,
+                'balance_after' => $user->balance,
+            ]);
 
             // 8. Refresh para pegar dados atualizados
             $cycle->load('plan');

@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Models\Commission;
 use App\Models\Cycle;
 use App\Models\User;
+use App\Models\Ledger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -90,9 +91,23 @@ class ProcessReferralCommissions
                 ]);
 
                 // Creditar no balance_withdrawn do upline
+                $balanceWithdrawnBefore = $upline->balance_withdrawn;
                 $upline->balance_withdrawn += $commissionAmount;
                 $upline->total_earned += $commissionAmount;
                 $upline->save();
+
+                // Registrar no extrato (Ledger)
+                Ledger::create([
+                    'user_id' => $upline->id,
+                    'type' => 'COMMISSION',
+                    'reference_type' => Commission::class,
+                    'reference_id' => $commission->id,
+                    'description' => $commission->description,
+                    'amount' => $commissionAmount,
+                    'operation' => 'CREDIT',
+                    'balance_before' => $balanceWithdrawnBefore,
+                    'balance_after' => $upline->balance_withdrawn,
+                ]);
 
                 $commissionsProcessed[] = [
                     'upline_id' => $upline->id,

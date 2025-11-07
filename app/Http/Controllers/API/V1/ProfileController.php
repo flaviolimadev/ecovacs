@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Requests\Profile\UpdatePasswordRequest;
+use App\Models\Ledger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -96,52 +97,74 @@ class ProfileController extends Controller
     }
 
     /**
-     * Get user financial statement
+     * Get user financial statement (Extrato)
      */
     public function statement(Request $request)
     {
         $user = $request->user();
         $perPage = $request->query('per_page', 20);
+        $type = $request->query('type'); // INVESTMENT, COMMISSION, EARNING, WITHDRAWAL, DEPOSIT
 
-        // Buscar comissões recebidas
-        $commissions = $user->commissionsReceived()
-            ->with(['fromUser', 'cycle.plan'])
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+        // Buscar transações do extrato (Ledger)
+        $query = Ledger::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc');
 
-        $transactions = $commissions->map(function ($commission) {
+        // Filtrar por tipo se especificado
+        if ($type) {
+            $query->where('type', $type);
+        }
+
+        $ledgerEntries = $query->paginate($perPage);
+
+        // Mapear labels dos tipos
+        $typeLabels = [
+            'INVESTMENT' => 'Investimento',
+            'COMMISSION' => 'Comissão',
+            'EARNING' => 'Rendimento',
+            'WITHDRAWAL' => 'Saque',
+            'DEPOSIT' => 'Depósito',
+        ];
+
+        $transactions = $ledgerEntries->map(function ($entry) use ($typeLabels) {
             return [
-                'id' => $commission->id,
-                'date' => $commission->created_at->format('Y-m-d H:i:s'),
-                'type' => 'commission',
-                'type_label' => 'Comissão',
-                'description' => $commission->description,
-                'amount' => (float) $commission->amount,
-                'details' => [
-                    'level' => $commission->level,
-                    'percentage' => (float) $commission->percentage,
-                    'from_user' => $commission->fromUser->name,
-                    'purchase_amount' => (float) $commission->purchase_amount,
-                    'commission_type' => $commission->type === 'FIRST_PURCHASE' ? 'Primeira Compra' : 'Compra Subsequente',
-                ],
+                'id' => $entry->id,
+                'date' => $entry->created_at->format('Y-m-d H:i:s'),
+                'type' => strtolower($entry->type),
+                'type_label' => $typeLabels[$entry->type] ?? $entry->type,
+                'description' => $entry->description,
+                'amount' => (float) $entry->amount,
+                'operation' => $entry->operation, // CREDIT ou DEBIT
+                'balance_before' => (float) $entry->balance_before,
+                'balance_after' => (float) $entry->balance_after,
                 'status' => 'completed',
                 'status_label' => 'Concluído',
             ];
         });
 
+        // Resumo financeiro
+        $totalCredits = Ledger::where('user_id', $user->id)
+            ->where('operation', 'CREDIT')
+            ->sum('amount');
+
+        $totalDebits = Ledger::where('user_id', $user->id)
+            ->where('operation', 'DEBIT')
+            ->sum('amount');
+
         return response()->json([
             'data' => $transactions,
             'pagination' => [
-                'current_page' => $commissions->currentPage(),
-                'last_page' => $commissions->lastPage(),
-                'per_page' => $commissions->perPage(),
-                'total' => $commissions->total(),
+                'current_page' => $ledgerEntries->currentPage(),
+                'last_page' => $ledgerEntries->lastPage(),
+                'per_page' => $ledgerEntries->perPage(),
+                'total' => $ledgerEntries->total(),
             ],
             'summary' => [
-                'total_commissions_received' => (float) $user->commissionsReceived()->sum('amount'),
-                'commissions_count' => $user->commissionsReceived()->count(),
+                'total_credits' => (float) $totalCredits,
+                'total_debits' => (float) $totalDebits,
+                'net_balance' => (float) ($totalCredits - $totalDebits),
                 'balance' => (float) $user->balance,
                 'balance_withdrawn' => (float) $user->balance_withdrawn,
+                'total_transactions' => Ledger::where('user_id', $user->id)->count(),
             ],
         ]);
     }
