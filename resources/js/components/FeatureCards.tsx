@@ -1,9 +1,11 @@
 import { Trophy, Target, Sparkles, Gift, Zap, Star } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import GoalsSection from "./GoalsSection";
 import { networkAPI } from "@/lib/api";
 
 const FeatureCards = () => {
+  const navigate = useNavigate();
   const [directNetworkVolume, setDirectNetworkVolume] = useState(0);
 
   useEffect(() => {
@@ -31,11 +33,18 @@ const FeatureCards = () => {
     }
   };
 
+  const handleDailyRewardClick = () => {
+    navigate('/daily-reward');
+  };
+
   return (
     <>
       <div className="mx-4 mt-6 grid grid-cols-2 gap-3">
         {/* Sorteio Premiado Card - Compacto */}
-        <button className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-pink-500 p-4 shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-95">
+        <button 
+          onClick={handleDailyRewardClick}
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-pink-500 p-4 shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-95"
+        >
           <div className="relative z-10">
             <div className="flex items-center gap-1 mb-1">
               <Trophy className="h-4 w-4 text-white" strokeWidth={2.5} />

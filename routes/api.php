@@ -5,6 +5,7 @@ use App\Http\Controllers\API\V1\ProfileController;
 use App\Http\Controllers\API\V1\NetworkController;
 use App\Http\Controllers\API\V1\PlanController;
 use App\Http\Controllers\API\V1\InvestmentController;
+use App\Http\Controllers\API\V1\DailyRewardController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -46,6 +47,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/investments', [InvestmentController::class, 'store']);
         Route::get('/investments/{id}', [InvestmentController::class, 'show']);
         
+        // Daily Reward
+        Route::get('/daily-reward/status', [DailyRewardController::class, 'status']);
+        Route::post('/daily-reward/claim', [DailyRewardController::class, 'claim']);
+
         // Settings (TODO)
         Route::get('/settings', function () {
             return response()->json(['message' => 'Settings endpoint - TODO']);

@@ -12,6 +12,7 @@ import Earnings from "./pages/Earnings";
 import Profile from "./pages/Profile";
 import Deposit from "./pages/Deposit";
 import Withdraw from "./pages/Withdraw";
+import DailyReward from "./pages/DailyReward";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -77,6 +78,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Withdraw />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/daily-reward"
+              element={
+                <ProtectedRoute>
+                  <DailyReward />
                 </ProtectedRoute>
               }
             />
