@@ -72,7 +72,7 @@ class NetworkController extends Controller
                 'inactive_members' => $totalInactiveMembers,
                 'direct_members' => $directMembers,
                 'referral_code' => $user->referral_code,
-                'referral_link' => url("/register?ref={$user->referral_code}"),
+                'referral_link' => config('app.frontend_url') . "/register?ref={$user->referral_code}",
             ],
         ]);
     }
@@ -133,12 +133,13 @@ class NetworkController extends Controller
     public function referralLink(Request $request)
     {
         $user = $request->user();
+        $frontendUrl = config('app.frontend_url');
 
         return response()->json([
             'data' => [
                 'referral_code' => $user->referral_code,
-                'referral_link' => url("/register?ref={$user->referral_code}"),
-                'short_link' => url("/r/{$user->referral_code}"), // Link curto
+                'referral_link' => $frontendUrl . "/register?ref={$user->referral_code}",
+                'short_link' => $frontendUrl . "/r/{$user->referral_code}", // Link curto
             ],
         ]);
     }

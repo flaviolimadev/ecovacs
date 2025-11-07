@@ -174,6 +174,11 @@ class InvestmentController extends Controller
             $user = $request->user();
             $status = $request->query('status'); // active, finished, all
 
+            Log::info('Buscando investimentos', [
+                'user_id' => $user->id,
+                'status_filter' => $status,
+            ]);
+
             $query = Cycle::where('user_id', $user->id)
                 ->with('plan')
                 ->orderBy('created_at', 'desc');
@@ -184,7 +189,15 @@ class InvestmentController extends Controller
                 $query->where('status', 'FINISHED');
             }
 
-            $cycles = $query->get()->map(function ($cycle) {
+            $cycles = $query->get();
+            
+            Log::info('Investimentos encontrados', [
+                'user_id' => $user->id,
+                'total' => $cycles->count(),
+                'cycles_ids' => $cycles->pluck('id')->toArray(),
+            ]);
+
+            $cycles = $cycles->map(function ($cycle) {
                 return [
                     'id' => $cycle->id,
                     'plan_id' => $cycle->plan_id,
