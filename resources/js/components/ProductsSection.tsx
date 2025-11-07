@@ -83,7 +83,7 @@ const ProductsSection = () => {
 
       <Tabs defaultValue="standard" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="standard">Padrão</TabsTrigger>
+          <TabsTrigger value="standard">Diário</TabsTrigger>
           <TabsTrigger value="cycle">Ciclo</TabsTrigger>
         </TabsList>
         
@@ -95,7 +95,7 @@ const ProductsSection = () => {
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>Nenhum plano padrão disponível</p>
+              <p>Nenhum plano diário disponível</p>
             </div>
           )}
         </TabsContent>
