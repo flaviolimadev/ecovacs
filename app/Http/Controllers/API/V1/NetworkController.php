@@ -143,4 +143,106 @@ class NetworkController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Get commission details and earnings
+     */
+    public function commissionDetails(Request $request)
+    {
+        $user = $request->user();
+
+        // Buscar comissões agrupadas por tipo
+        $commissionsData = DB::table('commissions')
+            ->where('user_id', $user->id)
+            ->selectRaw("
+                type,
+                COUNT(*) as total_count,
+                SUM(amount) as total_earned,
+                AVG(percentage) as avg_percentage
+            ")
+            ->groupBy('type')
+            ->get();
+
+        // Organizar dados
+        $firstPurchaseData = $commissionsData->firstWhere('type', 'FIRST_PURCHASE');
+        $subsequentPurchaseData = $commissionsData->firstWhere('type', 'SUBSEQUENT_PURCHASE');
+
+        // Buscar comissões por nível (para primeira compra)
+        $firstPurchaseByLevel = DB::table('commissions')
+            ->where('user_id', $user->id)
+            ->where('type', 'FIRST_PURCHASE')
+            ->selectRaw("
+                level,
+                COUNT(*) as count,
+                SUM(amount) as total,
+                AVG(percentage) as percentage
+            ")
+            ->groupBy('level')
+            ->orderBy('level')
+            ->get();
+
+        // Buscar comissões por nível (para compras subsequentes)
+        $subsequentByLevel = DB::table('commissions')
+            ->where('user_id', $user->id)
+            ->where('type', 'SUBSEQUENT_PURCHASE')
+            ->selectRaw("
+                level,
+                COUNT(*) as count,
+                SUM(amount) as total,
+                AVG(percentage) as percentage
+            ")
+            ->groupBy('level')
+            ->orderBy('level')
+            ->get();
+
+        // Total geral de comissões
+        $totalCommissions = $user->commissionsReceived()->sum('amount');
+
+        return response()->json([
+            'data' => [
+                'summary' => [
+                    'total_earned' => (float) $totalCommissions,
+                    'first_purchase_total' => (float) ($firstPurchaseData->total_earned ?? 0),
+                    'subsequent_purchase_total' => (float) ($subsequentPurchaseData->total_earned ?? 0),
+                    'total_commissions_count' => $user->commissionsReceived()->count(),
+                ],
+                'first_purchase' => [
+                    'total' => (float) ($firstPurchaseData->total_earned ?? 0),
+                    'count' => $firstPurchaseData->total_count ?? 0,
+                    'by_level' => $firstPurchaseByLevel->map(function ($item) {
+                        return [
+                            'level' => $item->level,
+                            'percentage' => (float) $item->percentage,
+                            'count' => $item->count,
+                            'total' => (float) $item->total,
+                        ];
+                    }),
+                ],
+                'subsequent_purchase' => [
+                    'total' => (float) ($subsequentPurchaseData->total_earned ?? 0),
+                    'count' => $subsequentPurchaseData->total_count ?? 0,
+                    'by_level' => $subsequentByLevel->map(function ($item) {
+                        return [
+                            'level' => $item->level,
+                            'percentage' => (float) $item->percentage,
+                            'count' => $item->count,
+                            'total' => (float) $item->total,
+                        ];
+                    }),
+                ],
+                'percentages_config' => [
+                    'first_purchase' => [
+                        ['level' => 1, 'percentage' => 15.00],
+                        ['level' => 2, 'percentage' => 2.00],
+                        ['level' => 3, 'percentage' => 1.00],
+                    ],
+                    'subsequent_purchase' => [
+                        ['level' => 1, 'percentage' => 8.00],
+                        ['level' => 2, 'percentage' => 2.00],
+                        ['level' => 3, 'percentage' => 1.00],
+                    ],
+                ],
+            ],
+        ]);
+    }
 }

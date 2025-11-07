@@ -36,6 +36,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/network/stats', [NetworkController::class, 'stats']);
         Route::get('/network/tree', [NetworkController::class, 'tree']);
         Route::get('/network/referral-link', [NetworkController::class, 'referralLink']);
+        Route::get('/network/commission-details', [NetworkController::class, 'commissionDetails']);
         
         // Plans
         Route::get('/plans', [PlanController::class, 'index']);

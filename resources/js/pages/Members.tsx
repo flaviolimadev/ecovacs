@@ -5,6 +5,7 @@ import TeamLevelCard from "@/components/TeamLevelCard";
 import MembersList from "@/components/MembersList";
 import GoalsSection from "@/components/GoalsSection";
 import BottomNavigation from "@/components/BottomNavigation";
+import CommissionDetailsDialog from "@/components/CommissionDetailsDialog";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,7 +113,7 @@ const Members = () => {
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-xl font-semibold flex-1 text-center">Equipa</h1>
-          <div className="w-10"></div>
+          <CommissionDetailsDialog />
         </div>
         <div className="flex justify-center">
           <div className="bg-white/20 p-4 rounded-full">
