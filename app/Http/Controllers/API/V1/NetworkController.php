@@ -110,6 +110,7 @@ class NetworkController extends Controller
                 'id' => $referredUser->id,
                 'name' => $referredUser->name,
                 'email' => $referredUser->email,
+                'phone' => $referredUser->phone, // Adicionar telefone
                 'level' => $referral->level,
                 'level_name' => chr(64 + $referral->level), // A, B, C
                 'total_invested' => (float) ($referredUser->total_invested ?? 0),

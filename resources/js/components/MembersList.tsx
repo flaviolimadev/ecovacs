@@ -53,6 +53,23 @@ const MembersList = () => {
     }
   };
 
+  const handleWhatsAppClick = (phone: string | null, name: string) => {
+    if (!phone) {
+      alert(`Telefone não cadastrado para ${name}`);
+      return;
+    }
+
+    // Remover caracteres especiais e espaços do telefone
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    // Verificar se tem o código do país (55 para Brasil)
+    const phoneWithCountryCode = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+    
+    // Abrir WhatsApp
+    const whatsappUrl = `https://wa.me/${phoneWithCountryCode}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <div className="px-4 space-y-3">
       <h2 className="text-sm font-semibold text-muted-foreground mb-3">Membros da Rede</h2>
@@ -99,7 +116,13 @@ const MembersList = () => {
                 <span>📅 {new Date(member.created_at).toLocaleDateString('pt-BR')}</span>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            <button
+              onClick={() => handleWhatsAppClick(member.phone, member.name)}
+              className="p-2 hover:bg-green-100 rounded-full transition-colors group"
+              title="Abrir WhatsApp"
+            >
+              <ChevronRight className="w-5 h-5 text-green-600 group-hover:scale-110 transition-transform" />
+            </button>
           </div>
         </Card>
       ))}
