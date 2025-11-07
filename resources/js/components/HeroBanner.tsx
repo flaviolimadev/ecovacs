@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const slides = [
   "/assets/ecovacs-booth-1.jpg",
   "/assets/ecovacs-booth-2.jpg",
-  "/assets/ecovacs-building.jpg",
+  "/assets/ecovacs-booth-3.jpg",
 ];
 
 const HeroBanner = () => {

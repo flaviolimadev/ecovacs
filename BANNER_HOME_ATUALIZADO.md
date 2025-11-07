@@ -25,7 +25,7 @@ Com os seguintes nomes:
 
 1. **`ecovacs-booth-1.jpg`** → Stand da feira (azul com robôs)
 2. **`ecovacs-booth-2.jpg`** → Booth interno (escuro, moderno)
-3. **`ecovacs-building.jpg`** → Fachada do prédio Ecovacs Group
+3. **`ecovacs-booth-3.jpg`** → Outro ângulo do stand/booth
 
 ## 📂 Como Adicionar as Imagens
 
@@ -35,7 +35,7 @@ Com os seguintes nomes:
 # Copiar as imagens que você enviou para a pasta public/assets/
 Copy-Item "caminho/da/imagem1.jpg" "public/assets/ecovacs-booth-1.jpg"
 Copy-Item "caminho/da/imagem2.jpg" "public/assets/ecovacs-booth-2.jpg"
-Copy-Item "caminho/da/imagem3.jpg" "public/assets/ecovacs-building.jpg"
+Copy-Item "caminho/da/imagem3.jpg" "public/assets/ecovacs-booth-3.jpg"
 ```
 
 ### Opção 2: Manualmente
@@ -45,7 +45,7 @@ Copy-Item "caminho/da/imagem3.jpg" "public/assets/ecovacs-building.jpg"
 3. Renomeie para os nomes corretos:
    - `ecovacs-booth-1.jpg`
    - `ecovacs-booth-2.jpg`
-   - `ecovacs-building.jpg`
+   - `ecovacs-booth-3.jpg`
 
 ## 🎨 Características do Novo Banner
 
@@ -94,7 +94,7 @@ const slides = [
 const slides = [
   "/assets/ecovacs-booth-1.jpg",
   "/assets/ecovacs-booth-2.jpg",
-  "/assets/ecovacs-building.jpg",
+  "/assets/ecovacs-booth-3.jpg",
 ];
 
 // Renderiza apenas a imagem
