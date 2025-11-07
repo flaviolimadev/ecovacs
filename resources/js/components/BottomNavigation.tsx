@@ -1,4 +1,4 @@
-import { Home, Users, Gift, User } from "lucide-react";
+import { Home, Users, CircleDollarSign, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const BottomNavigation = () => {
@@ -8,7 +8,7 @@ const BottomNavigation = () => {
   const navItems = [
     { id: "home", path: "/", icon: Home, label: "Início" },
     { id: "members", path: "/members", icon: Users, label: "Membro" },
-    { id: "earnings", path: "/earnings", icon: Gift, label: "Rendimentos" },
+    { id: "earnings", path: "/earnings", icon: CircleDollarSign, label: "Rendimentos" },
     { id: "user", path: "/profile", icon: User, label: "Utilizador" },
   ];
 
