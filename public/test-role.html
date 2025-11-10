@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Role</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .result {
+            background: #000;
+            padding: 20px;
+            border: 2px solid #00ff00;
+            margin: 20px 0;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            padding: 15px 30px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .error { border-color: #ff0000; color: #ff0000; }
+        .success { border-color: #00ff00; color: #00ff00; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Teste Role API</h1>
+    <button onclick="testLogin()">1. Login</button>
+    <button onclick="testMe()">2. Testar /me</button>
+    <button onclick="clearStorage()">3. Limpar Cache</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<div class="result">⏳ Fazendo login...</div>';
+            
+            try {
+                const res = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@ecovacs.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    localStorage.setItem('auth_token', data.data.token);
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+                    
+                    const role = data.data.user.role;
+                    result.innerHTML = `<div class="result success">
+✅ LOGIN OK!
+
+User: ${data.data.user.name}
+Email: ${data.data.user.email}
+Role: ${role || '❌ UNDEFINED'}
+
+${role === 'admin' ? '✅ É ADMIN!' : '❌ NÃO É ADMIN!'}
+
+Token salvo: ${data.data.token.substring(0, 30)}...
+
+Resposta completa:
+${JSON.stringify(data, null, 2)}
+                    </div>`;
+                } else {
+                    result.innerHTML = `<div class="result error">❌ ERRO: ${JSON.stringify(data)}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">❌ ERRO: ${e.message}</div>`;
+            }
+        }
+        
+        async function testMe() {
+            const result = document.getElementById('result');
+            const token = localStorage.getItem('auth_token');
+            
+            if (!token) {
+                result.innerHTML = '<div class="result error">❌ Sem token! Faça login primeiro.</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="result">⏳ Testando /me...</div>';
+            
+            try {
+                const res = await fetch('/api/v1/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    const role = data.data.user.role;
+                    result.innerHTML = `<div class="result success">
+✅ /me OK!
+
+User: ${data.data.user.name}
+Email: ${data.data.user.email}
+Role: ${role || '❌ UNDEFINED'}
+
+${role === 'admin' ? '✅ É ADMIN!' : '❌ NÃO É ADMIN!'}
+
+localStorage atual:
+${localStorage.getItem('user')}
+
+Resposta da API:
+${JSON.stringify(data, null, 2)}
+                    </div>`;
+                } else {
+                    result.innerHTML = `<div class="result error">❌ ERRO: ${JSON.stringify(data)}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="result error">❌ ERRO: ${e.message}</div>`;
+            }
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            document.getElementById('result').innerHTML = '<div class="result success">✅ Cache limpo! Faça login novamente.</div>';
+        }
+    </script>
+</body>
+</html>
+

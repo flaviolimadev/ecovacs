@@ -51,16 +51,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('user');
 
+    console.log('🔄 AuthContext: Inicializando...', {
+      hasToken: !!storedToken,
+      hasStoredUser: !!storedUser,
+      storedUserRaw: storedUser
+    });
+
     if (storedToken && storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      console.log('👤 AuthContext: Usuário do localStorage', {
+        userId: parsedUser.id,
+        email: parsedUser.email,
+        role: parsedUser.role,
+        hasRole: 'role' in parsedUser,
+        parsedUser: parsedUser
+      });
+
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      setUser(parsedUser);
+      
       // Verificar se o token ainda é válido
       authAPI.me()
         .then((response) => {
-          setUser(response.data.data);
-          localStorage.setItem('user', JSON.stringify(response.data.data));
+          const userData = response.data.data.user || response.data.data;
+          console.log('✅ AuthContext: /me atualizado', {
+            userId: userData.id,
+            email: userData.email,
+            role: userData.role,
+            hasRole: 'role' in userData,
+            userData: userData
+          });
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
         })
         .catch(() => {
+          console.warn('❌ AuthContext: Token inválido, limpando...');
           // Token inválido
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user');
@@ -69,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         .finally(() => setIsLoading(false));
     } else {
+      console.log('ℹ️ AuthContext: Nenhum token/usuário salvo');
       setIsLoading(false);
     }
   }, []);
@@ -77,6 +103,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authAPI.login(email, password);
       const { user: userData, token: userToken } = response.data.data;
+
+      console.log('🔐 AuthContext: Login bem-sucedido', {
+        userId: userData.id,
+        email: userData.email,
+        role: userData.role,
+        hasRole: 'role' in userData,
+        userData: userData
+      });
 
       setUser(userData);
       setToken(userToken);
