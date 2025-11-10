@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Withdrawal;
 use App\Models\User;
+use App\Services\VizzionPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -326,6 +327,153 @@ class WithdrawalController extends Controller
                 'error' => [
                     'code' => 'REJECTION_ERROR',
                     'message' => 'Erro ao rejeitar saque: ' . $e->getMessage(),
+                ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Processar pagamento via Vizzion (manual pelo admin)
+     */
+    public function processVizzionPayment($id)
+    {
+        $withdrawal = Withdrawal::with('user')->findOrFail($id);
+
+        if (!in_array($withdrawal->status, ['REQUESTED', 'APPROVED'])) {
+            return response()->json([
+                'error' => [
+                    'code' => 'INVALID_STATUS',
+                    'message' => 'Apenas saques REQUESTED ou APPROVED podem ser processados via Vizzion.',
+                ]
+            ], 400);
+        }
+
+        try {
+            $vizzionService = app(VizzionPayService::class);
+            $user = $withdrawal->user;
+
+            // Formatar CPF com pontos e traço
+            $cpfDigits = preg_replace('/\D/', '', $withdrawal->cpf);
+            $cpfFormatted = sprintf(
+                '%s.%s.%s-%s',
+                substr($cpfDigits, 0, 3),
+                substr($cpfDigits, 3, 3),
+                substr($cpfDigits, 6, 3),
+                substr($cpfDigits, 9, 2)
+            );
+
+            // Detectar IP (ou usar IP do admin)
+            $ownerIp = request()->ip() ?? '127.0.0.1';
+
+            // Identificador único da transferência
+            $clientIdentifier = 'admin_withdraw_' . $withdrawal->id . '_' . time();
+
+            // Preparar dados no formato EXATO da documentação Vizzion
+            $transferData = [
+                'identifier' => $clientIdentifier,
+                'clientIdentifier' => $clientIdentifier,
+                'callbackUrl' => route('api.v1.webhooks.vizzion'),
+                'amount' => (float) $withdrawal->net_amount,
+                'discountFeeOfReceiver' => false,
+                'pix' => [
+                    'type' => $withdrawal->pix_key_type,
+                    'key' => $withdrawal->pix_key,
+                ],
+                'owner' => [
+                    'ip' => $ownerIp,
+                    'name' => $user->name,
+                    'document' => [
+                        'type' => 'cpf',
+                        'number' => $cpfFormatted,
+                    ],
+                ],
+            ];
+
+            Log::info('Admin processando saque via Vizzion', [
+                'withdrawal_id' => $withdrawal->id,
+                'admin_id' => auth()->id(),
+                'payload' => $transferData,
+            ]);
+
+            // Chamar API Vizzion para transferência
+            $result = $vizzionService->createPixTransfer($transferData);
+
+            if ($result['success']) {
+                $rawResponse = $result['raw_response'] ?? [];
+                $withdrawData = $rawResponse['withdraw'] ?? [];
+                
+                DB::beginTransaction();
+
+                $withdrawal->update([
+                    'status' => 'APPROVED',
+                    'raw_response' => $rawResponse,
+                    'transaction_id' => $withdrawData['id'] ?? null,
+                    'approved_at' => now(),
+                    'error_message' => null,
+                ]);
+
+                DB::commit();
+
+                Log::info('Transferência PIX processada com sucesso pelo admin', [
+                    'withdrawal_id' => $withdrawal->id,
+                    'transaction_id' => $withdrawData['id'] ?? null,
+                    'admin_id' => auth()->id(),
+                ]);
+
+                return response()->json([
+                    'message' => 'Transferência enviada para Vizzion com sucesso!',
+                    'data' => [
+                        'id' => $withdrawal->id,
+                        'status' => $withdrawal->status,
+                        'transaction_id' => $withdrawal->transaction_id,
+                        'vizzion_status' => $withdrawData['status'] ?? 'unknown',
+                    ]
+                ]);
+            } else {
+                // Falha na API Vizzion
+                DB::beginTransaction();
+                
+                $withdrawal->update([
+                    'raw_response' => $result,
+                    'error_message' => $result['error'] ?? 'Erro desconhecido',
+                ]);
+
+                DB::commit();
+
+                Log::warning('Falha ao processar transferência via Vizzion (admin)', [
+                    'withdrawal_id' => $withdrawal->id,
+                    'admin_id' => auth()->id(),
+                    'error' => $result['error'] ?? 'Erro desconhecido',
+                    'details' => $result['details'] ?? null,
+                ]);
+
+                return response()->json([
+                    'error' => [
+                        'code' => 'VIZZION_ERROR',
+                        'message' => $result['error'] ?? 'Erro ao processar pagamento via Vizzion',
+                        'details' => $result['details'] ?? null,
+                    ]
+                ], 400);
+            }
+
+        } catch (\Exception $e) {
+            if (isset($withdrawal)) {
+                $withdrawal->update([
+                    'error_message' => 'Erro ao processar: ' . $e->getMessage(),
+                ]);
+            }
+
+            Log::error('Exceção ao processar transferência via Vizzion (admin)', [
+                'withdrawal_id' => $id,
+                'admin_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'error' => [
+                    'code' => 'INTERNAL_ERROR',
+                    'message' => 'Erro ao processar pagamento: ' . $e->getMessage(),
                 ]
             ], 500);
         }

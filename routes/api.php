@@ -88,6 +88,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/withdrawals', [AdminWithdrawalController::class, 'index']);
             Route::get('/withdrawals/{id}', [AdminWithdrawalController::class, 'show']);
             Route::post('/withdrawals/{id}/approve', [AdminWithdrawalController::class, 'approve']);
+            Route::post('/withdrawals/{id}/process-vizzion', [AdminWithdrawalController::class, 'processVizzionPayment']);
             Route::post('/withdrawals/{id}/mark-as-paid', [AdminWithdrawalController::class, 'markAsPaid']);
             Route::post('/withdrawals/{id}/reject', [AdminWithdrawalController::class, 'reject']);
 

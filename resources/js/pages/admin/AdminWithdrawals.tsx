@@ -68,7 +68,7 @@ export default function AdminWithdrawals() {
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
-  const [actionType, setActionType] = useState<'approve' | 'paid' | 'reject' | null>(null);
+  const [actionType, setActionType] = useState<'approve' | 'paid' | 'reject' | 'process-vizzion' | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [transactionId, setTransactionId] = useState("");
@@ -104,7 +104,7 @@ export default function AdminWithdrawals() {
     }
   };
 
-  const openActionDialog = (withdrawal: Withdrawal, action: 'approve' | 'paid' | 'reject') => {
+  const openActionDialog = (withdrawal: Withdrawal, action: 'approve' | 'paid' | 'reject' | 'process-vizzion') => {
     setSelectedWithdrawal(withdrawal);
     setActionType(action);
     setActionDialogOpen(true);
@@ -124,6 +124,9 @@ export default function AdminWithdrawals() {
       switch (actionType) {
         case 'approve':
           endpoint = `/admin/withdrawals/${selectedWithdrawal.id}/approve`;
+          break;
+        case 'process-vizzion':
+          endpoint = `/admin/withdrawals/${selectedWithdrawal.id}/process-vizzion`;
           break;
         case 'paid':
           endpoint = `/admin/withdrawals/${selectedWithdrawal.id}/mark-as-paid`;
@@ -156,9 +159,10 @@ export default function AdminWithdrawals() {
     }
   };
 
-  const getSuccessMessage = (action: 'approve' | 'paid' | 'reject') => {
+  const getSuccessMessage = (action: 'approve' | 'paid' | 'reject' | 'process-vizzion') => {
     switch (action) {
       case 'approve': return "Saque aprovado com sucesso!";
+      case 'process-vizzion': return "Transferência enviada para Vizzion com sucesso!";
       case 'paid': return "Saque marcado como pago!";
       case 'reject': return "Saque rejeitado e saldo estornado!";
     }
@@ -347,6 +351,14 @@ export default function AdminWithdrawals() {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="text-purple-600 hover:bg-purple-50"
+                                  onClick={() => openActionDialog(withdrawal, 'process-vizzion')}
+                                >
+                                  Pagar via Vizzion
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   className="text-green-600 hover:bg-green-50"
                                   onClick={() => openActionDialog(withdrawal, 'approve')}
                                 >
@@ -363,14 +375,24 @@ export default function AdminWithdrawals() {
                               </>
                             )}
                             {withdrawal.status === 'APPROVED' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-blue-600 hover:bg-blue-50"
-                                onClick={() => openActionDialog(withdrawal, 'paid')}
-                              >
-                                Marcar Pago
-                              </Button>
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-purple-600 hover:bg-purple-50"
+                                  onClick={() => openActionDialog(withdrawal, 'process-vizzion')}
+                                >
+                                  Pagar via Vizzion
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-blue-600 hover:bg-blue-50"
+                                  onClick={() => openActionDialog(withdrawal, 'paid')}
+                                >
+                                  Marcar Pago
+                                </Button>
+                              </>
                             )}
                           </div>
                         </TableCell>
@@ -466,11 +488,13 @@ export default function AdminWithdrawals() {
           <DialogHeader>
             <DialogTitle>
               {actionType === 'approve' && 'Aprovar Saque'}
+              {actionType === 'process-vizzion' && 'Processar Pagamento via Vizzion'}
               {actionType === 'paid' && 'Marcar como Pago'}
               {actionType === 'reject' && 'Rejeitar Saque'}
             </DialogTitle>
             <DialogDescription>
               {actionType === 'approve' && 'Tem certeza que deseja aprovar este saque?'}
+              {actionType === 'process-vizzion' && 'A transferência PIX será enviada automaticamente pela API Vizzion.'}
               {actionType === 'paid' && 'Confirme que o pagamento foi realizado.'}
               {actionType === 'reject' && 'O saldo será estornado para o usuário.'}
             </DialogDescription>
