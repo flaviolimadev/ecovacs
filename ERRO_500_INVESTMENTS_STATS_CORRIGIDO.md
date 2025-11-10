@@ -368,3 +368,6 @@ O erro 500 em `/api/v1/investments/stats` foi completamente resolvido! 🎉
 
 O sistema agora funciona corretamente mesmo quando o usuário não tem nenhum investimento!
 
+
+
+

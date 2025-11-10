@@ -288,3 +288,6 @@ O frontend agora usa a URL configurada no Easypanel! 🎉
 
 **Próximo passo:** Configurar `VITE_API_URL` no Easypanel e fazer rebuild.
 
+
+
+

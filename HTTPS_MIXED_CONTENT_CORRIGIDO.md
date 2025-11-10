@@ -309,3 +309,6 @@ O problema de Mixed Content foi **completamente resolvido**!
 
 Todos os assets agora são servidos via HTTPS corretamente. ✅
 
+
+
+

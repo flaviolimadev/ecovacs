@@ -572,3 +572,6 @@ O sistema de status ativo/inativo para membros está 100% operacional na página
 - 📈 API retorna estatísticas completas
 - 🎨 Interface intuitiva com cores e ícones
 
+
+
+

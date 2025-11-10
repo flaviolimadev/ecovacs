@@ -283,3 +283,6 @@ Se não houver backup, pelo menos garanta que:
 
 **NUNCA MAIS:** Usar `truncate()` ou `migrate:fresh` em produção!
 
+
+
+

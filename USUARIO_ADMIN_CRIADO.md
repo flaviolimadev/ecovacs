@@ -222,3 +222,6 @@ php artisan tinker --execute="App\Models\User::all(['id', 'name', 'email', 'refe
 
 **O sistema está pronto para testes!** 🎉
 
+
+
+

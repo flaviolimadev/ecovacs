@@ -280,3 +280,6 @@ export const networkAPI = {
 **Data**: 06/11/2025  
 **Status**: ✅ 100% IMPLEMENTADO E FUNCIONAL
 
+
+
+

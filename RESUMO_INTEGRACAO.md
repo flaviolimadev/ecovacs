@@ -258,3 +258,6 @@ O React está completamente integrado ao Laravel usando Vite, com:
 
 **Dúvidas?** Consulte `INSTALACAO.md` ou as regras em `.cursor/rules/`
 
+
+
+

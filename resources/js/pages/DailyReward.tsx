@@ -245,3 +245,6 @@ const DailyReward = () => {
 
 export default DailyReward;
 
+
+
+

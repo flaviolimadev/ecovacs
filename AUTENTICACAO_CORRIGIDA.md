@@ -198,3 +198,6 @@ Agora a autenticação está **100% funcional** e conectada ao backend Laravel!
 **Data**: 06/11/2025  
 **Status**: ✅ CONCLUÍDO
 
+
+
+

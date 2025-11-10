@@ -225,3 +225,6 @@ Depois do deploy:
 **Arquivo:** `.env.production`  
 **Status:** ✅ **CORRIGIDO** - Aguardando rebuild no Easypanel
 
+
+
+

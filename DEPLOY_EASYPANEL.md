@@ -334,3 +334,6 @@ Se tiver problemas:
 
 **Pronto! Sua aplicação Laravel + React está rodando no Easypanel! 🚀**
 
+
+
+

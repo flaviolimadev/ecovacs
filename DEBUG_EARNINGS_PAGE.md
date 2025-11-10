@@ -207,3 +207,6 @@ Me envie as seguintes informações:
 
 4. **User ID logado:** (console: `JSON.parse(localStorage.getItem('user')).id`)
 
+
+
+

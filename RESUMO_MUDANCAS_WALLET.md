@@ -105,3 +105,6 @@ SAQUE → balance_withdrawn ↓
 **Data**: 06/11/2025  
 **Status**: ✅ CONCLUÍDO
 
+
+
+

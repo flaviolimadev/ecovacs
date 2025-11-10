@@ -508,3 +508,6 @@ WHERE type = 'SUBSEQUENT_PURCHASE';
 
 Essas queries ajudam a monitorar, debugar e otimizar o sistema de comissões! 🚀
 
+
+
+

@@ -119,3 +119,6 @@ Se retornar algo, confirma que há lockdown ativo.
 
 **TL;DR:** Desabilitei o Fast Refresh no Vite. Reinicie o servidor (`npm run dev`) e o erro deve sumir! 🚀
 
+
+
+

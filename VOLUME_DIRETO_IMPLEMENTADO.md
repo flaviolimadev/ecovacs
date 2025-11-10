@@ -304,3 +304,6 @@ O sistema **JÁ calcula** o volume direto corretamente:
 **Status:** ✅ **IMPLEMENTADO E FUNCIONANDO**
 **Arquivo:** NetworkController.php (linha 38), InvestmentController.php (linha 102)
 
+
+
+

@@ -290,3 +290,6 @@ Connection refused
 
 **Próximo Passo:** Ver os logs do backend no Easypanel e me envie o output!
 
+
+
+

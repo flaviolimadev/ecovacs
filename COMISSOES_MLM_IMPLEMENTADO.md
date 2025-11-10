@@ -417,3 +417,6 @@ POST /api/v1/investments (como usuario3)
 
 O sistema de comissões está **totalmente funcional** e pronto para uso em produção! 🎉
 
+
+
+

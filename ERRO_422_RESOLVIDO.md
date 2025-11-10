@@ -180,3 +180,6 @@ if (error.response?.status === 422 && error.response?.data?.errors) {
 **Data**: 06/11/2025  
 **Status**: ✅ RESOLVIDO
 
+
+
+

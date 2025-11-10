@@ -67,3 +67,6 @@ EXPOSE 80
 # Comando de inicialização
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
+
+
+

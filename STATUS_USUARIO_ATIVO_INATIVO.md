@@ -498,3 +498,6 @@ border border-red-400/30
 
 O sistema de status Ativo/Inativo está completamente operacional e integrado à página de rendimentos!
 
+
+
+

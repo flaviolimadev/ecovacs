@@ -251,3 +251,6 @@ php artisan migrate
 **Status**: ✅ 100% IMPLEMENTADO
 **Versão**: 1.0
 
+
+
+

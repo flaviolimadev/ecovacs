@@ -593,3 +593,6 @@ Authorization: Bearer <TOKEN_MARIA>
 
 Se todos os passos acima funcionaram corretamente, o sistema de comissões está **100% operacional**! ✅
 
+
+
+

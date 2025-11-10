@@ -378,3 +378,6 @@ progress = (days_paid / duration_days) * 100
 
 **Funciona perfeitamente!** ✅
 
+
+
+

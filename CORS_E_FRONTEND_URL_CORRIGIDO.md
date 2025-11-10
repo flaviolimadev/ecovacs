@@ -188,3 +188,6 @@ Siga os passos para descobrir por que os planos não aparecem na página `/earni
 **Data:** $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 **Commit:** `7c61e70`
 
+
+
+

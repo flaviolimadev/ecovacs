@@ -200,3 +200,6 @@ O banco de dados PostgreSQL está totalmente configurado e pronto para uso. Voc�
 3. ✅ Criar um usuário inicial para testar o sistema
 4. ✅ Implementar seeders para dados de teste (se necessário)
 
+
+
+

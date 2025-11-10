@@ -180,3 +180,6 @@ FRONTEND_URL="https://clickads.pro"  # Só afeta backend (links de indicação)
 
 **Conclusão:** ✅ Sim, a página de registro usa o `.env`, mas você precisa garantir que `VITE_API_URL` está configurado corretamente **ANTES** do build em produção!
 
+
+
+

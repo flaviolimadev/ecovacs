@@ -30,6 +30,7 @@ return [
         'http://[::1]:8000',
         'https://localhost:5173',
         'https://localhost:8000',
+        'https://ecovacs-app.woty8c.easypanel.host',
     ]),
 
     'allowed_origins_patterns' => [],

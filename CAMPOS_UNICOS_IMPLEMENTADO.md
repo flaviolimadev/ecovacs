@@ -153,3 +153,6 @@ A implementação de campos únicos está completa. O sistema agora:
 4. ✅ Retorna mensagens de erro claras em português
 5. ✅ Permite que o usuário atualize seu perfil mantendo o mesmo email/telefone
 
+
+
+

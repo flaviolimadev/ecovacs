@@ -230,3 +230,6 @@ app/
 - `RESUMO_INTEGRACAO.md` - Detalhes técnicos
 - `QUICK_START.md` - Comandos rápidos
 
+
+
+
