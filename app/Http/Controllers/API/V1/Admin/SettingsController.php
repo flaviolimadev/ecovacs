@@ -27,19 +27,18 @@ class SettingsController extends Controller
                 $grouped[$group] = [];
             }
             
+            // Tentar decodificar JSON, senão usar valor direto
             $value = $setting->value;
-            if ($setting->type === 'json') {
-                $value = json_decode($value, true);
-            } elseif ($setting->type === 'numeric') {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $value = $decoded;
+            } elseif (is_numeric($value)) {
                 $value = (float) $value;
-            } elseif ($setting->type === 'boolean') {
-                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
             }
             
             $grouped[$group][] = [
                 'key' => $setting->key,
                 'value' => $value,
-                'type' => $setting->type,
                 'description' => $setting->description,
             ];
         }
@@ -84,17 +83,8 @@ class SettingsController extends Controller
             ], 404);
         }
 
-        // Validar e formatar valor baseado no tipo
-        $formattedValue = $this->formatValueByType($value, $setting->type);
-
-        if ($formattedValue === null && $value !== null) {
-            return response()->json([
-                'error' => [
-                    'code' => 'INVALID_VALUE',
-                    'message' => 'Valor inválido para o tipo ' . $setting->type,
-                ]
-            ], 400);
-        }
+        // Formatar valor (JSON para arrays/objetos, string para o resto)
+        $formattedValue = is_array($value) ? json_encode($value) : (string) $value;
 
         // Atualizar
         DB::table('settings')
@@ -112,7 +102,7 @@ class SettingsController extends Controller
             'message' => 'Configuração atualizada com sucesso!',
             'data' => [
                 'key' => $key,
-                'value' => json_decode($formattedValue, true) ?? $formattedValue,
+                'value' => is_array($value) ? $value : $formattedValue,
             ]
         ]);
     }
@@ -153,11 +143,7 @@ class SettingsController extends Controller
                     continue;
                 }
 
-                $formattedValue = $this->formatValueByType($value, $setting->type);
-
-                if ($formattedValue === null && $value !== null) {
-                    continue;
-                }
+                $formattedValue = is_array($value) ? json_encode($value) : (string) $value;
 
                 DB::table('settings')
                     ->where('key', $key)
@@ -302,46 +288,5 @@ class SettingsController extends Controller
         }
     }
 
-    /**
-     * Formatar valor baseado no tipo
-     */
-    private function formatValueByType($value, string $type): ?string
-    {
-        switch ($type) {
-            case 'json':
-                if (is_array($value)) {
-                    return json_encode($value);
-                }
-                if (is_string($value)) {
-                    $decoded = json_decode($value, true);
-                    return $decoded !== null ? json_encode($decoded) : null;
-                }
-                return null;
-
-            case 'numeric':
-                if (is_numeric($value)) {
-                    return (string) $value;
-                }
-                return null;
-
-            case 'boolean':
-                if (is_bool($value)) {
-                    return $value ? '1' : '0';
-                }
-                if (is_numeric($value)) {
-                    return $value ? '1' : '0';
-                }
-                if (is_string($value)) {
-                    $lower = strtolower($value);
-                    if (in_array($lower, ['true', '1', 'yes'])) return '1';
-                    if (in_array($lower, ['false', '0', 'no'])) return '0';
-                }
-                return null;
-
-            case 'string':
-            default:
-                return (string) $value;
-        }
-    }
 }
 
