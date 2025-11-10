@@ -83,7 +83,7 @@ const Deposit = () => {
     try {
       setLoading(true);
       
-      const response = await api.post('/v1/deposits', {
+      const response = await api.post('/deposits', {
         amount: numAmount,
         cpf: cpf.replace(/\D/g, '') // Remove formatação do CPF
       });
@@ -138,7 +138,7 @@ const Deposit = () => {
     try {
       setChecking(true);
       
-      const response = await api.post(`/v1/deposits/${depositData.id}/check-status`);
+      const response = await api.post(`/deposits/${depositData.id}/check-status`);
       
       if (response.data.data.status === 'PAID') {
         toast({
