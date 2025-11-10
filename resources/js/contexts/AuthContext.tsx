@@ -25,6 +25,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
   isAuthenticated: boolean;
+  isLoading: boolean;
   loading: boolean;
 }
 
@@ -167,7 +168,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     fetchUser,
     isAuthenticated: !!token && !!user,
-    loading: isLoading,
+    isLoading,
+    loading: isLoading, // Alias para compatibilidade
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
