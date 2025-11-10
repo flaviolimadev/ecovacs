@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" translate="no">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        <!-- Bloquear tradução automática do Google -->
+        <meta name="google" content="notranslate">
+        <meta http-equiv="content-language" content="pt-BR">
         
         <!-- SEO Meta Tags -->
         <title>Ecovacs Robotics - Plataforma de Investimentos Inteligentes</title>
@@ -45,8 +49,8 @@
         <!-- Scripts & Styles (Vite) -->
         @vite(['resources/css/app.css', 'resources/js/app.tsx'])
     </head>
-    <body>
-        <div id="app"></div>
+    <body class="notranslate" translate="no">
+        <div id="app" class="notranslate"></div>
     </body>
 </html>
 

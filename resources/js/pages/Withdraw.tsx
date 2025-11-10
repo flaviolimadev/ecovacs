@@ -225,11 +225,11 @@ const Withdraw = () => {
             </Card>
 
             {/* Amount Input */}
-            <Card className="p-6">
-              <div className="mb-6">
+            <Card className="p-6 notranslate" translate="no" data-no-translate="true">
+              <div className="mb-6 notranslate" translate="no">
                 <Label className="text-sm text-muted-foreground">Quanto deseja sacar?</Label>
-                <div className="relative mt-3">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground">
+                <div className="relative mt-3 notranslate" translate="no">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground notranslate" translate="no">
                     R$
                   </span>
                   <Input
@@ -237,11 +237,14 @@ const Withdraw = () => {
                     placeholder="0,00"
                     value={amount}
                     onChange={(e) => handleAmountChange(e.target.value)}
-                    className="text-3xl font-bold text-center h-16 pl-16"
+                    className="text-3xl font-bold text-center h-16 pl-16 notranslate"
+                    translate="no"
+                    autoComplete="off"
+                    data-no-translate="true"
                     disabled={!canWithdraw}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-muted-foreground mt-2 notranslate" translate="no">
                   Valor mínimo: R$ {minAmount.toFixed(2)}
                 </p>
               </div>
@@ -285,8 +288,8 @@ const Withdraw = () => {
               )}
 
               {/* CPF Input */}
-              <div className="mt-4">
-                <Label htmlFor="cpf" className="text-xs text-muted-foreground">
+              <div className="mt-4 notranslate" translate="no" data-no-translate="true">
+                <Label htmlFor="cpf" className="text-xs text-muted-foreground notranslate" translate="no">
                   CPF *
                 </Label>
                 <Input
@@ -296,7 +299,11 @@ const Withdraw = () => {
                   value={cpf}
                   onChange={(e) => handleCpfChange(e.target.value)}
                   maxLength={14}
-                  className="mt-1"
+                  className="mt-1 notranslate"
+                  translate="no"
+                  autoComplete="off"
+                  data-no-translate="true"
+                  inputMode="numeric"
                   disabled={!canWithdraw}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
@@ -305,8 +312,8 @@ const Withdraw = () => {
               </div>
 
               {/* PIX Key Type Selection */}
-              <div className="mt-4">
-                <Label className="text-xs text-muted-foreground">Tipo de Chave PIX *</Label>
+              <div className="mt-4 notranslate" translate="no" data-no-translate="true">
+                <Label className="text-xs text-muted-foreground notranslate" translate="no">Tipo de Chave PIX *</Label>
                 <div className="grid grid-cols-4 gap-2 mt-1">
                   {[
                     { type: "cpf", label: "CPF" },
@@ -332,8 +339,8 @@ const Withdraw = () => {
               </div>
 
               {/* PIX Key Input */}
-              <div className="mt-4">
-                <Label htmlFor="pixKey" className="text-xs text-muted-foreground">
+              <div className="mt-4 notranslate" translate="no" data-no-translate="true">
+                <Label htmlFor="pixKey" className="text-xs text-muted-foreground notranslate" translate="no">
                   Chave PIX ({pixKeyType === "cpf" ? "CPF" : pixKeyType === "email" ? "E-mail" : pixKeyType === "phone" ? "Telefone" : "Aleatória"}) *
                 </Label>
                 <Input
@@ -348,7 +355,10 @@ const Withdraw = () => {
                   value={pixKey}
                   onChange={(e) => handlePixKeyChange(e.target.value)}
                   maxLength={pixKeyType === "cpf" ? 14 : pixKeyType === "phone" ? 15 : undefined}
-                  className="mt-1"
+                  className="mt-1 notranslate"
+                  translate="no"
+                  autoComplete="off"
+                  data-no-translate="true"
                   disabled={!canWithdraw}
                 />
               </div>

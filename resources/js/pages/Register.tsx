@@ -121,50 +121,50 @@ const Register = () => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 notranslate" translate="no" data-no-translate="true">
           {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-gray-700 font-medium">
+          <div className="space-y-2 notranslate" translate="no">
+            <Label htmlFor="name" className="text-gray-700 font-medium notranslate" translate="no">
               Nome Completo *
             </Label>
             <Input id="name" type="text" placeholder="Seu nome completo" value={formData.name} onChange={e => setFormData({
             ...formData,
             name: e.target.value
-          })} className="h-11 border-2 focus:border-primary" />
+          })} className="h-11 border-2 focus:border-primary notranslate" translate="no" autoComplete="name" data-no-translate="true" />
           </div>
 
           {/* Email */}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-700 font-medium">
+          <div className="space-y-2 notranslate" translate="no">
+            <Label htmlFor="email" className="text-gray-700 font-medium notranslate" translate="no">
               E-mail *
             </Label>
             <Input id="email" type="email" placeholder="seu@email.com" value={formData.email} onChange={e => setFormData({
             ...formData,
             email: e.target.value
-          })} className="h-11 border-2 focus:border-primary" />
+          })} className="h-11 border-2 focus:border-primary notranslate" translate="no" autoComplete="email" data-no-translate="true" />
           </div>
 
           {/* Phone */}
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="text-gray-700 font-medium">
+          <div className="space-y-2 notranslate" translate="no">
+            <Label htmlFor="phone" className="text-gray-700 font-medium notranslate" translate="no">
               Telefone (Opcional)
             </Label>
             <Input id="phone" type="tel" placeholder="(00) 00000-0000" value={formData.phone} onChange={e => setFormData({
             ...formData,
             phone: e.target.value
-          })} className="h-11 border-2 focus:border-primary" />
+          })} className="h-11 border-2 focus:border-primary notranslate" translate="no" autoComplete="tel" data-no-translate="true" inputMode="numeric" />
           </div>
 
           {/* Password */}
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-gray-700 font-medium">
+          <div className="space-y-2 notranslate" translate="no">
+            <Label htmlFor="password" className="text-gray-700 font-medium notranslate" translate="no">
               Senha *
             </Label>
-            <div className="relative">
+            <div className="relative notranslate" translate="no">
               <Input id="password" type={showPassword ? "text" : "password"} placeholder="Mínimo 6 caracteres" value={formData.password} onChange={e => setFormData({
               ...formData,
               password: e.target.value
-            })} className="h-11 border-2 focus:border-primary pr-12" />
+            })} className="h-11 border-2 focus:border-primary pr-12 notranslate" translate="no" autoComplete="new-password" data-no-translate="true" />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -172,15 +172,15 @@ const Register = () => {
           </div>
 
           {/* Confirm Password */}
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
+          <div className="space-y-2 notranslate" translate="no">
+            <Label htmlFor="confirmPassword" className="text-gray-700 font-medium notranslate" translate="no">
               Confirmar Senha *
             </Label>
-            <div className="relative">
+            <div className="relative notranslate" translate="no">
               <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Digite a senha novamente" value={formData.confirmPassword} onChange={e => setFormData({
               ...formData,
               confirmPassword: e.target.value
-            })} className="h-11 border-2 focus:border-primary pr-12" />
+            })} className="h-11 border-2 focus:border-primary pr-12 notranslate" translate="no" autoComplete="new-password" data-no-translate="true" />
               <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -203,8 +203,8 @@ const Register = () => {
           </div>
 
           {/* Código de Indicação (Obrigatório) */}
-          <div className="space-y-2">
-            <Label htmlFor="referralCode" className="text-gray-700 font-medium">
+          <div className="space-y-2 notranslate" translate="no">
+            <Label htmlFor="referralCode" className="text-gray-700 font-medium notranslate" translate="no">
               Código de Indicação * {formData.referralCode && <span className="text-green-600">✓</span>}
             </Label>
             <Input 
@@ -216,7 +216,10 @@ const Register = () => {
                 ...formData,
                 referralCode: e.target.value.toUpperCase()
               })} 
-              className={`h-11 border-2 focus:border-primary ${formData.referralCode ? 'border-green-300 bg-green-50' : ''}`}
+              className={`h-11 border-2 focus:border-primary notranslate ${formData.referralCode ? 'border-green-300 bg-green-50' : ''}`}
+              translate="no"
+              autoComplete="off"
+              data-no-translate="true"
               required
             />
             {formData.referralCode && (

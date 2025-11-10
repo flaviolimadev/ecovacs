@@ -179,9 +179,9 @@ const Deposit = () => {
   const quickAmounts = [50, 100, 200, 500, 1000];
 
   return (
-    <div className="relative min-h-screen bg-background pb-8">
+    <div className="relative min-h-screen bg-background pb-8 notranslate" translate="no">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6 rounded-b-3xl">
+      <div className="bg-primary text-primary-foreground p-6 rounded-b-3xl notranslate" translate="no">
         <div className="flex items-center justify-between mb-4">
           <button 
             onClick={() => step === "payment" ? setStep("input") : navigate("/profile")} 
@@ -203,11 +203,11 @@ const Deposit = () => {
         {step === "input" ? (
           <>
             {/* Amount Input */}
-            <Card className="p-6">
-              <div className="text-center mb-6">
+            <Card className="p-6 notranslate" translate="no" data-no-translate="true">
+              <div className="text-center mb-6 notranslate" translate="no">
                 <Label className="text-sm text-muted-foreground">Quanto deseja depositar?</Label>
-                <div className="relative mt-3">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground">
+                <div className="relative mt-3 notranslate" translate="no">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground notranslate" translate="no">
                     R$
                   </span>
                   <Input
@@ -215,10 +215,14 @@ const Deposit = () => {
                     placeholder="0,00"
                     value={amount}
                     onChange={(e) => handleAmountChange(e.target.value)}
-                    className="text-3xl font-bold text-center h-16 pl-16"
+                    className="text-3xl font-bold text-center h-16 pl-16 notranslate"
+                    translate="no"
+                    autoComplete="off"
+                    data-no-translate="true"
+                    data-form-type="other"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-muted-foreground mt-2 notranslate" translate="no">
                   Valor mínimo: R$ {minAmount.toFixed(2)}
                 </p>
               </div>
@@ -242,8 +246,8 @@ const Deposit = () => {
               </div>
 
               {/* CPF Input */}
-              <div className="mt-6">
-                <Label htmlFor="cpf" className="text-sm text-muted-foreground">CPF do Titular *</Label>
+              <div className="mt-6 notranslate" translate="no" data-no-translate="true">
+                <Label htmlFor="cpf" className="text-sm text-muted-foreground notranslate" translate="no">CPF do Titular *</Label>
                 <Input
                   id="cpf"
                   type="text"
@@ -251,7 +255,12 @@ const Deposit = () => {
                   value={cpf}
                   onChange={(e) => handleCPFChange(e.target.value)}
                   maxLength={14}
-                  className="mt-1 h-12"
+                  className="mt-1 h-12 notranslate"
+                  translate="no"
+                  autoComplete="off"
+                  data-no-translate="true"
+                  data-form-type="other"
+                  inputMode="numeric"
                 />
               </div>
             </Card>
@@ -269,7 +278,8 @@ const Deposit = () => {
 
             <Button 
               onClick={handleContinue} 
-              className="w-full mt-6 h-12 text-base"
+              className="w-full mt-6 h-12 text-base notranslate"
+              translate="no"
               disabled={!amount || getNumericAmount() < minAmount || !cpf || cpf.replace(/\D/g, '').length !== 11 || loading}
             >
               {loading ? (
@@ -285,22 +295,23 @@ const Deposit = () => {
         ) : (
           <>
             {/* Payment Screen */}
-            <Card className="p-6">
-              <div className="text-center mb-6">
+            <Card className="p-6 notranslate" translate="no" data-no-translate="true">
+              <div className="text-center mb-6 notranslate" translate="no">
                 <p className="text-sm text-muted-foreground mb-2">Valor do depósito</p>
-                <p className="text-4xl font-bold text-primary">R$ {depositData?.amount.toFixed(2)}</p>
+                <p className="text-4xl font-bold text-primary notranslate" translate="no">R$ {depositData?.amount.toFixed(2)}</p>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 notranslate" translate="no">
                 {/* QR Code */}
-                <div className="space-y-3">
+                <div className="space-y-3 notranslate" translate="no">
                   <Label className="text-sm font-semibold text-center block">Escaneie o QR Code</Label>
                   {depositData?.qr_code_base64 ? (
-                    <div className="bg-white rounded-xl p-4 flex items-center justify-center border-2 border-border">
+                    <div className="bg-white rounded-xl p-4 flex items-center justify-center border-2 border-border notranslate" translate="no">
                       <img 
                         src={depositData.qr_code_base64} 
                         alt="QR Code PIX" 
-                        className="w-64 h-64 object-contain"
+                        className="w-64 h-64 object-contain notranslate"
+                        translate="no"
                       />
                     </div>
                   ) : depositData?.qr_code_image ? (
@@ -334,14 +345,14 @@ const Deposit = () => {
                 </div>
 
                 {/* PIX Copia e Cola */}
-                <div className="space-y-3">
+                <div className="space-y-3 notranslate" translate="no" data-no-translate="true">
                   <Label className="text-sm font-semibold">Código PIX Copia e Cola</Label>
                   
                   {depositData?.qr_code ? (
                     <>
                       {/* Mostrar código (truncado) */}
-                      <div className="bg-muted/50 p-3 rounded-lg border border-border">
-                        <p className="text-xs font-mono break-all text-muted-foreground">
+                      <div className="bg-muted/50 p-3 rounded-lg border border-border notranslate" translate="no">
+                        <p className="text-xs font-mono break-all text-muted-foreground notranslate" translate="no" data-no-translate="true">
                           {depositData.qr_code.substring(0, 100)}...
                         </p>
                       </div>
@@ -350,7 +361,8 @@ const Deposit = () => {
                       <Button
                         variant="default"
                         size="lg"
-                        className="w-full"
+                        className="w-full notranslate"
+                        translate="no"
                         onClick={handleCopyPixCode}
                       >
                         {copied ? (
