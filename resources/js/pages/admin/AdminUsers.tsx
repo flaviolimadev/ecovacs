@@ -28,7 +28,8 @@ import {
   UserPlus,
   User,
   TrendingUp,
-  Shield
+  Shield,
+  DollarSign
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AdminHeader } from "@/components/AdminHeader";
