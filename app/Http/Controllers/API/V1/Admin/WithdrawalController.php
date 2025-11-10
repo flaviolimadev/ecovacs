@@ -51,7 +51,6 @@ class WithdrawalController extends Controller
                         'id' => $withdrawal->user->id,
                         'name' => $withdrawal->user->name,
                         'email' => $withdrawal->user->email,
-                        'cpf' => $withdrawal->user->cpf,
                     ],
                     'amount' => (float) $withdrawal->amount,
                     'fee_amount' => (float) $withdrawal->fee_amount,
@@ -80,7 +79,7 @@ class WithdrawalController extends Controller
      */
     public function show($id)
     {
-        $withdrawal = Withdrawal::with('user:id,name,email,cpf,phone,balance,balance_withdrawn')
+        $withdrawal = Withdrawal::with('user:id,name,email,phone,balance,balance_withdrawn')
             ->findOrFail($id);
 
         return response()->json([
@@ -90,7 +89,6 @@ class WithdrawalController extends Controller
                     'id' => $withdrawal->user->id,
                     'name' => $withdrawal->user->name,
                     'email' => $withdrawal->user->email,
-                    'cpf' => $withdrawal->user->cpf,
                     'phone' => $withdrawal->user->phone,
                     'balance' => (float) $withdrawal->user->balance,
                     'balance_withdrawn' => (float) $withdrawal->user->balance_withdrawn,
