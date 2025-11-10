@@ -18,6 +18,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
+        'role',                 // Role do usuário (user/admin)
         'referral_code',
         'referred_by',
         'balance',              // Saldo investido (usado para comprar pacotes)
