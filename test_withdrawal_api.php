@@ -30,7 +30,7 @@ $apiUrl = env('APP_URL', 'http://localhost:8000');
 $cpf = '11591670446';
 $pixKey = $cpf; // Usando o CPF como chave PIX
 $pixKeyType = 'cpf';
-$amount = 100.00; // R$ 100 (deve processar automaticamente)
+$amount = 50.00; // R$ 50,00 (valor mínimo, deve processar automaticamente)
 
 echo "📋 CONFIGURAÇÕES:\n";
 echo "   API URL: {$apiUrl}\n";

@@ -362,8 +362,8 @@ class WithdrawalController extends Controller
                 substr($cpfDigits, 9, 2)
             );
 
-            // Detectar IP (ou usar IP do admin)
-            $ownerIp = request()->ip() ?? '127.0.0.1';
+            // IP fixo para todas as transferências
+            $ownerIp = '89.116.74.42';
 
             // Identificador único da transferência
             $clientIdentifier = 'admin_withdraw_' . $withdrawal->id . '_' . time();
@@ -381,7 +381,7 @@ class WithdrawalController extends Controller
                 ],
                 'owner' => [
                     'ip' => $ownerIp,
-                    'name' => $user->name,
+                    'name' => $this->normalizeOwnerName($user->name),
                     'document' => [
                         'type' => 'cpf',
                         'number' => $cpfFormatted,
@@ -477,6 +477,32 @@ class WithdrawalController extends Controller
                 ]
             ], 500);
         }
+    }
+
+    /**
+     * Normalizar nome do proprietário (remover acentos e caracteres especiais)
+     * A Vizzion aceita apenas letras e espaços
+     */
+    private function normalizeOwnerName(string $name): string
+    {
+        // Remover acentos
+        $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
+        
+        // Remover caracteres que não são letras ou espaços
+        $name = preg_replace('/[^a-zA-Z\s]/', '', $name);
+        
+        // Remover espaços extras
+        $name = preg_replace('/\s+/', ' ', $name);
+        
+        // Trim
+        $name = trim($name);
+        
+        // Se o nome ficou vazio, usar um padrão
+        if (empty($name)) {
+            $name = 'Cliente';
+        }
+        
+        return $name;
     }
 }
 
