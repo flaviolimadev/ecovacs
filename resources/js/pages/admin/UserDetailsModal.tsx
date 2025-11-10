@@ -118,10 +118,15 @@ interface UserDetailsModalProps {
 export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProps) {
   const [details, setDetails] = useState<UserDetails | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && userId) {
       loadDetails();
+    } else {
+      // Reset ao fechar
+      setDetails(null);
+      setError(null);
     }
   }, [open, userId]);
 
@@ -130,10 +135,16 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
 
     try {
       setLoading(true);
+      setError(null);
       const response = await api.get(`/admin/users/${userId}`);
       setDetails(response.data.data);
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error?.message || 
+                          error.response?.data?.message || 
+                          "Erro ao carregar detalhes do usuário";
+      setError(errorMessage);
       console.error("Erro ao carregar detalhes:", error);
+      console.error("Detalhes do erro:", error.response?.data);
     } finally {
       setLoading(false);
     }
@@ -173,6 +184,16 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="ml-3 text-gray-600">Carregando detalhes...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <XCircle className="w-12 h-12 text-red-500 mb-4" />
+            <p className="text-red-600 font-medium mb-2">Erro ao carregar detalhes</p>
+            <p className="text-gray-600 text-sm mb-4">{error}</p>
+            <Button onClick={loadDetails} variant="outline">
+              Tentar Novamente
+            </Button>
           </div>
         ) : details ? (
           <Tabs defaultValue="overview" className="w-full">
