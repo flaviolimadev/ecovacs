@@ -71,6 +71,10 @@ export default function AdminUsers() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [perPage, setPerPage] = useState(20);
+  const [total, setTotal] = useState(0);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -84,19 +88,33 @@ export default function AdminUsers() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentPage, search]);
 
   const loadData = async () => {
     try {
       setLoading(true);
 
       const [usersRes, statsRes] = await Promise.all([
-        api.get("/admin/users"),
+        api.get("/admin/users", { 
+          params: { 
+            page: currentPage,
+            per_page: perPage,
+            search: search || undefined
+          } 
+        }),
         api.get("/admin/users/stats"),
       ]);
       
       setUsers(usersRes.data.data);
       setStats(statsRes.data.data);
+      
+      // Atualizar informações de paginação
+      if (usersRes.data.meta) {
+        setCurrentPage(usersRes.data.meta.current_page);
+        setTotalPages(usersRes.data.meta.last_page);
+        setPerPage(usersRes.data.meta.per_page);
+        setTotal(usersRes.data.meta.total);
+      }
     } catch (error: any) {
 
 
@@ -128,19 +146,7 @@ export default function AdminUsers() {
   };
 
   const handleSearch = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get(`/admin/users?search=${search}`);
-      setUsers(res.data.data);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao buscar usuários.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    setCurrentPage(1); // Resetar para primeira página ao buscar
   };
 
   const handleEdit = (user: User) => {
@@ -214,13 +220,6 @@ export default function AdminUsers() {
       });
     }
   };
-
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase()) ||
-      user.referral_code.toLowerCase().includes(search.toLowerCase())
-  );
 
   if (loading && !users.length) {
     return (
@@ -324,7 +323,7 @@ export default function AdminUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
+                {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.id}</TableCell>
                     <TableCell>{user.name}</TableCell>
@@ -365,6 +364,57 @@ export default function AdminUsers() {
                 ))}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Paginação */}
+          <div className="flex items-center justify-between px-4 py-4 border-t">
+            <div className="text-sm text-gray-600">
+              Mostrando {users.length > 0 ? ((currentPage - 1) * perPage + 1) : 0} até {Math.min(currentPage * perPage, total)} de {total} usuários
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1 || loading}
+              >
+                Anterior
+              </Button>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      disabled={loading}
+                      className="w-10"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages || loading}
+              >
+                Próxima
+              </Button>
+            </div>
           </div>
         </Card>
       </div>
