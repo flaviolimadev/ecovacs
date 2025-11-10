@@ -212,13 +212,18 @@ class WebhookController extends Controller
                     $user->balance += $deposit->amount;
                     $user->save();
 
-                    // Registrar no ledger
+                    // Registrar no ledger (extrato)
+                    $balanceBefore = $user->balance - $deposit->amount; // já foi somado acima
                     Ledger::create([
                         'user_id' => $user->id,
-                        'ref_type' => 'DEPOSIT',
-                        'ref_id' => $deposit->id,
+                        'type' => 'DEPOSIT',
+                        'reference_type' => 'DEPOSIT',
+                        'reference_id' => $deposit->id,
                         'description' => "Depósito via PIX - R$ " . number_format($deposit->amount, 2, ',', '.'),
                         'amount' => $deposit->amount,
+                        'operation' => 'CREDIT',
+                        'balance_before' => $balanceBefore,
+                        'balance_after' => $user->balance,
                     ]);
 
                     Log::info('Depósito confirmado e creditado', [

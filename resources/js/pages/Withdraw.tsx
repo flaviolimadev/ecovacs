@@ -1,4 +1,4 @@
-import { ArrowLeft, Wallet, AlertCircle, Info, Copy, Check } from "lucide-react";
+import { ArrowLeft, Wallet, AlertCircle, Info, Copy, Check, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
+import api from "@/lib/api";
 
 const Withdraw = () => {
   const navigate = useNavigate();
@@ -18,27 +19,36 @@ const Withdraw = () => {
   const [pixKey, setPixKey] = useState("");
   const [pixKeyType, setPixKeyType] = useState<"cpf" | "email" | "phone" | "random">("cpf");
   const [step, setStep] = useState<"input" | "confirmation">("input");
+  const [loading, setLoading] = useState(false);
+  const [settings, setSettings] = useState<any>(null);
+  const [loadingSettings, setLoadingSettings] = useState(true);
 
-  const minAmount = 50;
-  const fee = 0.10; // 10%
+  const minAmount = settings?.min_amount || 50;
+  const fee = settings?.fee_percent || 0.10;
   const availableBalance = user?.balance_withdrawn || 0;
-  const hasWithdrawnToday = false; // TODO: Verificar com API
+  const hasWithdrawnToday = settings?.has_withdrawn_today || false;
+  const canWithdraw = settings?.can_withdraw || false;
 
-  const getCurrentDateTime = () => {
-    const now = new Date();
-    return {
-      hour: now.getHours(),
-      day: now.getDay(), // 0 = Sunday, 1 = Monday, etc.
-      dayName: now.toLocaleDateString('pt-BR', { weekday: 'long' }),
-      time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  // Carregar configurações de saque
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await api.get('/withdrawals/settings');
+        setSettings(response.data.data);
+      } catch (error) {
+        console.error('Erro ao carregar configurações de saque:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar as configurações de saque",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingSettings(false);
+      }
     };
-  };
 
-  const { hour, day, dayName, time } = getCurrentDateTime();
-  
-  const isWeekday = day >= 1 && day <= 5; // Monday to Friday
-  const isBusinessHours = hour >= 10 && hour < 17;
-  const canWithdraw = isWeekday && isBusinessHours && !hasWithdrawnToday;
+    fetchSettings();
+  }, []);
 
   const handleAmountChange = (value: string) => {
     const numericValue = value.replace(/[^\d.,]/g, '');
@@ -118,7 +128,7 @@ const Withdraw = () => {
     if (!canWithdraw) {
       toast({
         title: "Saque não disponível",
-        description: "Saques só podem ser realizados de segunda a sexta, das 10:00 às 17:00.",
+        description: settings?.validation_message || "Saques não disponíveis no momento.",
         variant: "destructive",
       });
       return;
@@ -172,12 +182,32 @@ const Withdraw = () => {
     setStep("confirmation");
   };
 
-  const handleConfirmWithdraw = () => {
-    toast({
-      title: "Saque solicitado!",
-      description: "Seu saque será processado em até 24h úteis.",
-    });
-    setTimeout(() => navigate("/profile"), 2000);
+  const handleConfirmWithdraw = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await api.post('/withdrawals', {
+        amount: getNumericAmount(),
+        cpf: cpf.replace(/\D/g, ''),
+        pix_key: pixKey,
+        pix_key_type: pixKeyType,
+      });
+
+      toast({
+        title: "Saque solicitado!",
+        description: response.data.data.message || "Seu saque será processado em breve.",
+      });
+      
+      setTimeout(() => navigate("/profile"), 2000);
+    } catch (error: any) {
+      console.error('Erro ao processar saque:', error);
+      toast({
+        title: "Erro ao processar saque",
+        description: error.response?.data?.error?.message || "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
   };
 
   const quickAmounts = [50, 100, 200, 500, 1000];
@@ -205,16 +235,26 @@ const Withdraw = () => {
 
       <div className="px-4 mt-6">
         {/* Status Alert */}
-        {!canWithdraw && (
+        {loadingSettings ? (
+          <Card className="p-6 text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+            <p className="text-sm text-muted-foreground mt-2">Carregando...</p>
+          </Card>
+        ) : !canWithdraw ? (
           <Alert className="mb-4 bg-red-50 border-red-200">
             <AlertCircle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-700 text-sm">
-              {!isWeekday && `Saques não são permitidos aos finais de semana. Hoje é ${dayName}.`}
-              {isWeekday && !isBusinessHours && `Saques só são permitidos das 10:00 às 17:00. Horário atual: ${time}.`}
-              {hasWithdrawnToday && "Você já realizou um saque hoje."}
+              {settings?.validation_message || "Saques não disponíveis no momento."}
             </AlertDescription>
           </Alert>
-        )}
+        ) : hasWithdrawnToday ? (
+          <Alert className="mb-4 bg-yellow-50 border-yellow-200">
+            <AlertCircle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-700 text-sm">
+              Você já realizou um saque hoje. Tente novamente amanhã.
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
         {step === "input" ? (
           <>
@@ -459,14 +499,23 @@ const Withdraw = () => {
                 variant="outline" 
                 onClick={() => setStep("input")}
                 className="flex-1"
+                disabled={loading}
               >
                 Voltar
               </Button>
               <Button 
                 onClick={handleConfirmWithdraw}
                 className="flex-1"
+                disabled={loading}
               >
-                Confirmar Saque
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  'Confirmar Saque'
+                )}
               </Button>
             </div>
           </>

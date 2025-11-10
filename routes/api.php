@@ -7,7 +7,9 @@ use App\Http\Controllers\API\V1\PlanController;
 use App\Http\Controllers\API\V1\InvestmentController;
 use App\Http\Controllers\API\V1\DailyRewardController;
 use App\Http\Controllers\API\V1\DepositController;
+use App\Http\Controllers\API\V1\WithdrawController;
 use App\Http\Controllers\API\V1\WebhookController;
+use App\Http\Controllers\API\V1\Admin\UserController as AdminUserController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -63,6 +65,23 @@ Route::prefix('v1')->group(function () {
         Route::get('/deposits/{id}', [DepositController::class, 'show']);
         Route::post('/deposits/{id}/check-status', [DepositController::class, 'checkStatus']);
 
+        // Withdrawals
+        Route::get('/withdrawals/settings', [WithdrawController::class, 'settings']);
+        Route::get('/withdrawals', [WithdrawController::class, 'index']);
+        Route::post('/withdrawals', [WithdrawController::class, 'store']);
+        Route::get('/withdrawals/{id}', [WithdrawController::class, 'show']);
+
+        // Admin Routes (protegidas por middleware admin)
+        Route::prefix('admin')->middleware('admin')->group(function () {
+            // Usuários
+            Route::get('/users/stats', [AdminUserController::class, 'stats']);
+            Route::get('/users', [AdminUserController::class, 'index']);
+            Route::get('/users/{id}', [AdminUserController::class, 'show']);
+            Route::put('/users/{id}', [AdminUserController::class, 'update']);
+            Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
+            Route::post('/users/{id}/adjust-balance', [AdminUserController::class, 'adjustBalance']);
+        });
+
         // Settings (TODO)
         Route::get('/settings', function () {
             return response()->json(['message' => 'Settings endpoint - TODO']);
@@ -71,11 +90,6 @@ Route::prefix('v1')->group(function () {
         // Statement (TODO)
         Route::get('/statement', function () {
             return response()->json(['message' => 'Statement endpoint - TODO']);
-        });
-        
-        // Withdrawals (TODO)
-        Route::post('/withdrawals', function () {
-            return response()->json(['message' => 'Withdrawal request - TODO']);
         });
     });
 });
