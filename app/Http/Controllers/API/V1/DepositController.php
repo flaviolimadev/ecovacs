@@ -115,7 +115,7 @@ class DepositController extends Controller
                     'user_id' => $user->id,
                     'platform' => 'Ecovacs',
                 ],
-                'callbackUrl' => route('api.v1.deposits.webhook'),
+                'callbackUrl' => route('api.v1.webhooks.vizzion'),
             ];
 
             $result = $this->vizzionService->createPixCharge($pixData);
@@ -256,77 +256,6 @@ class DepositController extends Controller
                 'created_at' => $deposit->created_at->toIso8601String(),
             ]
         ]);
-    }
-
-    /**
-     * Webhook para receber notificações de pagamento
-     */
-    public function webhook(Request $request)
-    {
-        Log::info('Webhook Vizzion recebido', $request->all());
-
-        try {
-            $transactionId = $request->input('transactionId') ?? $request->input('transaction_id');
-            $status = $request->input('status');
-            $externalReference = $request->input('externalReference') ?? $request->input('external_reference');
-
-            if (!$transactionId && !$externalReference) {
-                Log::warning('Webhook sem transaction_id ou externalReference', $request->all());
-                return response()->json(['message' => 'OK'], 200);
-            }
-
-            // Buscar depósito por transaction_id ou externalReference
-            $deposit = null;
-            
-            if ($transactionId) {
-                $deposit = Deposit::where('transaction_id', $transactionId)->first();
-            }
-            
-            if (!$deposit && $externalReference) {
-                // Extrair ID do externalReference (formato: DEP-123)
-                if (preg_match('/DEP-(\d+)/', $externalReference, $matches)) {
-                    $deposit = Deposit::find($matches[1]);
-                }
-            }
-
-            if (!$deposit) {
-                Log::warning('Depósito não encontrado no webhook', [
-                    'transaction_id' => $transactionId,
-                    'external_reference' => $externalReference,
-                ]);
-                return response()->json(['message' => 'OK'], 200);
-            }
-
-            // Se já foi pago, ignorar
-            if ($deposit->status === 'PAID') {
-                return response()->json(['message' => 'OK'], 200);
-            }
-
-            // Atualizar status baseado no retorno
-            if (in_array(strtoupper($status), ['PAID', 'APPROVED', 'CONFIRMED'])) {
-                DB::beginTransaction();
-                
-                $deposit->markAsPaid();
-                
-                DB::commit();
-
-                Log::info('Depósito confirmado via webhook', [
-                    'deposit_id' => $deposit->id,
-                    'user_id' => $deposit->user_id,
-                    'amount' => $deposit->amount,
-                ]);
-            }
-
-            return response()->json(['message' => 'OK'], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao processar webhook Vizzion', [
-                'error' => $e->getMessage(),
-                'payload' => $request->all(),
-            ]);
-
-            return response()->json(['message' => 'OK'], 200);
-        }
     }
 
     /**

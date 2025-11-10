@@ -7,6 +7,7 @@ use App\Http\Controllers\API\V1\PlanController;
 use App\Http\Controllers\API\V1\InvestmentController;
 use App\Http\Controllers\API\V1\DailyRewardController;
 use App\Http\Controllers\API\V1\DepositController;
+use App\Http\Controllers\API\V1\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -22,7 +23,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
     
     // Webhook Vizzion (público - não requer autenticação)
-    Route::post('/deposits/webhook', [DepositController::class, 'webhook'])->name('api.v1.deposits.webhook');
+    Route::post('/webhooks/vizzion', [WebhookController::class, 'vizzion'])->name('api.v1.webhooks.vizzion');
 
     // Rotas protegidas (requer autenticação)
     Route::middleware('auth:sanctum')->group(function () {
