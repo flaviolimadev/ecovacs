@@ -1,4 +1,4 @@
-import { ArrowLeft, Save, Clock, DollarSign, TrendingUp, Settings as SettingsIcon, Loader2, AlertCircle } from "lucide-react";
+import { Save, Clock, DollarSign, TrendingUp, Settings as SettingsIcon, Loader2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AdminHeader } from "@/components/AdminHeader";
 import api from "@/lib/api";
 
 interface WithdrawSettings {
@@ -119,23 +120,10 @@ export default function AdminSettings() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-4">
-            <button onClick={() => navigate("/admin/users")} className="p-2 hover:bg-white/10 rounded-full">
-              <ArrowLeft className="w-6 h-6" />
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold flex items-center gap-2">
-                <SettingsIcon className="w-8 h-8" />
-                Configurações do Sistema
-              </h1>
-              <p className="text-purple-100 mt-1">Gerencie todas as configurações da plataforma</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AdminHeader 
+        title="Configurações do Sistema" 
+        subtitle="Gerencie horários, taxas, limites e todas as configurações da plataforma"
+      />
 
       <div className="p-6 max-w-7xl mx-auto">
         <Alert className="mb-6 bg-blue-50 border-blue-200">

@@ -1,4 +1,4 @@
-import { ArrowLeft, Search, DollarSign, Clock, CheckCircle, XCircle, Eye, AlertCircle, Loader2 } from "lucide-react";
+import { Search, DollarSign, Clock, CheckCircle, XCircle, Eye, AlertCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { AdminHeader } from "@/components/AdminHeader";
 import api from "@/lib/api";
 
 interface Withdrawal {
@@ -195,25 +196,10 @@ export default function AdminWithdrawals() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate("/admin/users")} className="p-2 hover:bg-white/10 rounded-full">
-              <ArrowLeft className="w-6 h-6" />
-            </button>
-            <h1 className="text-2xl font-bold">Gerenciar Saques</h1>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/admin/settings")}
-            className="border-white/30 text-white hover:bg-white/20"
-          >
-            Configurações
-          </Button>
-        </div>
-      </div>
+      <AdminHeader 
+        title="Gerenciamento de Saques" 
+        subtitle="Aprove, processe ou rejeite solicitações de saque"
+      />
 
       <div className="p-6 max-w-7xl mx-auto">
         {/* Stats Cards */}
