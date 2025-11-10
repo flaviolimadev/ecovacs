@@ -59,6 +59,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Alias para referrer (compatibilidade)
+     */
+    public function referredBy(): BelongsTo
+    {
+        return $this->referrer();
+    }
+
+    /**
      * Get users referred by this user
      */
     public function referrals(): HasMany
