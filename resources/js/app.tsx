@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminWithdrawals from "./pages/admin/AdminWithdrawals";
 import "../css/app.css";
 
 const queryClient = new QueryClient();
@@ -98,6 +99,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminUsers />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/withdrawals"
+              element={
+                <AdminRoute>
+                  <AdminWithdrawals />
                 </AdminRoute>
               }
             />

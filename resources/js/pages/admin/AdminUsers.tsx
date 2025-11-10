@@ -245,14 +245,24 @@ export default function AdminUsers() {
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
         <div className="max-w-7xl mx-auto">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/")}
-            className="text-white hover:bg-white/20 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/")}
+              className="text-white hover:bg-white/20"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/admin/withdrawals")}
+              className="text-white border-white/30 hover:bg-white/20"
+            >
+              <DollarSign className="w-4 h-4 mr-2" />
+              Gerenciar Saques
+            </Button>
+          </div>
           <h1 className="text-3xl font-bold">Painel Administrativo</h1>
           <p className="text-blue-100 mt-2">Gerenciar usuários e configurações</p>
         </div>

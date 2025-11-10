@@ -10,6 +10,7 @@ use App\Http\Controllers\API\V1\DepositController;
 use App\Http\Controllers\API\V1\WithdrawController;
 use App\Http\Controllers\API\V1\WebhookController;
 use App\Http\Controllers\API\V1\Admin\UserController as AdminUserController;
+use App\Http\Controllers\API\V1\Admin\WithdrawalController as AdminWithdrawalController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -80,6 +81,14 @@ Route::prefix('v1')->group(function () {
             Route::put('/users/{id}', [AdminUserController::class, 'update']);
             Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
             Route::post('/users/{id}/adjust-balance', [AdminUserController::class, 'adjustBalance']);
+
+            // Saques (Withdrawals)
+            Route::get('/withdrawals/stats', [AdminWithdrawalController::class, 'stats']);
+            Route::get('/withdrawals', [AdminWithdrawalController::class, 'index']);
+            Route::get('/withdrawals/{id}', [AdminWithdrawalController::class, 'show']);
+            Route::post('/withdrawals/{id}/approve', [AdminWithdrawalController::class, 'approve']);
+            Route::post('/withdrawals/{id}/mark-as-paid', [AdminWithdrawalController::class, 'markAsPaid']);
+            Route::post('/withdrawals/{id}/reject', [AdminWithdrawalController::class, 'reject']);
         });
 
         // Settings (TODO)
