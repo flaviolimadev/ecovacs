@@ -17,7 +17,7 @@ const ActionButtonsGrid = () => {
         setReferralCode(response.data.data.referral_code);
         setReferralLink(response.data.data.referral_link);
       } catch (error) {
-        console.error("Failed to load referral data:", error);
+
       }
     };
 

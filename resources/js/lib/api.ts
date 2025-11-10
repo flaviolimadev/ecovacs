@@ -19,9 +19,6 @@ api.interceptors.request.use(
     const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('API Request:', config.method?.toUpperCase(), config.url, '- Token presente:', token.substring(0, 20) + '...');
-    } else {
-      console.warn('API Request:', config.method?.toUpperCase(), config.url, '- SEM TOKEN!');
     }
     return config;
   },
@@ -33,16 +30,11 @@ api.interceptors.request.use(
 // Response interceptor - trata erros
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.config.method?.toUpperCase(), response.config.url, '- Status:', response.status);
     return response;
   },
   (error) => {
-    console.error('API Error:', error.config?.method?.toUpperCase(), error.config?.url, '- Status:', error.response?.status);
-    console.error('API Error Data:', error.response?.data);
-    
     if (error.response?.status === 401) {
       // Token inválido ou expirado
-      console.warn('Token inválido! Limpando localStorage e redirecionando...');
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
       

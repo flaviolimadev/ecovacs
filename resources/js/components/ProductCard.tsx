@@ -48,7 +48,7 @@ const ProductCard = ({ id, name, image, price, dailyIncome, duration, totalRetur
         const count = investments.filter((inv: any) => inv.plan_id === id).length;
         setActivePurchases(count);
       } catch (error) {
-        console.error('Erro ao verificar limite de compras:', error);
+
       } finally {
         setCheckingLimit(false);
       }

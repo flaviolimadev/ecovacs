@@ -31,7 +31,7 @@ const ProductsSection = () => {
         setStandardPlans(data.standard || []);
         setCyclePlans(data.cycle || []);
       } catch (error) {
-        console.error('Erro ao carregar planos:', error);
+
       } finally {
         setIsLoading(false);
       }

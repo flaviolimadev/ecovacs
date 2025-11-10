@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('user', JSON.stringify(userData));
         })
         .catch(() => {
-          console.warn('❌ AuthContext: Token inválido, limpando...');
+
           // Token inválido
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user');
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         .finally(() => setIsLoading(false));
     } else {
-      console.log('ℹ️ AuthContext: Nenhum token/usuário salvo');
+
       setIsLoading(false);
     }
   }, []);
@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authAPI.logout();
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+
     } finally {
       setUser(null);
       setToken(null);
@@ -189,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
     } catch (error: any) {
-      console.error('Failed to fetch user:', error);
+
       throw error;
     }
   };

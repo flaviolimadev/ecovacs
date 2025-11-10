@@ -89,8 +89,7 @@ export default function AdminUsers() {
   const loadData = async () => {
     try {
       setLoading(true);
-      console.log('AdminUsers: Carregando dados...');
-      
+
       const [usersRes, statsRes] = await Promise.all([
         api.get("/admin/users"),
         api.get("/admin/users/stats"),
@@ -104,10 +103,9 @@ export default function AdminUsers() {
       setUsers(usersRes.data.data);
       setStats(statsRes.data.data);
     } catch (error: any) {
-      console.error("AdminUsers: Erro ao carregar dados:", error);
-      console.error("AdminUsers: Status da resposta:", error.response?.status);
-      console.error("AdminUsers: Dados da resposta:", error.response?.data);
-      
+
+
+
       if (error.response?.status === 403) {
         toast({
           title: "Acesso Negado",

@@ -14,7 +14,7 @@ const MembersList = () => {
         const response = await networkAPI.getTree();
         setMembers(response.data.data);
       } catch (error) {
-        console.error("Failed to load members:", error);
+
       } finally {
         setIsLoading(false);
       }

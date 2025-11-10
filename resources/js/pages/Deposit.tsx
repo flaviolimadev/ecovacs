@@ -89,9 +89,7 @@ const Deposit = () => {
       });
 
       const data = response.data.data;
-      
-      console.log('Resposta da API:', data);
-      
+
       // Processar base64 - adicionar prefixo se necessário
       let qrCodeBase64 = data.pix?.base64 || data.qrCode;
       if (qrCodeBase64 && !qrCodeBase64.startsWith('data:image')) {
@@ -111,10 +109,8 @@ const Deposit = () => {
         expires_at: data.expires_at,
         created_at: data.created_at,
       };
-      
-      console.log('Dados mapeados:', mappedData);
-      console.log('QR Code Base64 (primeiros 100 chars):', mappedData.qr_code_base64?.substring(0, 100));
-      
+
+
       setDepositData(mappedData);
       setStep("payment");
       

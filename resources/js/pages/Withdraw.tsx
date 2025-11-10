@@ -36,7 +36,7 @@ const Withdraw = () => {
         const response = await api.get('/withdrawals/settings');
         setSettings(response.data.data);
       } catch (error) {
-        console.error('Erro ao carregar configurações de saque:', error);
+
         toast({
           title: "Erro",
           description: "Não foi possível carregar as configurações de saque",
@@ -200,7 +200,7 @@ const Withdraw = () => {
       
       setTimeout(() => navigate("/profile"), 2000);
     } catch (error: any) {
-      console.error('Erro ao processar saque:', error);
+
       toast({
         title: "Erro ao processar saque",
         description: error.response?.data?.error?.message || "Tente novamente mais tarde.",

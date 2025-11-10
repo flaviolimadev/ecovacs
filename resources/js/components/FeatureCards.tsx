@@ -18,7 +18,7 @@ const FeatureCards = () => {
         const levelA = stats.levels.find((level: any) => level.level === 1);
         setDirectNetworkVolume(levelA?.total_deposits || 0);
       } catch (error) {
-        console.error('Erro ao carregar volume direto:', error);
+
         setDirectNetworkVolume(0);
       }
     };

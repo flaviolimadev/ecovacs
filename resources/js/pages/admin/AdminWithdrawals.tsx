@@ -93,7 +93,7 @@ export default function AdminWithdrawals() {
       setWithdrawals(withdrawalsRes.data.data);
       setStats(statsRes.data.data);
     } catch (error: any) {
-      console.error("Erro ao carregar saques:", error);
+
       toast({
         title: "Erro",
         description: error.response?.data?.error?.message || "Não foi possível carregar os saques.",
@@ -148,7 +148,7 @@ export default function AdminWithdrawals() {
       setActionDialogOpen(false);
       loadData();
     } catch (error: any) {
-      console.error("Erro na ação:", error);
+
       toast({
         title: "Erro",
         description: error.response?.data?.error?.message || "Não foi possível realizar a ação.",

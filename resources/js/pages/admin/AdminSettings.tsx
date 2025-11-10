@@ -62,7 +62,7 @@ export default function AdminSettings() {
       const response = await api.get("/admin/settings/withdraw");
       setWithdrawSettings(response.data.data);
     } catch (error: any) {
-      console.error("Erro ao carregar configurações:", error);
+
       toast({
         title: "Erro",
         description: error.response?.data?.error?.message || "Não foi possível carregar as configurações.",
@@ -84,7 +84,7 @@ export default function AdminSettings() {
         description: "Configurações de saque atualizadas.",
       });
     } catch (error: any) {
-      console.error("Erro ao salvar:", error);
+
       toast({
         title: "Erro",
         description: error.response?.data?.error?.message || "Não foi possível salvar as configurações.",
