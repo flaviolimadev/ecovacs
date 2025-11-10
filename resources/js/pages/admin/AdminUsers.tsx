@@ -95,11 +95,6 @@ export default function AdminUsers() {
         api.get("/admin/users/stats"),
       ]);
       
-      console.log('AdminUsers: Dados carregados com sucesso', {
-        users: usersRes.data.data.length,
-        stats: statsRes.data.data
-      });
-      
       setUsers(usersRes.data.data);
       setStats(statsRes.data.data);
     } catch (error: any) {

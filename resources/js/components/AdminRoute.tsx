@@ -20,14 +20,7 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  console.log('AdminRoute: Verificando permissões', { 
-    userId: user.id, 
-    userEmail: user.email, 
-    userRole: user.role 
-  });
-
   if (user.role !== "admin") {
-
     return <Navigate to="/" replace />;
   }
 

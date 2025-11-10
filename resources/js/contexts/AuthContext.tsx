@@ -51,21 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('user');
 
-    console.log('🔄 AuthContext: Inicializando...', {
-      hasToken: !!storedToken,
-      hasStoredUser: !!storedUser,
-      storedUserRaw: storedUser
-    });
-
     if (storedToken && storedUser) {
       const parsedUser = JSON.parse(storedUser);
-      console.log('👤 AuthContext: Usuário do localStorage', {
-        userId: parsedUser.id,
-        email: parsedUser.email,
-        role: parsedUser.role,
-        hasRole: 'role' in parsedUser,
-        parsedUser: parsedUser
-      });
 
       setToken(storedToken);
       setUser(parsedUser);
@@ -74,18 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authAPI.me()
         .then((response) => {
           const userData = response.data.data.user || response.data.data;
-          console.log('✅ AuthContext: /me atualizado', {
-            userId: userData.id,
-            email: userData.email,
-            role: userData.role,
-            hasRole: 'role' in userData,
-            userData: userData
-          });
           setUser(userData);
           localStorage.setItem('user', JSON.stringify(userData));
         })
         .catch(() => {
-
           // Token inválido
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user');
@@ -94,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         .finally(() => setIsLoading(false));
     } else {
-
       setIsLoading(false);
     }
   }, []);
@@ -103,14 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authAPI.login(email, password);
       const { user: userData, token: userToken } = response.data.data;
-
-      console.log('🔐 AuthContext: Login bem-sucedido', {
-        userId: userData.id,
-        email: userData.email,
-        role: userData.role,
-        hasRole: 'role' in userData,
-        userData: userData
-      });
 
       setUser(userData);
       setToken(userToken);
@@ -168,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authAPI.logout();
     } catch (error) {
-
+      // Silently ignore logout errors
     } finally {
       setUser(null);
       setToken(null);
@@ -189,7 +159,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
     } catch (error: any) {
-
       throw error;
     }
   };

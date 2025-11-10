@@ -17,5 +17,15 @@ export default defineConfig({
     esbuild: {
         jsx: 'automatic',
         jsxDev: false,
+        drop: ['console', 'debugger'], // Remove console e debugger em produção
+    },
+    build: {
+        minify: 'esbuild',
+        rollupOptions: {
+            output: {
+                // Suprimir warnings de chunks grandes
+                manualChunks: undefined,
+            },
+        },
     },
 });
