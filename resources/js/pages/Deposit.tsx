@@ -25,6 +25,7 @@ const Deposit = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [amount, setAmount] = useState("");
+  const [cpf, setCpf] = useState("");
   const [step, setStep] = useState<"input" | "payment">("input");
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,6 +44,21 @@ const Deposit = () => {
     return parseFloat(amount.replace(',', '.')) || 0;
   };
 
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    return value;
+  };
+
+  const handleCPFChange = (value: string) => {
+    setCpf(formatCPF(value));
+  };
+
   const handleContinue = async () => {
     const numAmount = getNumericAmount();
     
@@ -55,14 +71,38 @@ const Deposit = () => {
       return;
     }
 
+    if (!cpf || cpf.replace(/\D/g, '').length !== 11) {
+      toast({
+        title: "CPF inválido",
+        description: "Por favor, informe um CPF válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       
       const response = await api.post('/v1/deposits', {
-        amount: numAmount
+        amount: numAmount,
+        cpf: cpf.replace(/\D/g, '') // Remove formatação do CPF
       });
 
-      setDepositData(response.data.data);
+      const data = response.data.data;
+      
+      // Mapear resposta para o formato esperado
+      setDepositData({
+        id: data.deposit_id,
+        amount: data.amount,
+        status: data.status,
+        transaction_id: data.transactionId || data.provider_ref,
+        qr_code: data.pix?.code || data.copia_cola,
+        qr_code_base64: data.pix?.base64 || data.qrCode,
+        qr_code_image: data.pix?.image,
+        order_url: data.order?.url,
+        expires_at: data.expires_at,
+        created_at: data.created_at,
+      });
       setStep("payment");
       
       toast({
@@ -188,6 +228,19 @@ const Deposit = () => {
                 </div>
               </div>
 
+              {/* CPF Input */}
+              <div className="mt-6">
+                <Label htmlFor="cpf" className="text-sm text-muted-foreground">CPF do Titular *</Label>
+                <Input
+                  id="cpf"
+                  type="text"
+                  placeholder="000.000.000-00"
+                  value={cpf}
+                  onChange={(e) => handleCPFChange(e.target.value)}
+                  maxLength={14}
+                  className="mt-1 h-12"
+                />
+              </div>
             </Card>
 
             {/* Info Card */}
@@ -204,7 +257,7 @@ const Deposit = () => {
             <Button 
               onClick={handleContinue} 
               className="w-full mt-6 h-12 text-base"
-              disabled={!amount || getNumericAmount() < minAmount || loading}
+              disabled={!amount || getNumericAmount() < minAmount || !cpf || cpf.replace(/\D/g, '').length !== 11 || loading}
             >
               {loading ? (
                 <>
@@ -305,6 +358,7 @@ const Deposit = () => {
                   setStep("input");
                   setDepositData(null);
                   setAmount("");
+                  setCpf("");
                 }}
                 className="w-full"
               >

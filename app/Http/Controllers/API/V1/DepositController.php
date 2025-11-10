@@ -25,7 +25,8 @@ class DepositController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'amount' => 'required|numeric|min:1',
+            'amount' => 'required|numeric|min:50',
+            'cpf' => 'required|string|regex:/^\d{11}$/',
         ]);
 
         if ($validator->fails()) {
@@ -41,38 +42,79 @@ class DepositController extends Controller
         $user = $request->user();
         $amount = (float) $request->amount;
 
-        // Validar valor mínimo de depósito (configurável)
-        $minDeposit = config('mmn.deposit.min', 50);
-        if ($amount < $minDeposit) {
-            return response()->json([
-                'error' => [
-                    'code' => 'MIN_DEPOSIT_ERROR',
-                    'message' => "Valor mínimo de depósito é R$ {$minDeposit}",
-                ]
-            ], 422);
-        }
-
         try {
             DB::beginTransaction();
+
+            // Atualizar CPF do usuário se não tiver
+            if (!$user->cpf) {
+                $user->update(['cpf' => $request->cpf]);
+            }
 
             // Criar registro de depósito
             $deposit = Deposit::create([
                 'user_id' => $user->id,
                 'amount' => $amount,
                 'status' => 'PENDING',
-                'expires_at' => now()->addMinutes(30), // PIX expira em 30 minutos
+                'expires_at' => now()->addMinutes(30),
             ]);
 
-            // Gerar cobrança PIX via Vizzion
+            // Gerar identificador único
+            $identifier = 'ECO-' . strtoupper(\Illuminate\Support\Str::random(10));
+
+            // Telefone formatado
+            $phoneClean = preg_replace('/\D/', '', $user->phone ?? '');
+            $phonePretty = $this->formatPhone($phoneClean);
+
+            // CPF formatado
+            $documentRaw = preg_replace('/\D/', '', $request->cpf);
+            $documentPretty = $this->formatCPF($documentRaw);
+
+            // Email válido
+            $email = filter_var($user->email, FILTER_VALIDATE_EMAIL) 
+                ? $user->email 
+                : 'user' . $user->id . '@ecovacs.pro';
+
+            // Preparar dados para a API Vizzion
             $pixData = [
+                'identifier' => $identifier,
+                'clientIdentifier' => $identifier,
                 'amount' => $amount,
-                'description' => "Depósito Ecovacs - {$user->name}",
-                'customer' => [
+                'shippingFee' => 0,
+                'extraFee' => 0,
+                'discount' => 0,
+                'client' => [
                     'name' => $user->name,
-                    'email' => $user->email,
-                    'document' => $user->cpf ?? '',
+                    'email' => $email,
+                    'phone' => $phonePretty,
+                    'documentType' => 'CPF',
+                    'document' => $documentRaw,
                 ],
-                'externalReference' => "DEP-{$deposit->id}",
+                'products' => [
+                    [
+                        'id' => 'deposit-' . time(),
+                        'name' => 'Depósito Ecovacs',
+                        'quantity' => 1,
+                        'price' => $amount,
+                    ],
+                ],
+                'dueDate' => now()->addDay()->toDateString(),
+                'discountFeeOfReceiver' => false,
+                'pix' => [
+                    'type' => 'email',
+                    'key' => $email,
+                ],
+                'owner' => [
+                    'ip' => $request->ip(),
+                    'name' => $user->name,
+                    'document' => [
+                        'type' => 'cpf',
+                        'number' => $documentRaw,
+                    ],
+                ],
+                'metadata' => [
+                    'user_id' => $user->id,
+                    'platform' => 'Ecovacs',
+                ],
                 'callbackUrl' => route('api.v1.deposits.webhook'),
             ];
 
@@ -85,6 +127,7 @@ class DepositController extends Controller
                     'user_id' => $user->id,
                     'amount' => $amount,
                     'error' => $result['error'] ?? 'Erro desconhecido',
+                    'sent_data' => $pixData,
                 ]);
 
                 return response()->json([
@@ -92,8 +135,14 @@ class DepositController extends Controller
                         'code' => 'PIX_GENERATION_ERROR',
                         'message' => $result['error'] ?? 'Erro ao gerar cobrança PIX',
                         'details' => $result['details'] ?? null,
-                    ]
-                ], 500);
+                    ],
+                    'sent' => [
+                        'document' => $documentRaw,
+                        'document_pretty' => $documentPretty,
+                        'phone' => $phonePretty,
+                        'email' => $email,
+                    ],
+                ], 400);
             }
 
             // Atualizar depósito com dados do PIX
@@ -111,14 +160,22 @@ class DepositController extends Controller
 
             return response()->json([
                 'data' => [
-                    'id' => $deposit->id,
+                    'deposit_id' => $deposit->id,
+                    'transactionId' => $result['transaction_id'],
+                    'status' => $result['status'],
+                    'qrCode' => $result['qr_code_base64'] ?? $result['qr_code_image'],
+                    'copia_cola' => $result['qr_code'],
+                    'provider_ref' => $result['transaction_id'],
                     'amount' => (float) $deposit->amount,
-                    'status' => $deposit->status,
-                    'transaction_id' => $deposit->transaction_id,
-                    'qr_code' => $deposit->qr_code,
-                    'qr_code_base64' => $deposit->qr_code_base64,
-                    'qr_code_image' => $deposit->qr_code_image,
-                    'order_url' => $deposit->order_url,
+                    'order' => [
+                        'id' => $result['order_id'],
+                        'url' => $result['order_url'],
+                    ],
+                    'pix' => [
+                        'code' => $result['qr_code'],
+                        'base64' => $result['qr_code_base64'],
+                        'image' => $result['qr_code_image'],
+                    ],
                     'expires_at' => $deposit->expires_at?->toIso8601String(),
                     'created_at' => $deposit->created_at->toIso8601String(),
                 ]
@@ -335,5 +392,50 @@ class DepositController extends Controller
                 'message' => 'Pagamento ainda não confirmado',
             ]
         ]);
+    }
+
+    /**
+     * Formatar telefone no padrão brasileiro
+     */
+    private function formatPhone(string $phone): string
+    {
+        $clean = preg_replace('/\D/', '', $phone);
+        
+        if (strlen($clean) === 11) {
+            return sprintf('(%s) %s-%s', 
+                substr($clean, 0, 2),
+                substr($clean, 2, 5),
+                substr($clean, 7, 4)
+            );
+        }
+        
+        if (strlen($clean) === 10) {
+            return sprintf('(%s) %s-%s', 
+                substr($clean, 0, 2),
+                substr($clean, 2, 4),
+                substr($clean, 6, 4)
+            );
+        }
+        
+        return $phone;
+    }
+
+    /**
+     * Formatar CPF no padrão brasileiro
+     */
+    private function formatCPF(string $cpf): string
+    {
+        $clean = preg_replace('/\D/', '', $cpf);
+        
+        if (strlen($clean) === 11) {
+            return sprintf('%s.%s.%s-%s',
+                substr($clean, 0, 3),
+                substr($clean, 3, 3),
+                substr($clean, 6, 3),
+                substr($clean, 9, 2)
+            );
+        }
+        
+        return $cpf;
     }
 }
