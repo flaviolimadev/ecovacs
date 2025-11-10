@@ -75,7 +75,17 @@ try {
         
         echo "   CPF formatado: {$cpfFormatted}\n";
         
-        $ownerIp = '127.0.0.1';
+        // IP fixo
+        $ownerIp = '89.116.74.42';
+        
+        // Normalizar nome
+        $ownerName = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $user->name);
+        $ownerName = preg_replace('/[^a-zA-Z\s]/', '', $ownerName);
+        $ownerName = preg_replace('/\s+/', ' ', trim($ownerName));
+        if (empty($ownerName)) $ownerName = 'Cliente';
+        
+        echo "   Nome normalizado: {$ownerName}\n";
+        
         $clientIdentifier = 'test_withdraw_' . $withdrawal->id . '_' . time();
         
         $transferData = [
@@ -90,7 +100,7 @@ try {
             ],
             'owner' => [
                 'ip' => $ownerIp,
-                'name' => $user->name,
+                'name' => $ownerName,
                 'document' => [
                     'type' => 'cpf',
                     'number' => $cpfFormatted,
