@@ -29,10 +29,12 @@ import {
   User,
   TrendingUp,
   Shield,
-  DollarSign
+  DollarSign,
+  Eye
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AdminHeader } from "@/components/AdminHeader";
+import { UserDetailsModal } from "./UserDetailsModal";
 
 interface User {
   id: number;
@@ -78,6 +80,8 @@ export default function AdminUsers() {
   const [total, setTotal] = useState(0);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [detailsUserId, setDetailsUserId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
     email: "",
@@ -365,8 +369,20 @@ export default function AdminUsers() {
                       <div className="flex gap-2 justify-end">
                         <Button
                           size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setDetailsUserId(user.id);
+                            setDetailsDialogOpen(true);
+                          }}
+                          title="Ver Detalhes"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => handleEdit(user)}
+                          title="Editar"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -374,6 +390,7 @@ export default function AdminUsers() {
                           size="sm"
                           variant="destructive"
                           onClick={() => handleDelete(user.id)}
+                          title="Deletar"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -509,6 +526,16 @@ export default function AdminUsers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Detalhes do Usuário */}
+      <UserDetailsModal
+        userId={detailsUserId}
+        open={detailsDialogOpen}
+        onClose={() => {
+          setDetailsDialogOpen(false);
+          setDetailsUserId(null);
+        }}
+      />
     </div>
   );
 }
