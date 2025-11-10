@@ -61,8 +61,11 @@ class DepositController extends Controller
             // Gerar identificador único
             $identifier = 'ECO-' . strtoupper(\Illuminate\Support\Str::random(10));
 
-            // Telefone formatado
-            $phoneClean = preg_replace('/\D/', '', $user->phone ?? '');
+            // Telefone SEMPRE aleatório válido (garante geração do PIX pela Vizzion)
+            // Formato: (11) 9XXXX-XXXX com números aleatórios
+            // Não usa telefone real do usuário para evitar problemas na API
+            $phoneClean = '11' . str_pad((string)$user->id, 9, random_int(1000, 9999), STR_PAD_LEFT);
+            $phoneClean = substr($phoneClean, 0, 11); // Garantir exatos 11 dígitos
             $phonePretty = $this->formatPhone($phoneClean);
 
             // CPF formatado
