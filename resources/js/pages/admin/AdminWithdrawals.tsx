@@ -197,11 +197,21 @@ export default function AdminWithdrawals() {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <button onClick={() => navigate("/admin/users")} className="p-2 hover:bg-white/10 rounded-full">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-2xl font-bold">Gerenciar Saques</h1>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate("/admin/users")} className="p-2 hover:bg-white/10 rounded-full">
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-2xl font-bold">Gerenciar Saques</h1>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/admin/settings")}
+            className="border-white/30 text-white hover:bg-white/20"
+          >
+            Configurações
+          </Button>
         </div>
       </div>
 

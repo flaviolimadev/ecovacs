@@ -254,14 +254,24 @@ export default function AdminUsers() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/admin/withdrawals")}
-              className="text-white border-white/30 hover:bg-white/20"
-            >
-              <DollarSign className="w-4 h-4 mr-2" />
-              Gerenciar Saques
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/admin/withdrawals")}
+                className="text-white border-white/30 hover:bg-white/20"
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Saques
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/admin/settings")}
+                className="text-white border-white/30 hover:bg-white/20"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Configurações
+              </Button>
+            </div>
           </div>
           <h1 className="text-3xl font-bold">Painel Administrativo</h1>
           <p className="text-blue-100 mt-2">Gerenciar usuários e configurações</p>

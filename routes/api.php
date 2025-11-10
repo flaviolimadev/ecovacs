@@ -11,6 +11,7 @@ use App\Http\Controllers\API\V1\WithdrawController;
 use App\Http\Controllers\API\V1\WebhookController;
 use App\Http\Controllers\API\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\API\V1\Admin\WithdrawalController as AdminWithdrawalController;
+use App\Http\Controllers\API\V1\Admin\SettingsController as AdminSettingsController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -89,6 +90,13 @@ Route::prefix('v1')->group(function () {
             Route::post('/withdrawals/{id}/approve', [AdminWithdrawalController::class, 'approve']);
             Route::post('/withdrawals/{id}/mark-as-paid', [AdminWithdrawalController::class, 'markAsPaid']);
             Route::post('/withdrawals/{id}/reject', [AdminWithdrawalController::class, 'reject']);
+
+            // Configurações (Settings)
+            Route::get('/settings', [AdminSettingsController::class, 'index']);
+            Route::put('/settings', [AdminSettingsController::class, 'update']);
+            Route::put('/settings/bulk', [AdminSettingsController::class, 'updateBulk']);
+            Route::get('/settings/withdraw', [AdminSettingsController::class, 'getWithdrawSettings']);
+            Route::put('/settings/withdraw', [AdminSettingsController::class, 'updateWithdrawSettings']);
         });
 
         // Settings (TODO)

@@ -19,6 +19,7 @@ import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminWithdrawals from "./pages/admin/AdminWithdrawals";
+import AdminSettings from "./pages/admin/AdminSettings";
 import "../css/app.css";
 
 const queryClient = new QueryClient();
@@ -107,6 +108,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminWithdrawals />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/settings"
+              element={
+                <AdminRoute>
+                  <AdminSettings />
                 </AdminRoute>
               }
             />
