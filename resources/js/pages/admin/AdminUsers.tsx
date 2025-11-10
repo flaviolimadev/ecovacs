@@ -71,6 +71,7 @@ export default function AdminUsers() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // Termo digitado (com debounce)
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -86,9 +87,18 @@ export default function AdminUsers() {
     balance_withdrawn: "",
   });
 
+  // Debounce para busca (aguarda 500ms após parar de digitar)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(search);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [search]);
+
   useEffect(() => {
     loadData();
-  }, [currentPage, search]);
+  }, [currentPage, searchTerm]);
 
   const loadData = async () => {
     try {
@@ -99,7 +109,7 @@ export default function AdminUsers() {
           params: { 
             page: currentPage,
             per_page: perPage,
-            search: search || undefined
+            search: searchTerm || undefined
           } 
         }),
         api.get("/admin/users/stats"),
@@ -146,7 +156,14 @@ export default function AdminUsers() {
   };
 
   const handleSearch = async () => {
+    setSearchTerm(search); // Aplica busca imediatamente
     setCurrentPage(1); // Resetar para primeira página ao buscar
+  };
+
+  const handleClear = () => {
+    setSearch("");
+    setSearchTerm("");
+    setCurrentPage(1);
   };
 
   const handleEdit = (user: User) => {
@@ -299,8 +316,10 @@ export default function AdminUsers() {
                 className="pl-10"
               />
             </div>
-            <Button onClick={handleSearch}>Buscar</Button>
-            <Button onClick={loadData} variant="outline">
+            <Button onClick={handleSearch} disabled={loading}>
+              Buscar
+            </Button>
+            <Button onClick={handleClear} variant="outline" disabled={loading}>
               Limpar
             </Button>
           </div>
