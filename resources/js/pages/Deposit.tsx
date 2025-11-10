@@ -90,8 +90,10 @@ const Deposit = () => {
 
       const data = response.data.data;
       
+      console.log('Resposta da API:', data);
+      
       // Mapear resposta para o formato esperado
-      setDepositData({
+      const mappedData = {
         id: data.deposit_id,
         amount: data.amount,
         status: data.status,
@@ -102,7 +104,11 @@ const Deposit = () => {
         order_url: data.order?.url,
         expires_at: data.expires_at,
         created_at: data.created_at,
-      });
+      };
+      
+      console.log('Dados mapeados:', mappedData);
+      
+      setDepositData(mappedData);
       setStep("payment");
       
       toast({
@@ -280,45 +286,85 @@ const Deposit = () => {
 
               <div className="space-y-4">
                 {/* QR Code */}
-                {depositData?.qr_code_base64 ? (
-                  <div className="bg-white rounded-xl p-4 flex items-center justify-center border-2 border-border">
-                    <img 
-                      src={depositData.qr_code_base64} 
-                      alt="QR Code PIX" 
-                      className="w-64 h-64"
-                    />
-                  </div>
-                ) : depositData?.qr_code_image ? (
-                  <div className="bg-white rounded-xl p-4 flex items-center justify-center border-2 border-border">
-                    <img 
-                      src={depositData.qr_code_image} 
-                      alt="QR Code PIX" 
-                      className="w-64 h-64"
-                    />
-                  </div>
-                ) : (
-                  <div className="bg-muted/30 rounded-xl p-8 flex items-center justify-center border-2 border-dashed border-border">
-                    <div className="text-center">
-                      <QrCode className="w-48 h-48 mx-auto text-muted-foreground/30" />
-                      <p className="text-xs text-muted-foreground mt-2">QR Code não disponível</p>
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-center block">Escaneie o QR Code</Label>
+                  {depositData?.qr_code_base64 ? (
+                    <div className="bg-white rounded-xl p-4 flex items-center justify-center border-2 border-border">
+                      <img 
+                        src={depositData.qr_code_base64} 
+                        alt="QR Code PIX" 
+                        className="w-64 h-64 object-contain"
+                      />
                     </div>
+                  ) : depositData?.qr_code_image ? (
+                    <div className="bg-white rounded-xl p-4 flex items-center justify-center border-2 border-border">
+                      <img 
+                        src={depositData.qr_code_image} 
+                        alt="QR Code PIX" 
+                        className="w-64 h-64 object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-muted/30 rounded-xl p-8 flex items-center justify-center border-2 border-dashed border-border">
+                      <div className="text-center">
+                        <QrCode className="w-48 h-48 mx-auto text-muted-foreground/30" />
+                        <p className="text-xs text-muted-foreground mt-2">Gerando QR Code...</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Separador */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
                   </div>
-                )}
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      ou
+                    </span>
+                  </div>
+                </div>
 
                 {/* PIX Copia e Cola */}
-                {depositData?.qr_code && (
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">ou copie o código:</Label>
-                    <Button
-                      variant="default"
-                      className="w-full"
-                      onClick={handleCopyPixCode}
-                    >
-                      {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                      {copied ? 'Código Copiado!' : 'Copiar Código PIX'}
-                    </Button>
-                  </div>
-                )}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold">Código PIX Copia e Cola</Label>
+                  
+                  {depositData?.qr_code ? (
+                    <>
+                      {/* Mostrar código (truncado) */}
+                      <div className="bg-muted/50 p-3 rounded-lg border border-border">
+                        <p className="text-xs font-mono break-all text-muted-foreground">
+                          {depositData.qr_code.substring(0, 100)}...
+                        </p>
+                      </div>
+                      
+                      {/* Botão copiar */}
+                      <Button
+                        variant="default"
+                        size="lg"
+                        className="w-full"
+                        onClick={handleCopyPixCode}
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="w-5 h-5 mr-2" />
+                            Código Copiado!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-5 h-5 mr-2" />
+                            Copiar Código PIX
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground text-center py-4">
+                      Código PIX não disponível
+                    </p>
+                  )}
+                </div>
               </div>
             </Card>
 
