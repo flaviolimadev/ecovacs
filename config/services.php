@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'vizzionpay' => [
+        'base_url' => env('PAYMENT_API_URL', 'https://api.vizzionpay.com.br'),
+        'api_key' => env('PAYMENT_API_KEY'),
+        'api_secret' => env('PAYMENT_API_SECRET'),
+    ],
+
+    'vizzion' => [
+        'api_url' => env('PAYMENT_API_URL', 'https://api.vizzionpay.com.br'),
+        'api_key' => env('PAYMENT_API_KEY'),
+        'api_secret' => env('PAYMENT_API_SECRET'),
+    ],
+
 ];

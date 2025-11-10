@@ -6,6 +6,7 @@ use App\Http\Controllers\API\V1\NetworkController;
 use App\Http\Controllers\API\V1\PlanController;
 use App\Http\Controllers\API\V1\InvestmentController;
 use App\Http\Controllers\API\V1\DailyRewardController;
+use App\Http\Controllers\API\V1\DepositController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -19,6 +20,9 @@ Route::prefix('v1')->group(function () {
     // Rotas públicas (sem autenticação)
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
+    
+    // Webhook Vizzion (público - não requer autenticação)
+    Route::post('/deposits/webhook', [DepositController::class, 'webhook'])->name('api.v1.deposits.webhook');
 
     // Rotas protegidas (requer autenticação)
     Route::middleware('auth:sanctum')->group(function () {
@@ -51,6 +55,12 @@ Route::prefix('v1')->group(function () {
         // Daily Reward
         Route::get('/daily-reward/status', [DailyRewardController::class, 'status']);
         Route::post('/daily-reward/claim', [DailyRewardController::class, 'claim']);
+        
+        // Deposits
+        Route::get('/deposits', [DepositController::class, 'index']);
+        Route::post('/deposits', [DepositController::class, 'store']);
+        Route::get('/deposits/{id}', [DepositController::class, 'show']);
+        Route::post('/deposits/{id}/check-status', [DepositController::class, 'checkStatus']);
 
         // Settings (TODO)
         Route::get('/settings', function () {
