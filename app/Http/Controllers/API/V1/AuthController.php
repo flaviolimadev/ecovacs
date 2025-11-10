@@ -61,6 +61,7 @@ class AuthController extends Controller
                         'name' => $user->name,
                         'email' => $user->email,
                         'phone' => $user->phone,
+                        'role' => $user->role ?? 'user',
                         'referral_code' => $user->referral_code,
                         'balance' => (float) $user->balance,                    // Saldo para investir
                         'balance_withdrawn' => (float) $user->balance_withdrawn, // Saldo para sacar
@@ -108,6 +109,7 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'phone' => $user->phone,
+                    'role' => $user->role ?? 'user',
                     'referral_code' => $user->referral_code,
                     'balance' => (float) $user->balance,                    // Saldo para investir
                     'balance_withdrawn' => (float) $user->balance_withdrawn, // Saldo para sacar
@@ -145,6 +147,7 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'phone' => $user->phone,
+                    'role' => $user->role ?? 'user',
                     'referral_code' => $user->referral_code,
                     'balance' => (float) $user->balance,                    // Saldo para investir
                     'balance_withdrawn' => (float) $user->balance_withdrawn, // Saldo para sacar
