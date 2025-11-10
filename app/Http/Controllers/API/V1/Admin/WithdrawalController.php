@@ -16,7 +16,7 @@ class WithdrawalController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Withdrawal::with('user:id,name,email,cpf');
+        $query = Withdrawal::with('user:id,name,email');
 
         // Filtros
         if ($request->has('status')) {
@@ -31,9 +31,8 @@ class WithdrawalController extends Controller
             $search = $request->search;
             $query->whereHas('user', function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%")
-                  ->orWhere('cpf', 'ilike', "%{$search}%");
-            });
+                  ->orWhere('email', 'ilike', "%{$search}%");
+            })->orWhere('cpf', 'ilike', "%{$search}%");
         }
 
         // Ordenação
