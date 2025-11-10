@@ -25,18 +25,16 @@ sed -i 's/namespace App\\Http\\Controllers\\Api\\V1;/namespace App\\Http\\Contro
 
 # 6. Inserir validação de ciclo após a linha 87 (após "try {")
 sed -i '87 a\
-            // 1. Validar se o usuário tem pelo menos 1 ciclo finalizado\
-            $finishedCyclesCount = Cycle::where("user_id", $user->id)\
-                ->where("status", "FINISHED")\
-                ->count();\
+            // 1. Validar se o usuário tem pelo menos 1 ciclo (qualquer status)\
+            $cyclesCount = Cycle::where("user_id", $user->id)->count();\
 \
-            if ($finishedCyclesCount < 1) {\
+            if ($cyclesCount < 1) {\
                 return response()->json([\
                     "error" => [\
-                        "code" => "NO_FINISHED_CYCLES",\
-                        "message" => "Você precisa ter pelo menos 1 ciclo finalizado para realizar saques.",\
+                        "code" => "NO_CYCLES",\
+                        "message" => "Você precisa ter pelo menos 1 ciclo/investimento para realizar saques.",\
                         "details" => [\
-                            "finished_cycles" => $finishedCyclesCount,\
+                            "cycles_count" => $cyclesCount,\
                             "required_cycles" => 1,\
                         ]\
                     ]\
@@ -55,7 +53,7 @@ sed -n '87,110p' app/Http/Controllers/API/V1/WithdrawController.php
 
 echo ""
 echo "✅ VALIDAÇÃO DE CICLO ADICIONADA!"
-echo "Teste fazer um saque SEM ciclo finalizado - deve dar erro NO_FINISHED_CYCLES"
+echo "Teste fazer um saque SEM nenhum investimento - deve dar erro NO_CYCLES"
 
 ========================================
 ALTERNATIVA: COPIAR ARQUIVO MANUALMENTE
@@ -77,11 +75,11 @@ TESTE
 
 Após aplicar, teste no app:
 
-1. Com usuário SEM ciclo finalizado:
+1. Com usuário SEM nenhum investimento/ciclo:
    - Tentar fazer saque
-   - Deve retornar erro: "Você precisa ter pelo menos 1 ciclo finalizado para realizar saques."
+   - Deve retornar erro: "Você precisa ter pelo menos 1 ciclo/investimento para realizar saques."
 
-2. Com usuário COM ciclo finalizado:
+2. Com usuário COM pelo menos 1 investimento (qualquer status):
    - Fazer saque normalmente
    - Deve funcionar
 
@@ -94,7 +92,7 @@ php artisan tinker
 >>> \App\Models\Cycle::where('user_id', 1)->get(['id', 'status', 'started_at', 'ends_at']);
 >>> exit
 
-# Criar um ciclo FINISHED para teste (se necessário)
+# Criar um ciclo para teste (qualquer status funciona)
 php artisan tinker
 >>> $cycle = new \App\Models\Cycle();
 >>> $cycle->user_id = 1;
@@ -102,10 +100,10 @@ php artisan tinker
 >>> $cycle->amount = 100;
 >>> $cycle->type = 'DAILY';
 >>> $cycle->duration_days = 30;
->>> $cycle->started_at = now()->subDays(31);
->>> $cycle->ends_at = now()->subDay();
->>> $cycle->status = 'FINISHED';
->>> $cycle->days_paid = 30;
+>>> $cycle->started_at = now();
+>>> $cycle->ends_at = now()->addDays(30);
+>>> $cycle->status = 'ACTIVE'; // Qualquer status funciona: ACTIVE, FINISHED, CANCELLED, etc.
+>>> $cycle->days_paid = 0;
 >>> $cycle->save();
 >>> exit
 

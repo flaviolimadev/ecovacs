@@ -1,8 +1,8 @@
-# ✅ Validação de Ciclo Finalizado para Saques
+# ✅ Validação de Ciclo para Saques
 
 ## 📋 O que foi implementado
 
-Foi adicionada uma **validação obrigatória** no sistema de saques que impede usuários de realizar saques antes de completarem pelo menos **1 ciclo**.
+Foi adicionada uma **validação obrigatória** no sistema de saques que impede usuários de realizar saques antes de terem pelo menos **1 ciclo/investimento** (independente do status).
 
 ---
 
@@ -17,18 +17,16 @@ use App\Models\Cycle;
 
 #### 2. Nova validação no método `store()`:
 ```php
-// 1. Validar se o usuário tem pelo menos 1 ciclo finalizado
-$finishedCyclesCount = Cycle::where('user_id', $user->id)
-    ->where('status', 'FINISHED')
-    ->count();
+// 1. Validar se o usuário tem pelo menos 1 ciclo (qualquer status)
+$cyclesCount = Cycle::where('user_id', $user->id)->count();
 
-if ($finishedCyclesCount < 1) {
+if ($cyclesCount < 1) {
     return response()->json([
         'error' => [
-            'code' => 'NO_FINISHED_CYCLES',
-            'message' => 'Você precisa ter pelo menos 1 ciclo finalizado para realizar saques.',
+            'code' => 'NO_CYCLES',
+            'message' => 'Você precisa ter pelo menos 1 ciclo/investimento para realizar saques.',
             'details' => [
-                'finished_cycles' => $finishedCyclesCount,
+                'cycles_count' => $cyclesCount,
                 'required_cycles' => 1,
             ]
         ]
@@ -41,15 +39,16 @@ if ($finishedCyclesCount < 1) {
 ## 🎯 Como Funciona
 
 ### Status de Ciclos
-- **ACTIVE**: Ciclo em andamento (NÃO conta para saque)
-- **FINISHED**: Ciclo finalizado (CONTA para saque)
-- **CANCELLED/EXPIRED**: Ciclos cancelados (NÃO contam)
+- **ACTIVE**: Ciclo em andamento (CONTA para saque ✅)
+- **FINISHED**: Ciclo finalizado (CONTA para saque ✅)
+- **CANCELLED**: Ciclo cancelado (CONTA para saque ✅)
+- **EXPIRED**: Ciclo expirado (CONTA para saque ✅)
 
 ### Regra de Negócio
 1. Usuário faz investimento → Ciclo criado com status `ACTIVE`
-2. Ciclo recebe pagamentos diários (tipo `DAILY`) ou aguarda final (tipo `END_CYCLE`)
-3. Quando `days_paid >= duration_days` → Status muda para `FINISHED`
-4. **SOMENTE APÓS TER 1+ CICLOS `FINISHED`** → Usuário pode sacar
+2. **QUALQUER ciclo (independente do status)** permite saques
+3. Usuário precisa ter feito **pelo menos 1 investimento** para poder sacar
+4. Não importa se o ciclo está ativo, finalizado ou cancelado
 
 ---
 
@@ -58,7 +57,7 @@ if ($finishedCyclesCount < 1) {
 Agora o fluxo de validação segue esta ordem:
 
 ```
-1. ✅ Validar se tem pelo menos 1 ciclo FINISHED (NOVO!)
+1. ✅ Validar se tem pelo menos 1 ciclo (qualquer status) (NOVO!)
 2. ✅ Validar janela de saque (dias úteis, horário)
 3. ✅ Validar limite diário de saques
 4. ✅ Validar valor mínimo
@@ -75,7 +74,7 @@ Agora o fluxo de validação segue esta ordem:
 
 ## 🧪 Testes
 
-### Cenário 1: Usuário SEM ciclo finalizado
+### Cenário 1: Usuário SEM nenhum ciclo/investimento
 **Request:**
 ```json
 POST /api/v1/withdrawals
@@ -91,17 +90,17 @@ POST /api/v1/withdrawals
 ```json
 {
   "error": {
-    "code": "NO_FINISHED_CYCLES",
-    "message": "Você precisa ter pelo menos 1 ciclo finalizado para realizar saques.",
+    "code": "NO_CYCLES",
+    "message": "Você precisa ter pelo menos 1 ciclo/investimento para realizar saques.",
     "details": {
-      "finished_cycles": 0,
+      "cycles_count": 0,
       "required_cycles": 1
     }
   }
 }
 ```
 
-### Cenário 2: Usuário COM ciclo finalizado
+### Cenário 2: Usuário COM pelo menos 1 ciclo (qualquer status)
 **Request:** (mesmo de cima)
 
 **Response (201 Created):**
