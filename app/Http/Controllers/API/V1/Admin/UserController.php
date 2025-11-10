@@ -24,13 +24,14 @@ class UserController extends Controller
 
         $query = User::query();
 
-        // Busca por nome, email ou CPF
+        // Busca por nome, email, CPF ou código de indicação
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%")
-                  ->orWhere('cpf', 'like', "%{$search}%")
-                  ->orWhere('referral_code', 'ilike', "%{$search}%");
+            $searchLower = strtolower($search);
+            $query->where(function ($q) use ($search, $searchLower) {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(email) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhere('cpf', 'LIKE', "%{$search}%")
+                  ->orWhereRaw('LOWER(referral_code) LIKE ?', ["%{$searchLower}%"]);
             });
         }
 
