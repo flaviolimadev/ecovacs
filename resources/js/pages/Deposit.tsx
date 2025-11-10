@@ -1,4 +1,4 @@
-import { ArrowLeft, Wallet, Copy, Check, QrCode } from "lucide-react";
+import { ArrowLeft, Wallet, Copy, Check, QrCode, Loader2, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -6,20 +6,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/api";
+
+interface DepositData {
+  id: number;
+  amount: number;
+  status: string;
+  transaction_id: string | null;
+  qr_code: string | null;
+  qr_code_base64: string | null;
+  qr_code_image: string | null;
+  order_url: string | null;
+  expires_at: string | null;
+  created_at: string;
+}
 
 const Deposit = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [amount, setAmount] = useState("");
-  const [cpf, setCpf] = useState("");
   const [step, setStep] = useState<"input" | "payment">("input");
   const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [depositData, setDepositData] = useState<DepositData | null>(null);
 
   const minAmount = 50;
-  
-  // Mock PIX key
-  const pixKey = "depositos@empresa.com.br";
-  const pixCode = "00020126330014br.gov.bcb.pix0111123456789015204000053039865802BR5925EMPRESA LTDA6009SAO PAULO62070503***63041234";
 
   const handleAmountChange = (value: string) => {
     // Remove non-numeric characters except comma and dot
@@ -31,22 +43,7 @@ const Deposit = () => {
     return parseFloat(amount.replace(',', '.')) || 0;
   };
 
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 11) {
-      return numbers
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    }
-    return value;
-  };
-
-  const handleCPFChange = (value: string) => {
-    setCpf(formatCPF(value));
-  };
-
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const numAmount = getNumericAmount();
     
     if (!amount || numAmount < minAmount) {
@@ -58,34 +55,72 @@ const Deposit = () => {
       return;
     }
 
-    if (!cpf || cpf.replace(/\D/g, '').length !== 11) {
+    try {
+      setLoading(true);
+      
+      const response = await api.post('/v1/deposits', {
+        amount: numAmount
+      });
+
+      setDepositData(response.data.data);
+      setStep("payment");
+      
       toast({
-        title: "CPF inválido",
-        description: "Por favor, informe um CPF válido.",
+        title: "PIX gerado!",
+        description: "Escaneie o QR Code ou copie o código para pagar.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.error?.message || "Erro ao gerar PIX. Tente novamente.",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    setStep("payment");
-  };
-
-  const handleCopyPixKey = () => {
-    navigator.clipboard.writeText(pixKey);
-    setCopied(true);
-    toast({
-      title: "Copiado!",
-      description: "Chave PIX copiada para a área de transferência.",
-    });
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleCopyPixCode = () => {
-    navigator.clipboard.writeText(pixCode);
+    if (!depositData?.qr_code) return;
+    
+    navigator.clipboard.writeText(depositData.qr_code);
+    setCopied(true);
     toast({
       title: "Copiado!",
       description: "Código PIX copiado. Cole no seu app de pagamento.",
     });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCheckStatus = async () => {
+    if (!depositData?.id) return;
+
+    try {
+      setChecking(true);
+      
+      const response = await api.post(`/v1/deposits/${depositData.id}/check-status`);
+      
+      if (response.data.data.status === 'PAID') {
+        toast({
+          title: "Pagamento confirmado! 🎉",
+          description: "Seu saldo foi atualizado.",
+        });
+        setTimeout(() => navigate("/profile"), 2000);
+      } else {
+        toast({
+          title: "Aguardando pagamento",
+          description: "Ainda não identificamos seu pagamento. Tente novamente em alguns instantes.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao verificar status. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setChecking(false);
+    }
   };
 
   const quickAmounts = [50, 100, 200, 500, 1000];
@@ -153,19 +188,6 @@ const Deposit = () => {
                 </div>
               </div>
 
-              {/* CPF Input */}
-              <div className="mt-4">
-                <Label htmlFor="cpf" className="text-xs text-muted-foreground">CPF do Titular *</Label>
-                <Input
-                  id="cpf"
-                  type="text"
-                  placeholder="000.000.000-00"
-                  value={cpf}
-                  onChange={(e) => handleCPFChange(e.target.value)}
-                  maxLength={14}
-                  className="mt-1"
-                />
-              </div>
             </Card>
 
             {/* Info Card */}
@@ -182,9 +204,16 @@ const Deposit = () => {
             <Button 
               onClick={handleContinue} 
               className="w-full mt-6 h-12 text-base"
-              disabled={!amount || getNumericAmount() < minAmount || !cpf || cpf.replace(/\D/g, '').length !== 11}
+              disabled={!amount || getNumericAmount() < minAmount || loading}
             >
-              Continuar
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Gerando PIX...
+                </>
+              ) : (
+                'Continuar'
+              )}
             </Button>
           </>
         ) : (
@@ -193,48 +222,50 @@ const Deposit = () => {
             <Card className="p-6">
               <div className="text-center mb-6">
                 <p className="text-sm text-muted-foreground mb-2">Valor do depósito</p>
-                <p className="text-4xl font-bold text-primary">R$ {getNumericAmount().toFixed(2)}</p>
+                <p className="text-4xl font-bold text-primary">R$ {depositData?.amount.toFixed(2)}</p>
               </div>
 
               <div className="space-y-4">
-                {/* QR Code Placeholder */}
-                <div className="bg-muted/30 rounded-xl p-8 flex items-center justify-center border-2 border-dashed border-border">
-                  <div className="text-center">
-                    <QrCode className="w-48 h-48 mx-auto text-muted-foreground/30" />
-                    <p className="text-xs text-muted-foreground mt-2">QR Code PIX</p>
+                {/* QR Code */}
+                {depositData?.qr_code_base64 ? (
+                  <div className="bg-white rounded-xl p-4 flex items-center justify-center border-2 border-border">
+                    <img 
+                      src={depositData.qr_code_base64} 
+                      alt="QR Code PIX" 
+                      className="w-64 h-64"
+                    />
                   </div>
-                </div>
-
-                {/* PIX Instructions */}
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Chave PIX:</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Input
-                        value={pixKey}
-                        readOnly
-                        className="bg-muted"
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCopyPixKey}
-                        className="shrink-0"
-                      >
-                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      </Button>
+                ) : depositData?.qr_code_image ? (
+                  <div className="bg-white rounded-xl p-4 flex items-center justify-center border-2 border-border">
+                    <img 
+                      src={depositData.qr_code_image} 
+                      alt="QR Code PIX" 
+                      className="w-64 h-64"
+                    />
+                  </div>
+                ) : (
+                  <div className="bg-muted/30 rounded-xl p-8 flex items-center justify-center border-2 border-dashed border-border">
+                    <div className="text-center">
+                      <QrCode className="w-48 h-48 mx-auto text-muted-foreground/30" />
+                      <p className="text-xs text-muted-foreground mt-2">QR Code não disponível</p>
                     </div>
                   </div>
+                )}
 
-                  <Button
-                    variant="default"
-                    className="w-full"
-                    onClick={handleCopyPixCode}
-                  >
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copiar Código PIX Copia e Cola
-                  </Button>
-                </div>
+                {/* PIX Copia e Cola */}
+                {depositData?.qr_code && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">ou copie o código:</Label>
+                    <Button
+                      variant="default"
+                      className="w-full"
+                      onClick={handleCopyPixCode}
+                    >
+                      {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                      {copied ? 'Código Copiado!' : 'Copiar Código PIX'}
+                    </Button>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -244,30 +275,40 @@ const Deposit = () => {
                 <li>Abra o app do seu banco</li>
                 <li>Escolha pagar com PIX</li>
                 <li>Escaneie o QR Code ou cole o código</li>
-                <li>Confirme o pagamento de R$ {getNumericAmount().toFixed(2)}</li>
-                <li>Aguarde a confirmação automática</li>
+                <li>Confirme o pagamento de R$ {depositData?.amount.toFixed(2)}</li>
+                <li>Clique em "Verificar Pagamento" após pagar</li>
               </ol>
             </Card>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex flex-col gap-3 mt-6">
+              <Button 
+                onClick={handleCheckStatus}
+                className="w-full h-12"
+                disabled={checking}
+              >
+                {checking ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Verificar Pagamento
+                  </>
+                )}
+              </Button>
+              
               <Button 
                 variant="outline" 
-                onClick={() => setStep("input")}
-                className="flex-1"
+                onClick={() => {
+                  setStep("input");
+                  setDepositData(null);
+                  setAmount("");
+                }}
+                className="w-full"
               >
                 Voltar
-              </Button>
-              <Button 
-                onClick={() => {
-                  toast({
-                    title: "Aguardando pagamento",
-                    description: "Assim que confirmarmos o pagamento, seu saldo será atualizado.",
-                  });
-                  setTimeout(() => navigate("/profile"), 2000);
-                }}
-                className="flex-1"
-              >
-                Já paguei
               </Button>
             </div>
           </>
