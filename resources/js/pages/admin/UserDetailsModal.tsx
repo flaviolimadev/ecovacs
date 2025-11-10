@@ -195,7 +195,7 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
               Tentar Novamente
             </Button>
           </div>
-        ) : details ? (
+        ) : details && details.user ? (
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Resumo</TabsTrigger>
@@ -211,27 +211,27 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">Nome</p>
-                    <p className="font-medium">{details.user.name}</p>
+                    <p className="font-medium">{details.user?.name || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Email</p>
-                    <p className="font-medium">{details.user.email}</p>
+                    <p className="font-medium">{details.user?.email || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">CPF</p>
-                    <p className="font-medium">{details.user.cpf || "N/A"}</p>
+                    <p className="font-medium">{details.user?.cpf || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Telefone</p>
-                    <p className="font-medium">{details.user.phone || "N/A"}</p>
+                    <p className="font-medium">{details.user?.phone || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Código de Indicação</p>
-                    <p className="font-mono font-medium">{details.user.referral_code}</p>
+                    <p className="font-mono font-medium">{details.user?.referral_code || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Cadastrado em</p>
-                    <p className="font-medium">{formatDate(details.user.created_at)}</p>
+                    <p className="font-medium">{details.user?.created_at ? formatDate(details.user.created_at) : "N/A"}</p>
                   </div>
                 </div>
               </Card>
