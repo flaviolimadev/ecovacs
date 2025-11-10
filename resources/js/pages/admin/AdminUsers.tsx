@@ -27,7 +27,8 @@ import {
   Trash2, 
   UserPlus,
   User,
-  TrendingUp
+  TrendingUp,
+  Shield
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AdminHeader } from "@/components/AdminHeader";
