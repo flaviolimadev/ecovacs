@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -24,14 +25,18 @@ class UserController extends Controller
 
         $query = User::query();
 
-        // Busca por nome, email, CPF ou código de indicação
+        // Busca por nome, email, CPF (se existir) ou código de indicação
         if ($search) {
             $searchLower = strtolower($search);
             $query->where(function ($q) use ($search, $searchLower) {
                 $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
                   ->orWhereRaw('LOWER(email) LIKE ?', ["%{$searchLower}%"])
-                  ->orWhere('cpf', 'LIKE', "%{$search}%")
                   ->orWhereRaw('LOWER(referral_code) LIKE ?', ["%{$searchLower}%"]);
+                
+                // Só busca por CPF se a coluna existir
+                if (Schema::hasColumn('users', 'cpf')) {
+                    $q->orWhereRaw('LOWER(cpf::text) LIKE ?', ["%{$searchLower}%"]);
+                }
             });
         }
 
