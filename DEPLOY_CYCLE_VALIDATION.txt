@@ -1,0 +1,111 @@
+========================================
+COMANDOS PARA APLICAR NO SERVIDOR
+========================================
+
+Execute os comandos abaixo NO SERVIDOR (SSH) linha por linha:
+
+cd /app
+
+# 1. Fazer backup do controller atual
+cp app/Http/Controllers/API/V1/WithdrawController.php app/Http/Controllers/API/V1/WithdrawController.php.before_cycle_validation
+
+# 2. Adicionar import do Model Cycle
+sed -i 's/use App\\Models\\Ledger;/use App\\Models\\Ledger;\nuse App\\Models\\Cycle;/g' app/Http/Controllers/API/V1/WithdrawController.php
+
+# 3. Verificar se import foi adicionado
+echo "=== Verificando import do Cycle ==="
+grep -n "use App\\Models\\Cycle" app/Http/Controllers/API/V1/WithdrawController.php
+
+# 4. Corrigir namespace (se necessário)
+sed -i 's/namespace App\\Http\\Controllers\\Api\\V1;/namespace App\\Http\\Controllers\\API\\V1;/g' app/Http/Controllers/API/V1/WithdrawController.php
+
+# 5. Baixar o controller atualizado do repositório local
+# (Cole o arquivo WithdrawController.php atualizado via SCP ou editor)
+# OU execute o bloco sed abaixo:
+
+# 6. Inserir validação de ciclo após a linha 87 (após "try {")
+sed -i '87 a\
+            // 1. Validar se o usuário tem pelo menos 1 ciclo finalizado\
+            $finishedCyclesCount = Cycle::where("user_id", $user->id)\
+                ->where("status", "FINISHED")\
+                ->count();\
+\
+            if ($finishedCyclesCount < 1) {\
+                return response()->json([\
+                    "error" => [\
+                        "code" => "NO_FINISHED_CYCLES",\
+                        "message" => "Você precisa ter pelo menos 1 ciclo finalizado para realizar saques.",\
+                        "details" => [\
+                            "finished_cycles" => $finishedCyclesCount,\
+                            "required_cycles" => 1,\
+                        ]\
+                    ]\
+                ], 400);\
+            }\
+' app/Http/Controllers/API/V1/WithdrawController.php
+
+# 7. Limpar caches
+php artisan optimize:clear
+composer dump-autoload -o
+
+# 8. Verificar resultado final
+echo ""
+echo "=== CÓDIGO APÓS TRY ==="
+sed -n '87,110p' app/Http/Controllers/API/V1/WithdrawController.php
+
+echo ""
+echo "✅ VALIDAÇÃO DE CICLO ADICIONADA!"
+echo "Teste fazer um saque SEM ciclo finalizado - deve dar erro NO_FINISHED_CYCLES"
+
+========================================
+ALTERNATIVA: COPIAR ARQUIVO MANUALMENTE
+========================================
+
+Se os comandos sed não funcionarem, você pode:
+
+1. Fazer upload do arquivo atualizado:
+   scp app/Http/Controllers/API/V1/WithdrawController.php root@seu-servidor:/app/app/Http/Controllers/API/V1/
+
+2. No servidor, limpar caches:
+   cd /app
+   php artisan optimize:clear
+   composer dump-autoload -o
+
+========================================
+TESTE
+========================================
+
+Após aplicar, teste no app:
+
+1. Com usuário SEM ciclo finalizado:
+   - Tentar fazer saque
+   - Deve retornar erro: "Você precisa ter pelo menos 1 ciclo finalizado para realizar saques."
+
+2. Com usuário COM ciclo finalizado:
+   - Fazer saque normalmente
+   - Deve funcionar
+
+========================================
+VERIFICAR CICLOS DE UM USUÁRIO
+========================================
+
+# Ver ciclos do usuário ID 1
+php artisan tinker
+>>> \App\Models\Cycle::where('user_id', 1)->get(['id', 'status', 'started_at', 'ends_at']);
+>>> exit
+
+# Criar um ciclo FINISHED para teste (se necessário)
+php artisan tinker
+>>> $cycle = new \App\Models\Cycle();
+>>> $cycle->user_id = 1;
+>>> $cycle->plan_id = 1;
+>>> $cycle->amount = 100;
+>>> $cycle->type = 'DAILY';
+>>> $cycle->duration_days = 30;
+>>> $cycle->started_at = now()->subDays(31);
+>>> $cycle->ends_at = now()->subDay();
+>>> $cycle->status = 'FINISHED';
+>>> $cycle->days_paid = 30;
+>>> $cycle->save();
+>>> exit
+
