@@ -16,13 +16,22 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
+    console.log('AdminRoute: Nenhum usuário autenticado, redirecionando para login');
     return <Navigate to="/login" replace />;
   }
 
+  console.log('AdminRoute: Verificando permissões', { 
+    userId: user.id, 
+    userEmail: user.email, 
+    userRole: user.role 
+  });
+
   if (user.role !== "admin") {
+    console.log('AdminRoute: Usuário não é admin, redirecionando para home');
     return <Navigate to="/" replace />;
   }
 
+  console.log('AdminRoute: Acesso permitido!');
   return <>{children}</>;
 }
 

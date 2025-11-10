@@ -89,14 +89,24 @@ export default function AdminUsers() {
   const loadData = async () => {
     try {
       setLoading(true);
+      console.log('AdminUsers: Carregando dados...');
+      
       const [usersRes, statsRes] = await Promise.all([
         api.get("/admin/users"),
         api.get("/admin/users/stats"),
       ]);
+      
+      console.log('AdminUsers: Dados carregados com sucesso', {
+        users: usersRes.data.data.length,
+        stats: statsRes.data.data
+      });
+      
       setUsers(usersRes.data.data);
       setStats(statsRes.data.data);
     } catch (error: any) {
-      console.error("Erro ao carregar dados:", error);
+      console.error("AdminUsers: Erro ao carregar dados:", error);
+      console.error("AdminUsers: Status da resposta:", error.response?.status);
+      console.error("AdminUsers: Dados da resposta:", error.response?.data);
       
       if (error.response?.status === 403) {
         toast({
@@ -105,10 +115,17 @@ export default function AdminUsers() {
           variant: "destructive",
         });
         navigate("/");
+      } else if (error.response?.status === 401) {
+        toast({
+          title: "Sessão Expirada",
+          description: "Faça login novamente.",
+          variant: "destructive",
+        });
+        navigate("/login");
       } else {
         toast({
           title: "Erro",
-          description: "Não foi possível carregar os dados.",
+          description: error.response?.data?.error?.message || "Não foi possível carregar os dados.",
           variant: "destructive",
         });
       }

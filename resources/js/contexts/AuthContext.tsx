@@ -7,6 +7,7 @@ interface User {
   name: string;
   email: string;
   phone?: string;
+  role: string;                 // 'user' ou 'admin'
   referral_code: string;
   balance: number;              // Saldo para investir (comprar pacotes)
   balance_withdrawn: number;    // Saldo disponível para saque
@@ -24,7 +25,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
   isAuthenticated: boolean;
-  isLoading: boolean;
+  loading: boolean;
 }
 
 interface RegisterData {
@@ -166,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     fetchUser,
     isAuthenticated: !!token && !!user,
-    isLoading,
+    loading: isLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
