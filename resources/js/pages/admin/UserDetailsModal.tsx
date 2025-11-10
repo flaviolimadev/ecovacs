@@ -199,9 +199,9 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Resumo</TabsTrigger>
-              <TabsTrigger value="cycles">Ciclos ({details.cycles.summary.total})</TabsTrigger>
-              <TabsTrigger value="ledger">Extrato ({details.ledger.showing})</TabsTrigger>
-              <TabsTrigger value="network">Rede ({details.referral_network.total_referrals})</TabsTrigger>
+              <TabsTrigger value="cycles">Ciclos ({details.cycles?.summary?.total || 0})</TabsTrigger>
+              <TabsTrigger value="ledger">Extrato ({details.ledger?.showing || 0})</TabsTrigger>
+              <TabsTrigger value="network">Rede ({details.referral_network?.total_referrals || 0})</TabsTrigger>
             </TabsList>
 
             {/* TAB 1: RESUMO */}
@@ -240,95 +240,104 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                 <Card className="p-4">
                   <p className="text-sm text-gray-600">Saldo Investível</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    R$ {details.user.balance.toFixed(2)}
+                    R$ {(details.user?.balance || 0).toFixed(2)}
                   </p>
                 </Card>
                 <Card className="p-4">
                   <p className="text-sm text-gray-600">Saldo para Saque</p>
                   <p className="text-2xl font-bold text-green-600">
-                    R$ {details.user.balance_withdrawn.toFixed(2)}
+                    R$ {(details.user?.balance_withdrawn || 0).toFixed(2)}
                   </p>
                 </Card>
                 <Card className="p-4">
                   <p className="text-sm text-gray-600">Total Investido</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    R$ {details.user.total_invested.toFixed(2)}
+                    R$ {(details.user?.total_invested || 0).toFixed(2)}
                   </p>
                 </Card>
               </div>
 
-              <Card className="p-4">
-                <h3 className="font-semibold mb-4">Resumo de Ciclos</h3>
-                <div className="grid grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Total</p>
-                    <p className="text-xl font-bold">{details.cycles.summary.total}</p>
+              {details.cycles?.summary && (
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-4">Resumo de Ciclos</h3>
+                  <div className="grid grid-cols-4 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Total</p>
+                      <p className="text-xl font-bold">{details.cycles.summary.total || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Ativos</p>
+                      <p className="text-xl font-bold text-green-600">
+                        {details.cycles.summary.active || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Finalizados</p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {details.cycles.summary.finished || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Cancelados</p>
+                      <p className="text-xl font-bold text-red-600">
+                        {details.cycles.summary.cancelled || 0}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Ativos</p>
-                    <p className="text-xl font-bold text-green-600">
-                      {details.cycles.summary.active}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Finalizados</p>
-                    <p className="text-xl font-bold text-blue-600">
-                      {details.cycles.summary.finished}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Cancelados</p>
-                    <p className="text-xl font-bold text-red-600">
-                      {details.cycles.summary.cancelled}
-                    </p>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              )}
             </TabsContent>
 
             {/* TAB 2: CICLOS */}
             <TabsContent value="cycles">
-              <Card>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Plano</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Dias</TableHead>
-                      <TableHead>Rendimento</TableHead>
-                      <TableHead>Início</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {details.cycles.list.map((cycle) => (
-                      <TableRow key={cycle.id}>
-                        <TableCell className="font-medium">{cycle.plan_name}</TableCell>
-                        <TableCell>R$ {cycle.amount.toFixed(2)}</TableCell>
-                        <TableCell>{getStatusBadge(cycle.status)}</TableCell>
-                        <TableCell>
-                          {cycle.days_paid}/{cycle.duration_days}
-                        </TableCell>
-                        <TableCell className="text-green-600">
-                          R$ {cycle.total_paid.toFixed(2)}
-                        </TableCell>
-                        <TableCell>{formatDate(cycle.started_at)}</TableCell>
+              {details.cycles?.list && details.cycles.list.length > 0 ? (
+                <Card>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Plano</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Dias</TableHead>
+                        <TableHead>Rendimento</TableHead>
+                        <TableHead>Início</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {details.cycles.list.map((cycle) => (
+                        <TableRow key={cycle.id}>
+                          <TableCell className="font-medium">{cycle.plan_name}</TableCell>
+                          <TableCell>R$ {cycle.amount.toFixed(2)}</TableCell>
+                          <TableCell>{getStatusBadge(cycle.status)}</TableCell>
+                          <TableCell>
+                            {cycle.days_paid}/{cycle.duration_days}
+                          </TableCell>
+                          <TableCell className="text-green-600">
+                            R$ {cycle.total_paid.toFixed(2)}
+                          </TableCell>
+                          <TableCell>{formatDate(cycle.started_at)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              ) : (
+                <Card className="p-8">
+                  <p className="text-center text-gray-500">Nenhum ciclo encontrado</p>
+                </Card>
+              )}
             </TabsContent>
 
             {/* TAB 3: EXTRATO */}
             <TabsContent value="ledger">
-              <Card>
-                <div className="p-4 border-b">
-                  <p className="text-sm text-gray-600">
-                    Mostrando {details.ledger.showing} de {details.ledger.total_entries} movimentações
-                  </p>
-                </div>
-                <Table>
+              {details.ledger?.entries && details.ledger.entries.length > 0 ? (
+                <Card>
+                  <div className="p-4 border-b">
+                    <p className="text-sm text-gray-600">
+                      Mostrando {details.ledger.showing || 0} de {details.ledger.total_entries || 0} movimentações
+                    </p>
+                  </div>
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Tipo</TableHead>
@@ -364,6 +373,11 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                   </TableBody>
                 </Table>
               </Card>
+              ) : (
+                <Card className="p-8">
+                  <p className="text-center text-gray-500">Nenhuma movimentação encontrada</p>
+                </Card>
+              )}
             </TabsContent>
 
             {/* TAB 4: REDE DE INDICAÇÕES */}
@@ -371,11 +385,11 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
               <Card className="p-4">
                 <h3 className="font-semibold mb-2">Total de Indicados</h3>
                 <p className="text-3xl font-bold text-primary">
-                  {details.referral_network.total_referrals}
+                  {details.referral_network?.total_referrals || 0}
                 </p>
               </Card>
 
-              {[1, 2, 3].map((level) => {
+              {details.referral_network?.by_level && [1, 2, 3].map((level) => {
                 const levelData = details.referral_network.by_level[level];
                 if (!levelData) return null;
 
