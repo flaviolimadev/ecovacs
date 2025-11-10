@@ -3,12 +3,23 @@
 use Illuminate\Support\Facades\Route;
 
 /**
- * SPA Fallback Route
+ * Web Routes (apenas fallback SPA)
  * 
- * O React Router controla todas as rotas do front-end.
- * Esta rota captura TODAS as requisições que não são /api/*
- * e retorna a view app.blade.php (que carrega o React).
+ * Rotas de API estão em routes/api.php
  */
+
+// Fallback: qualquer rota não-API redireciona para o frontend
 Route::get('/{any}', function () {
     return view('app');
-})->where('any', '.*');
+})->where('any', '^(?!api).*$');
+
+// Rota nomeada "login" para evitar erros do Laravel
+Route::get('/login', function () {
+    return response()->json([
+        'error' => [
+            'code' => 'API_ONLY',
+            'message' => 'Esta é uma API. Use POST /api/v1/auth/login para autenticar.',
+            'endpoint' => '/api/v1/auth/login',
+        ]
+    ], 400);
+})->name('login');

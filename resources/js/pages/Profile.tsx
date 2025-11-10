@@ -244,9 +244,16 @@ const Profile = () => {
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-xl font-semibold flex-1 text-center">Perfil</h1>
-          <button onClick={handleLogout} className="p-2 hover:bg-white/10 rounded-full transition-colors" title="Sair">
-            <LogOut className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            {user?.role === 'admin' && (
+              <button onClick={() => navigate("/admin/users")} className="p-2 hover:bg-white/10 rounded-full transition-colors" title="Admin">
+                🔐
+              </button>
+            )}
+            <button onClick={handleLogout} className="p-2 hover:bg-white/10 rounded-full transition-colors" title="Sair">
+              <LogOut className="w-6 h-6" />
+            </button>
+          </div>
         </div>
         <div className="flex justify-center">
           <div className="bg-white/20 p-4 rounded-full">
