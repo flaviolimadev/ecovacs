@@ -25,5 +25,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Retornar JSON para APIs quando não autenticado
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'error' => [
+                        'code' => 'UNAUTHENTICATED',
+                        'message' => 'Não autenticado. Por favor, faça login.',
+                    ]
+                ], 401);
+            }
+        });
     })->create();
