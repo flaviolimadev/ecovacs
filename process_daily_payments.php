@@ -21,10 +21,25 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+// Verificar se foi passada uma hora específica como argumento
+$specificHour = null;
+if (isset($argv[1])) {
+    $specificHour = (int) $argv[1];
+    if ($specificHour < 0 || $specificHour > 23) {
+        echo "❌ ERRO: Hora deve estar entre 0 e 23\n";
+        echo "Uso: php process_daily_payments.php [HORA]\n";
+        echo "Exemplo: php process_daily_payments.php 10\n\n";
+        exit(1);
+    }
+}
+
 echo "\n";
 echo "===========================================\n";
 echo "  PROCESSAMENTO DE PAGAMENTOS DIÁRIOS\n";
 echo "===========================================\n";
+if ($specificHour !== null) {
+    echo "⚠️  MODO TESTE: Simulando hora {$specificHour}:00\n";
+}
 echo "Iniciado em: " . now()->format('d/m/Y H:i:s') . "\n";
 echo "\n";
 
@@ -68,6 +83,11 @@ $pendingCycles = []; // Para armazenar ciclos aguardando com tempo restante
 foreach ($cycles as $cycle) {
     try {
         $now = Carbon::now();
+        
+        // Se foi especificada uma hora, usar ela para comparação
+        if ($specificHour !== null) {
+            $now = $now->setHour($specificHour)->setMinute(0)->setSecond(0);
+        }
         
         // 1. Buscar último pagamento deste ciclo
         $lastPayment = Earning::where('cycle_id', $cycle->id)
