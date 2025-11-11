@@ -63,6 +63,8 @@ $stats = [
     'errors' => 0,
 ];
 
+$pendingCycles = []; // Para armazenar ciclos aguardando com tempo restante
+
 foreach ($cycles as $cycle) {
     try {
         $now = Carbon::now();
@@ -74,10 +76,25 @@ foreach ($cycles as $cycle) {
         
         if ($lastPayment) {
             // Tem pagamento anterior, verificar se faz 24h desde o último
-            $hoursSinceLastPayment = Carbon::parse($lastPayment->created_at)->diffInHours($now);
+            $lastPaymentTime = Carbon::parse($lastPayment->created_at);
+            $hoursSinceLastPayment = $lastPaymentTime->diffInHours($now);
             
             if ($hoursSinceLastPayment < 24) {
                 $stats['cycles_skipped_time']++;
+                
+                // Calcular quando completará 24h
+                $hoursRemaining = 24 - $hoursSinceLastPayment;
+                $willBeReadyAt = $now->copy()->addHours($hoursRemaining);
+                
+                $pendingCycles[] = [
+                    'cycle_id' => $cycle->id,
+                    'user_name' => $cycle->user->name,
+                    'plan_name' => $cycle->plan ? $cycle->plan->name : 'N/A',
+                    'last_payment' => $lastPaymentTime,
+                    'hours_remaining' => $hoursRemaining,
+                    'ready_at' => $willBeReadyAt,
+                ];
+                
                 continue; // Ainda não faz 24h do último pagamento
             }
         } else {
@@ -87,6 +104,20 @@ foreach ($cycles as $cycle) {
             
             if ($hoursSinceStart < 24) {
                 $stats['cycles_skipped_time']++;
+                
+                // Calcular quando completará 24h
+                $hoursRemaining = 24 - $hoursSinceStart;
+                $willBeReadyAt = $now->copy()->addHours($hoursRemaining);
+                
+                $pendingCycles[] = [
+                    'cycle_id' => $cycle->id,
+                    'user_name' => $cycle->user->name,
+                    'plan_name' => $cycle->plan ? $cycle->plan->name : 'N/A',
+                    'started_at' => $startedAt,
+                    'hours_remaining' => $hoursRemaining,
+                    'ready_at' => $willBeReadyAt,
+                ];
+                
                 continue; // Ciclo ainda não tem 24h
             }
         }
@@ -255,6 +286,46 @@ echo "💰 TOTAL GERAL: R$ " . number_format($stats['total_earnings_paid'] + $st
 echo "\n";
 echo "👥 Usuários beneficiados: " . count($stats['users_benefited']) . "\n";
 echo "===========================================\n";
+
+// Mostrar próximos 10 ciclos que completarão 24h
+if (!empty($pendingCycles)) {
+    echo "\n";
+    echo "⏰ PRÓXIMOS 10 CICLOS AGUARDANDO 24H\n";
+    echo "===========================================\n";
+    
+    // Ordenar por tempo restante (menor primeiro)
+    usort($pendingCycles, function($a, $b) {
+        return $a['hours_remaining'] <=> $b['hours_remaining'];
+    });
+    
+    // Mostrar apenas os 10 primeiros
+    $top10 = array_slice($pendingCycles, 0, 10);
+    
+    foreach ($top10 as $index => $pending) {
+        $num = $index + 1;
+        $hoursRemaining = $pending['hours_remaining'];
+        $minutesRemaining = ($hoursRemaining - floor($hoursRemaining)) * 60;
+        
+        echo "\n";
+        echo "{$num}. CICLO #{$pending['cycle_id']}\n";
+        echo "   Usuário: {$pending['user_name']}\n";
+        echo "   Plano: {$pending['plan_name']}\n";
+        
+        if (isset($pending['last_payment'])) {
+            echo "   Último pagamento: " . $pending['last_payment']->format('d/m/Y H:i:s') . "\n";
+        } else {
+            echo "   Iniciado em: " . $pending['started_at']->format('d/m/Y H:i:s') . "\n";
+        }
+        
+        echo "   ⏳ Tempo restante: " . floor($hoursRemaining) . "h " . round($minutesRemaining) . "min\n";
+        echo "   ✅ Pronto em: " . $pending['ready_at']->format('d/m/Y H:i:s') . "\n";
+    }
+    
+    echo "\n";
+    echo "===========================================\n";
+}
+
+echo "\n";
 echo "Finalizado em: " . now()->format('d/m/Y H:i:s') . "\n";
 echo "\n";
 
