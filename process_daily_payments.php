@@ -84,14 +84,25 @@ foreach ($cycles as $cycle) {
                 continue; // Já pagou nesta hora hoje
             }
             
-            // Verificar se passou pelo menos 24h desde a HORA do último pagamento
-            $hoursSinceLastPayment = $lastPaymentTime->diffInHours($now, false);
+            // Verificar se a HORA atual já passou da HORA do último pagamento
+            // Ex: Último pag foi ontem às 10h, agora são 09h → não paga
+            // Ex: Último pag foi ontem às 10h, agora são 10h ou depois → paga
             
-            if ($hoursSinceLastPayment < 24) {
+            if ($lastPaymentTime->isSameDay($now)) {
+                // Mesmo dia, não paga
+                $stats['cycles_skipped_time']++;
+                continue;
+            }
+            
+            // Passou pelo menos 1 dia
+            // Verificar se JÁ CHEGOU na hora de pagamento
+            if ($now->hour >= $lastPaymentTime->hour) {
+                // PAGA!
+            } else {
+                // Ainda não chegou na hora
                 $stats['cycles_skipped_time']++;
                 
-                // Calcular quando será a próxima hora de pagamento
-                $nextPaymentHour = $lastPaymentTime->copy()->addDay()->setMinutes(0)->setSeconds(0);
+                $nextPaymentHour = $now->copy()->setHour($lastPaymentTime->hour)->setMinutes(0)->setSeconds(0);
                 $hoursRemaining = $now->diffInHours($nextPaymentHour, false);
                 
                 if ($hoursRemaining > 0) {
@@ -105,18 +116,17 @@ foreach ($cycles as $cycle) {
                     ];
                 }
                 
-                continue; // Ainda não chegou na hora de pagamento
+                continue;
             }
         } else {
-            // Primeiro pagamento, verificar se faz pelo menos 24h desde started_at
+            // Primeiro pagamento
             $startedAt = Carbon::parse($cycle->started_at);
-            $hoursSinceStart = $startedAt->diffInHours($now, false);
             
-            if ($hoursSinceStart < 24) {
+            if ($startedAt->isSameDay($now)) {
+                // Mesmo dia, não paga (precisa de pelo menos 1 dia)
                 $stats['cycles_skipped_time']++;
                 
-                // Calcular quando será a próxima hora de pagamento (mesma hora amanhã)
-                $nextPaymentHour = $startedAt->copy()->addDay()->setMinutes(0)->setSeconds(0);
+                $nextPaymentHour = $startedAt->copy()->addDay()->setHour($startedAt->hour)->setMinutes(0)->setSeconds(0);
                 $hoursRemaining = $now->diffInHours($nextPaymentHour, false);
                 
                 if ($hoursRemaining > 0) {
@@ -130,7 +140,32 @@ foreach ($cycles as $cycle) {
                     ];
                 }
                 
-                continue; // Ciclo ainda não tem 24h
+                continue;
+            }
+            
+            // Passou pelo menos 1 dia
+            // Verificar se JÁ CHEGOU na hora do primeiro pagamento
+            if ($now->hour >= $startedAt->hour) {
+                // PAGA!
+            } else {
+                // Ainda não chegou na hora
+                $stats['cycles_skipped_time']++;
+                
+                $nextPaymentHour = $now->copy()->setHour($startedAt->hour)->setMinutes(0)->setSeconds(0);
+                $hoursRemaining = $now->diffInHours($nextPaymentHour, false);
+                
+                if ($hoursRemaining > 0) {
+                    $pendingCycles[] = [
+                        'cycle_id' => $cycle->id,
+                        'user_name' => $cycle->user->name,
+                        'plan_name' => $cycle->plan ? $cycle->plan->name : 'N/A',
+                        'started_at' => $startedAt,
+                        'hours_remaining' => $hoursRemaining,
+                        'ready_at' => $nextPaymentHour,
+                    ];
+                }
+                
+                continue;
             }
         }
         
