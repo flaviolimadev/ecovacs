@@ -122,6 +122,7 @@ foreach ($cycles as $cycle) {
             
             // B) CRIAR EARNING
             $earning = Earning::create([
+                'user_id' => $user->id,
                 'cycle_id' => $cycle->id,
                 'reference_date' => today(),
                 'value' => $dailyIncome,
