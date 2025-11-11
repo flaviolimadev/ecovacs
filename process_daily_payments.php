@@ -75,48 +75,60 @@ foreach ($cycles as $cycle) {
             ->first();
         
         if ($lastPayment) {
-            // Tem pagamento anterior, verificar se faz 24h desde o último
+            // Tem pagamento anterior
             $lastPaymentTime = Carbon::parse($lastPayment->created_at);
-            $hoursSinceLastPayment = $lastPaymentTime->diffInHours($now);
+            
+            // Verificar se último pagamento foi na mesma HORA de HOJE
+            if ($lastPaymentTime->isSameDay($now) && $lastPaymentTime->hour == $now->hour) {
+                $stats['cycles_skipped_time']++;
+                continue; // Já pagou nesta hora hoje
+            }
+            
+            // Verificar se passou pelo menos 24h desde a HORA do último pagamento
+            $hoursSinceLastPayment = $lastPaymentTime->diffInHours($now, false);
             
             if ($hoursSinceLastPayment < 24) {
                 $stats['cycles_skipped_time']++;
                 
-                // Calcular quando completará 24h
-                $hoursRemaining = 24 - $hoursSinceLastPayment;
-                $willBeReadyAt = $now->copy()->addHours($hoursRemaining);
+                // Calcular quando será a próxima hora de pagamento
+                $nextPaymentHour = $lastPaymentTime->copy()->addDay()->setMinutes(0)->setSeconds(0);
+                $hoursRemaining = $now->diffInHours($nextPaymentHour, false);
                 
-                $pendingCycles[] = [
-                    'cycle_id' => $cycle->id,
-                    'user_name' => $cycle->user->name,
-                    'plan_name' => $cycle->plan ? $cycle->plan->name : 'N/A',
-                    'last_payment' => $lastPaymentTime,
-                    'hours_remaining' => $hoursRemaining,
-                    'ready_at' => $willBeReadyAt,
-                ];
+                if ($hoursRemaining > 0) {
+                    $pendingCycles[] = [
+                        'cycle_id' => $cycle->id,
+                        'user_name' => $cycle->user->name,
+                        'plan_name' => $cycle->plan ? $cycle->plan->name : 'N/A',
+                        'last_payment' => $lastPaymentTime,
+                        'hours_remaining' => $hoursRemaining,
+                        'ready_at' => $nextPaymentHour,
+                    ];
+                }
                 
-                continue; // Ainda não faz 24h do último pagamento
+                continue; // Ainda não chegou na hora de pagamento
             }
         } else {
-            // Primeiro pagamento, verificar se faz 24h desde started_at
+            // Primeiro pagamento, verificar se faz pelo menos 24h desde started_at
             $startedAt = Carbon::parse($cycle->started_at);
-            $hoursSinceStart = $startedAt->diffInHours($now);
+            $hoursSinceStart = $startedAt->diffInHours($now, false);
             
             if ($hoursSinceStart < 24) {
                 $stats['cycles_skipped_time']++;
                 
-                // Calcular quando completará 24h
-                $hoursRemaining = 24 - $hoursSinceStart;
-                $willBeReadyAt = $now->copy()->addHours($hoursRemaining);
+                // Calcular quando será a próxima hora de pagamento (mesma hora amanhã)
+                $nextPaymentHour = $startedAt->copy()->addDay()->setMinutes(0)->setSeconds(0);
+                $hoursRemaining = $now->diffInHours($nextPaymentHour, false);
                 
-                $pendingCycles[] = [
-                    'cycle_id' => $cycle->id,
-                    'user_name' => $cycle->user->name,
-                    'plan_name' => $cycle->plan ? $cycle->plan->name : 'N/A',
-                    'started_at' => $startedAt,
-                    'hours_remaining' => $hoursRemaining,
-                    'ready_at' => $willBeReadyAt,
-                ];
+                if ($hoursRemaining > 0) {
+                    $pendingCycles[] = [
+                        'cycle_id' => $cycle->id,
+                        'user_name' => $cycle->user->name,
+                        'plan_name' => $cycle->plan ? $cycle->plan->name : 'N/A',
+                        'started_at' => $startedAt,
+                        'hours_remaining' => $hoursRemaining,
+                        'ready_at' => $nextPaymentHour,
+                    ];
+                }
                 
                 continue; // Ciclo ainda não tem 24h
             }
@@ -276,7 +288,7 @@ echo "===========================================\n";
 echo "  RESUMO FINAL\n";
 echo "===========================================\n";
 echo "Ciclos processados: {$stats['cycles_processed']}\n";
-echo "Ciclos aguardando 24h desde último pagamento: {$stats['cycles_skipped_time']}\n";
+echo "Ciclos aguardando próxima hora de pagamento: {$stats['cycles_skipped_time']}\n";
 echo "Ciclos finalizados: {$stats['cycles_completed']}\n";
 echo "Erros: {$stats['errors']}\n";
 echo "\n";
@@ -290,7 +302,7 @@ echo "===========================================\n";
 // Mostrar próximos 10 ciclos que completarão 24h
 if (!empty($pendingCycles)) {
     echo "\n";
-    echo "⏰ PRÓXIMOS 10 CICLOS AGUARDANDO 24H\n";
+    echo "⏰ PRÓXIMOS 10 CICLOS AGUARDANDO HORA DE PAGAMENTO\n";
     echo "===========================================\n";
     
     // Ordenar por tempo restante (menor primeiro)
