@@ -56,7 +56,6 @@ echo "\n";
 $stats = [
     'cycles_processed' => 0,
     'cycles_skipped_time' => 0,
-    'cycles_skipped_already_paid' => 0,
     'cycles_completed' => 0,
     'total_earnings_paid' => 0,
     'total_residuals_paid' => 0,
@@ -67,23 +66,29 @@ $stats = [
 foreach ($cycles as $cycle) {
     try {
         $now = Carbon::now();
-        $startedAt = Carbon::parse($cycle->started_at);
-        $hoursElapsed = $startedAt->diffInHours($now);
         
-        // 1. Verificar se faz mais de 24h
-        if ($hoursElapsed < 24) {
-            $stats['cycles_skipped_time']++;
-            continue;
-        }
+        // 1. Buscar último pagamento deste ciclo
+        $lastPayment = Earning::where('cycle_id', $cycle->id)
+            ->orderBy('created_at', 'desc')
+            ->first();
         
-        // 2. Verificar se já pagou HOJE
-        $paidToday = Earning::where('cycle_id', $cycle->id)
-            ->whereDate('created_at', today())
-            ->exists();
-        
-        if ($paidToday) {
-            $stats['cycles_skipped_already_paid']++;
-            continue;
+        if ($lastPayment) {
+            // Tem pagamento anterior, verificar se faz 24h desde o último
+            $hoursSinceLastPayment = Carbon::parse($lastPayment->created_at)->diffInHours($now);
+            
+            if ($hoursSinceLastPayment < 24) {
+                $stats['cycles_skipped_time']++;
+                continue; // Ainda não faz 24h do último pagamento
+            }
+        } else {
+            // Primeiro pagamento, verificar se faz 24h desde started_at
+            $startedAt = Carbon::parse($cycle->started_at);
+            $hoursSinceStart = $startedAt->diffInHours($now);
+            
+            if ($hoursSinceStart < 24) {
+                $stats['cycles_skipped_time']++;
+                continue; // Ciclo ainda não tem 24h
+            }
         }
         
         // 3. Verificar se ainda tem dias para pagar
@@ -240,8 +245,7 @@ echo "===========================================\n";
 echo "  RESUMO FINAL\n";
 echo "===========================================\n";
 echo "Ciclos processados: {$stats['cycles_processed']}\n";
-echo "Ciclos aguardando 24h: {$stats['cycles_skipped_time']}\n";
-echo "Ciclos já pagos hoje: {$stats['cycles_skipped_already_paid']}\n";
+echo "Ciclos aguardando 24h desde último pagamento: {$stats['cycles_skipped_time']}\n";
 echo "Ciclos finalizados: {$stats['cycles_completed']}\n";
 echo "Erros: {$stats['errors']}\n";
 echo "\n";
