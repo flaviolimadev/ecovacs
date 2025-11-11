@@ -268,12 +268,12 @@ foreach ($cycles as $cycle) {
                 $currentUser = $user;
                 
                 foreach ($residualTiers as $level => $percent) {
-                    // Buscar quem indicou
-                    if (!$currentUser->referred_by_id) {
+                    // Buscar quem indicou (usar referred_by, não referred_by_id)
+                    if (!$currentUser->referred_by) {
                         break; // Não tem mais indicadores
                     }
                     
-                    $referrer = User::find($currentUser->referred_by_id);
+                    $referrer = User::find($currentUser->referred_by);
                     
                     if (!$referrer) {
                         break;
@@ -282,15 +282,22 @@ foreach ($cycles as $cycle) {
                     // Calcular comissão residual
                     $residualAmount = $dailyIncome * ($percent / 100);
                     
+                    // Pular se o valor for muito pequeno
+                    if ($residualAmount < 0.01) {
+                        echo "  • Nível {$level}: {$referrer->name} - R$ 0,00 (valor muito pequeno)\n";
+                        $currentUser = $referrer;
+                        continue;
+                    }
+                    
                     // Creditar no indicador
                     $referrer->balance_withdrawn += $residualAmount;
                     $referrer->total_earned += $residualAmount;
                     $referrer->save();
                     
-                    // Criar ledger
+                    // Criar ledger (usar RESIDUAL_COMMISSION)
                     Ledger::create([
                         'user_id' => $referrer->id,
-                        'type' => 'COMMISSION_RESIDUAL',
+                        'type' => 'RESIDUAL_COMMISSION',
                         'reference_type' => Earning::class,
                         'reference_id' => $earning->id,
                         'description' => sprintf(
