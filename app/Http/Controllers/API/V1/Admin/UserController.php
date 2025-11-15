@@ -1,13 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1\Admin;
+namespace App\Http\Controllers\API\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Cycle;
+use App\Models\Ledger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -86,45 +90,216 @@ class UserController extends Controller
     }
 
     /**
-     * Buscar usuário específico
+     * Buscar usuário específico com detalhes completos
      */
     public function show(int $id)
     {
-        $user = User::with(['referredBy', 'referrals'])->findOrFail($id);
+        try {
+            $user = User::with(['referredBy'])->findOrFail($id);
+        } catch (\Exception $e) {
+            Log::error('Erro ao buscar usuário', [
+                'user_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json([
+                'error' => [
+                    'code' => 'USER_NOT_FOUND',
+                    'message' => 'Usuário não encontrado',
+                ]
+            ], 404);
+        }
 
-        return response()->json([
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'cpf' => $user->cpf,
-                'phone' => $user->phone,
-                'role' => $user->role,
-                'balance' => (float) $user->balance,
-                'balance_withdrawn' => (float) $user->balance_withdrawn,
-                'total_invested' => (float) $user->total_invested,
-                'total_earned' => (float) $user->total_earned,
-                'total_withdrawn' => (float) $user->total_withdrawn,
-                'referral_code' => $user->referral_code,
-                'referred_by_id' => $user->referred_by_id,
-                'referred_by' => $user->referredBy ? [
-                    'id' => $user->referredBy->id,
-                    'name' => $user->referredBy->name,
-                    'email' => $user->referredBy->email,
-                    'referral_code' => $user->referredBy->referral_code,
-                ] : null,
-                'direct_referrals' => $user->referrals->map(function ($ref) {
+        // 1. CICLOS DO USUÁRIO
+        $cycles = Cycle::where('user_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($cycle) {
+                // Tentar carregar o plano de forma segura
+                $planName = 'N/A';
+                try {
+                    if ($cycle->plan_id && $cycle->plan) {
+                        $planName = $cycle->plan->name;
+                    }
+                } catch (\Exception $e) {
+                    // Se falhar ao carregar o plano, usar N/A
+                }
+
+                return [
+                    'id' => $cycle->id,
+                    'plan_name' => $planName,
+                    'amount' => (float) ($cycle->amount ?? 0),
+                    'type' => $cycle->type ?? 'N/A',
+                    'status' => $cycle->status ?? 'UNKNOWN',
+                    'duration_days' => $cycle->duration_days ?? 0,
+                    'days_paid' => $cycle->days_paid ?? 0,
+                    'daily_income' => (float) ($cycle->daily_income ?? 0),
+                    'total_return' => (float) ($cycle->total_return ?? 0),
+                    'total_paid' => (float) ($cycle->total_paid ?? 0),
+                    'started_at' => $cycle->started_at ? $cycle->started_at->toIso8601String() : null,
+                    'ends_at' => $cycle->ends_at ? $cycle->ends_at->toIso8601String() : null,
+                    'created_at' => $cycle->created_at->toIso8601String(),
+                ];
+            });
+
+        // Resumo de ciclos
+        $cyclesSummary = [
+            'total' => $cycles->count(),
+            'active' => Cycle::where('user_id', $id)->where('status', 'ACTIVE')->count(),
+            'finished' => Cycle::where('user_id', $id)->where('status', 'FINISHED')->count(),
+            'cancelled' => Cycle::where('user_id', $id)->where('status', 'CANCELLED')->count(),
+            'total_invested_in_cycles' => (float) Cycle::where('user_id', $id)->sum('amount'),
+        ];
+
+        // 2. EXTRATO (últimas 50 movimentações)
+        $ledger = Ledger::where('user_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->limit(50)
+            ->get()
+            ->map(function ($entry) {
+                return [
+                    'id' => $entry->id,
+                    'type' => $entry->type,
+                    'description' => $entry->description,
+                    'amount' => (float) $entry->amount,
+                    'operation' => $entry->operation,
+                    'balance_type' => $entry->balance_type,
+                    'created_at' => $entry->created_at->toIso8601String(),
+                ];
+            });
+
+        // 3. REDE DE INDICAÇÕES (3 NÍVEIS)
+        try {
+            $referralNetwork = $this->getReferralNetwork($user, 3);
+        } catch (\Exception $e) {
+            Log::error('Erro ao buscar rede de indicações', [
+                'user_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            $referralNetwork = [
+                'total_referrals' => 0,
+                'by_level' => [],
+            ];
+        }
+
+        // 4. DADOS BÁSICOS DO USUÁRIO
+        try {
+            return response()->json([
+                'data' => [
+                    // Informações básicas
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'cpf' => $user->cpf ?? null,
+                        'phone' => $user->phone ?? null,
+                        'role' => $user->role,
+                        'balance' => (float) $user->balance,
+                        'balance_withdrawn' => (float) $user->balance_withdrawn,
+                        'total_invested' => (float) $user->total_invested,
+                        'total_earned' => (float) $user->total_earned,
+                        'total_withdrawn' => (float) $user->total_withdrawn,
+                        'referral_code' => $user->referral_code,
+                        'referred_by_id' => $user->referred_by_id,
+                        'referred_by' => $user->referredBy ? [
+                            'id' => $user->referredBy->id,
+                            'name' => $user->referredBy->name,
+                            'email' => $user->referredBy->email,
+                            'referral_code' => $user->referredBy->referral_code ?? null,
+                        ] : null,
+                        'created_at' => $user->created_at->toIso8601String(),
+                        'updated_at' => $user->updated_at->toIso8601String(),
+                    ],
+
+                    // Ciclos
+                    'cycles' => [
+                        'summary' => $cyclesSummary,
+                        'list' => $cycles->values(),
+                    ],
+
+                    // Extrato
+                    'ledger' => [
+                        'total_entries' => Ledger::where('user_id', $id)->count(),
+                        'showing' => $ledger->count(),
+                        'entries' => $ledger->values(),
+                    ],
+
+                    // Rede de indicações
+                    'referral_network' => $referralNetwork,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao montar resposta de detalhes do usuário', [
+                'user_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return response()->json([
+                'error' => [
+                    'code' => 'INTERNAL_ERROR',
+                    'message' => 'Erro ao carregar detalhes do usuário',
+                    'details' => config('app.debug') ? $e->getMessage() : null,
+                ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Obter rede de indicações até N níveis
+     */
+    private function getReferralNetwork(User $user, int $maxLevel = 3): array
+    {
+        $network = [
+            'total_referrals' => 0,
+            'by_level' => [],
+        ];
+
+        for ($level = 1; $level <= $maxLevel; $level++) {
+            $referrals = $this->getReferralsByLevel($user->id, $level);
+            
+            $network['by_level'][$level] = [
+                'level' => $level,
+                'count' => $referrals->count(),
+                'total_invested' => (float) $referrals->sum('total_invested'),
+                'total_earned' => (float) $referrals->sum('total_earned'),
+                'users' => $referrals->map(function ($ref) {
                     return [
                         'id' => $ref->id,
                         'name' => $ref->name,
                         'email' => $ref->email,
+                        'total_invested' => (float) $ref->total_invested,
+                        'total_earned' => (float) $ref->total_earned,
+                        'active_cycles' => Cycle::where('user_id', $ref->id)->where('status', 'ACTIVE')->count(),
                         'created_at' => $ref->created_at->toIso8601String(),
                     ];
-                }),
-                'created_at' => $user->created_at->toIso8601String(),
-                'updated_at' => $user->updated_at->toIso8601String(),
-            ]
-        ]);
+                })->values(),
+            ];
+
+            $network['total_referrals'] += $referrals->count();
+        }
+
+        return $network;
+    }
+
+    /**
+     * Obter indicados de um nível específico
+     */
+    private function getReferralsByLevel(int $userId, int $level): \Illuminate\Support\Collection
+    {
+        if ($level === 1) {
+            // Nível 1: diretos
+            return User::where('referred_by_id', $userId)->get();
+        }
+
+        // Níveis 2 e 3: recursivo
+        $previousLevel = $this->getReferralsByLevel($userId, $level - 1);
+        $previousLevelIds = $previousLevel->pluck('id')->toArray();
+
+        if (empty($previousLevelIds)) {
+            return collect([]);
+        }
+
+        return User::whereIn('referred_by_id', $previousLevelIds)->get();
     }
 
     /**

@@ -1,6 +1,7 @@
 import { Package, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import ProductCard from "./ProductCard";
+import FeaturedProductCard from "./FeaturedProductCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { plansAPI } from "@/lib/api";
 
@@ -14,6 +15,10 @@ interface Plan {
   total_return: number | string; // Laravel retorna decimal como string
   max_purchases: number;
   type: 'DAILY' | 'END_CYCLE';
+  is_featured?: boolean;
+  featured_color?: string | null;
+  featured_ends_at?: string | null;
+  is_promotion_active?: boolean;
 }
 
 const ProductsSection = () => {
@@ -31,7 +36,7 @@ const ProductsSection = () => {
         setStandardPlans(data.standard || []);
         setCyclePlans(data.cycle || []);
       } catch (error) {
-
+        // Silenciar erro
       } finally {
         setIsLoading(false);
       }
@@ -89,9 +94,25 @@ const ProductsSection = () => {
         
         <TabsContent value="standard" className="space-y-3">
           {standardPlans.length > 0 ? (
-            standardPlans.map((plan) => (
-              <ProductCard key={plan.id} {...formatPlan(plan)} />
-            ))
+            <>
+              {/* Planos em Promoção primeiro */}
+              {standardPlans
+                .filter(plan => plan.is_promotion_active && plan.is_featured)
+                .map((plan) => (
+                  <FeaturedProductCard
+                    key={plan.id}
+                    {...formatPlan(plan)}
+                    featuredColor={plan.featured_color || '#FF0000'}
+                    featuredEndsAt={plan.featured_ends_at || null}
+                  />
+                ))}
+              {/* Planos normais */}
+              {standardPlans
+                .filter(plan => !plan.is_promotion_active || !plan.is_featured)
+                .map((plan) => (
+                  <ProductCard key={plan.id} {...formatPlan(plan)} />
+                ))}
+            </>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -102,9 +123,25 @@ const ProductsSection = () => {
         
         <TabsContent value="cycle" className="space-y-3">
           {cyclePlans.length > 0 ? (
-            cyclePlans.map((plan) => (
-              <ProductCard key={plan.id} {...formatPlan(plan)} />
-            ))
+            <>
+              {/* Planos em Promoção primeiro */}
+              {cyclePlans
+                .filter(plan => plan.is_promotion_active && plan.is_featured)
+                .map((plan) => (
+                  <FeaturedProductCard
+                    key={plan.id}
+                    {...formatPlan(plan)}
+                    featuredColor={plan.featured_color || '#FF0000'}
+                    featuredEndsAt={plan.featured_ends_at || null}
+                  />
+                ))}
+              {/* Planos normais */}
+              {cyclePlans
+                .filter(plan => !plan.is_promotion_active || !plan.is_featured)
+                .map((plan) => (
+                  <ProductCard key={plan.id} {...formatPlan(plan)} />
+                ))}
+            </>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />

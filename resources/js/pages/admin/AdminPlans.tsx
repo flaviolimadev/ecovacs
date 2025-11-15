@@ -1,0 +1,849 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { 
+  Search, 
+  Edit, 
+  Trash2, 
+  Plus,
+  Package,
+  TrendingUp,
+  DollarSign,
+  X
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { AdminHeader } from "@/components/AdminHeader";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface Plan {
+  id: number;
+  name: string;
+  image: string;
+  price: number;
+  daily_income: number | null;
+  duration_days: number;
+  total_return: number;
+  max_purchases: number;
+  type: 'DAILY' | 'END_CYCLE';
+  description: string | null;
+  is_active: boolean;
+  order: number;
+  is_featured: boolean;
+  featured_color: string | null;
+  featured_ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Stats {
+  total: number;
+  active: number;
+  inactive: number;
+  by_type: {
+    daily: number;
+    end_cycle: number;
+  };
+}
+
+export default function AdminPlans() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [perPage, setPerPage] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    image: "",
+    price: "",
+    daily_income: "",
+    duration_days: "",
+    total_return: "",
+    max_purchases: "1",
+    type: "DAILY" as 'DAILY' | 'END_CYCLE',
+    description: "",
+    is_active: true,
+    order: "0",
+    is_featured: false,
+    featured_color: "#FF0000",
+    featured_ends_at: "",
+  });
+
+  // Debounce para busca
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(search);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    loadData();
+  }, [currentPage, searchTerm]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      const [plansRes, statsRes] = await Promise.all([
+        api.get("/admin/plans", { 
+          params: { 
+            page: currentPage,
+            per_page: perPage,
+            search: searchTerm || undefined
+          } 
+        }),
+        api.get("/admin/plans/stats"),
+      ]);
+      
+      setPlans(plansRes.data.data);
+      setStats(statsRes.data.data);
+      
+      if (plansRes.data.meta) {
+        setCurrentPage(plansRes.data.meta.current_page);
+        setTotalPages(plansRes.data.meta.last_page);
+        setPerPage(plansRes.data.meta.per_page);
+        setTotal(plansRes.data.meta.total);
+      }
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        toast({
+          title: "Acesso Negado",
+          description: "Você não tem permissão de administrador.",
+          variant: "destructive",
+        });
+        navigate("/");
+      } else if (error.response?.status === 401) {
+        toast({
+          title: "Sessão Expirada",
+          description: "Faça login novamente.",
+          variant: "destructive",
+        });
+        navigate("/login");
+      } else {
+        toast({
+          title: "Erro",
+          description: error.response?.data?.error?.message || "Não foi possível carregar os dados.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    setSearchTerm(search);
+    setCurrentPage(1);
+  };
+
+  const handleClear = () => {
+    setSearch("");
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
+
+  const resetForm = () => {
+    setForm({
+      name: "",
+      image: "",
+      price: "",
+      daily_income: "",
+      duration_days: "",
+      total_return: "",
+      max_purchases: "1",
+      type: "DAILY",
+      description: "",
+      is_active: true,
+      order: "0",
+      is_featured: false,
+      featured_color: "#FF0000",
+      featured_ends_at: "",
+    });
+  };
+
+  const handleCreate = () => {
+    resetForm();
+    setSelectedPlan(null);
+    setCreateDialogOpen(true);
+  };
+
+  const handleEdit = (plan: Plan) => {
+    setSelectedPlan(plan);
+    setForm({
+      name: plan.name,
+      image: plan.image,
+      price: plan.price.toString(),
+      daily_income: plan.daily_income?.toString() || "",
+      duration_days: plan.duration_days.toString(),
+      total_return: plan.total_return.toString(),
+      max_purchases: plan.max_purchases.toString(),
+      type: plan.type,
+      description: plan.description || "",
+      is_active: plan.is_active,
+      order: plan.order.toString(),
+      is_featured: plan.is_featured,
+      featured_color: plan.featured_color || "#FF0000",
+      featured_ends_at: plan.featured_ends_at ? new Date(plan.featured_ends_at).toISOString().slice(0, 16) : "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      const data: any = {
+        name: form.name,
+        image: form.image,
+        price: parseFloat(form.price),
+        duration_days: parseInt(form.duration_days),
+        total_return: parseFloat(form.total_return),
+        max_purchases: parseInt(form.max_purchases),
+        type: form.type,
+        description: form.description || null,
+        is_active: form.is_active,
+        order: parseInt(form.order),
+      };
+
+      if (form.daily_income) {
+        data.daily_income = parseFloat(form.daily_income);
+      }
+
+      data.is_featured = form.is_featured;
+      if (form.is_featured) {
+        data.featured_color = form.featured_color;
+        data.featured_ends_at = form.featured_ends_at ? new Date(form.featured_ends_at).toISOString() : null;
+      } else {
+        data.featured_color = null;
+        data.featured_ends_at = null;
+      }
+
+      if (selectedPlan) {
+        await api.put(`/admin/plans/${selectedPlan.id}`, data);
+        toast({
+          title: "Sucesso",
+          description: "Plano atualizado com sucesso!",
+        });
+        setEditDialogOpen(false);
+      } else {
+        await api.post("/admin/plans", data);
+        toast({
+          title: "Sucesso",
+          description: "Plano criado com sucesso!",
+        });
+        setCreateDialogOpen(false);
+      }
+
+      resetForm();
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.error?.message || "Erro ao salvar plano.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (planId: number) => {
+    if (!confirm("Tem certeza que deseja deletar este plano?")) return;
+
+    try {
+      await api.delete(`/admin/plans/${planId}`);
+      toast({
+        title: "Sucesso",
+        description: "Plano deletado com sucesso!",
+      });
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.error?.message || "Erro ao deletar plano.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading && !plans.length) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando planos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <AdminHeader />
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Gerenciar Planos</h1>
+          <p className="text-gray-600 mt-2">Gerencie os planos de investimento do sistema</p>
+        </div>
+
+        {/* Estatísticas */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total de Planos</p>
+                  <p className="text-2xl font-bold">{stats.total}</p>
+                </div>
+                <Package className="h-8 w-8 text-blue-500" />
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Planos Ativos</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.active}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-green-500" />
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Planos Inativos</p>
+                  <p className="text-2xl font-bold text-gray-600">{stats.inactive}</p>
+                </div>
+                <X className="h-8 w-8 text-gray-500" />
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Diários / Ciclo</p>
+                  <p className="text-2xl font-bold">{stats.by_type.daily} / {stats.by_type.end_cycle}</p>
+                </div>
+                <DollarSign className="h-8 w-8 text-purple-500" />
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Barra de busca e ações */}
+        <Card className="p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Buscar por nome ou descrição..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  className="pl-10"
+                />
+              </div>
+              <Button onClick={handleSearch} variant="outline">
+                Buscar
+              </Button>
+              {search && (
+                <Button onClick={handleClear} variant="ghost">
+                  Limpar
+                </Button>
+              )}
+            </div>
+            <Button onClick={handleCreate} className="md:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Plano
+            </Button>
+          </div>
+        </Card>
+
+        {/* Tabela de planos */}
+        <Card>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Preço</TableHead>
+                  <TableHead>Renda Diária</TableHead>
+                  <TableHead>Duração</TableHead>
+                  <TableHead>Retorno Total</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Ordem</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {plans.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                      Nenhum plano encontrado
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  plans.map((plan) => (
+                    <TableRow key={plan.id}>
+                      <TableCell>{plan.id}</TableCell>
+                      <TableCell className="font-medium">{plan.name}</TableCell>
+                      <TableCell>R$ {plan.price.toFixed(2)}</TableCell>
+                      <TableCell>
+                        {plan.daily_income ? `R$ ${plan.daily_income.toFixed(2)}` : '-'}
+                      </TableCell>
+                      <TableCell>{plan.duration_days} dias</TableCell>
+                      <TableCell>R$ {plan.total_return.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Badge variant={plan.type === 'DAILY' ? 'default' : 'secondary'}>
+                          {plan.type === 'DAILY' ? 'Diário' : 'Fim de Ciclo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={plan.is_active ? 'default' : 'destructive'}>
+                          {plan.is_active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{plan.order}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(plan)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(plan.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <div className="p-4 flex items-center justify-between border-t">
+              <div className="text-sm text-gray-600">
+                Mostrando {((currentPage - 1) * perPage) + 1} a {Math.min(currentPage * perPage, total)} de {total} planos
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Dialog de Edição */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Plano</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nome</Label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Ex: 🤖 Ecovacs Deebot T8 Robot"
+              />
+            </div>
+            <div>
+              <Label>Imagem (URL ou caminho)</Label>
+              <Input
+                value={form.image}
+                onChange={(e) => setForm({ ...form, image: e.target.value })}
+                placeholder="/assets/ecovacs-t8.jpg"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Preço (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  placeholder="50.00"
+                />
+              </div>
+              <div>
+                <Label>Renda Diária (R$) - Opcional</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={form.daily_income}
+                  onChange={(e) => setForm({ ...form, daily_income: e.target.value })}
+                  placeholder="5.00"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Duração (dias)</Label>
+                <Input
+                  type="number"
+                  value={form.duration_days}
+                  onChange={(e) => setForm({ ...form, duration_days: e.target.value })}
+                  placeholder="20"
+                />
+              </div>
+              <div>
+                <Label>Retorno Total (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={form.total_return}
+                  onChange={(e) => setForm({ ...form, total_return: e.target.value })}
+                  placeholder="100.00"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Máximo de Compras</Label>
+                <Input
+                  type="number"
+                  value={form.max_purchases}
+                  onChange={(e) => setForm({ ...form, max_purchases: e.target.value })}
+                  placeholder="1"
+                />
+              </div>
+              <div>
+                <Label>Tipo</Label>
+                <Select
+                  value={form.type}
+                  onValueChange={(value: 'DAILY' | 'END_CYCLE') => setForm({ ...form, type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DAILY">Diário</SelectItem>
+                    <SelectItem value="END_CYCLE">Fim de Ciclo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Descrição (Opcional)</Label>
+              <Textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Descrição do plano..."
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Ordem de Exibição</Label>
+                <Input
+                  type="number"
+                  value={form.order}
+                  onChange={(e) => setForm({ ...form, order: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
+              <div className="flex items-center space-x-2 pt-8">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={form.is_active}
+                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="is_active">Plano Ativo</Label>
+              </div>
+            </div>
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_featured"
+                  checked={form.is_featured}
+                  onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="is_featured" className="font-semibold">Plano em Promoção/Destaque</Label>
+              </div>
+              {form.is_featured && (
+                <>
+                  <div>
+                    <Label>Cor do Destaque (Hex)</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={form.featured_color}
+                        onChange={(e) => setForm({ ...form, featured_color: e.target.value })}
+                        className="w-20 h-10"
+                      />
+                      <Input
+                        type="text"
+                        value={form.featured_color}
+                        onChange={(e) => setForm({ ...form, featured_color: e.target.value })}
+                        placeholder="#FF0000"
+                        pattern="^#[0-9A-Fa-f]{6}$"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Data/Hora de Término da Promoção</Label>
+                    <Input
+                      type="datetime-local"
+                      value={form.featured_ends_at}
+                      onChange={(e) => setForm({ ...form, featured_ends_at: e.target.value })}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Deixe vazio para promoção sem data de término</p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Criação */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Novo Plano</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nome</Label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Ex: 🤖 Ecovacs Deebot T8 Robot"
+              />
+            </div>
+            <div>
+              <Label>Imagem (URL ou caminho)</Label>
+              <Input
+                value={form.image}
+                onChange={(e) => setForm({ ...form, image: e.target.value })}
+                placeholder="/assets/ecovacs-t8.jpg"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Preço (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  placeholder="50.00"
+                />
+              </div>
+              <div>
+                <Label>Renda Diária (R$) - Opcional</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={form.daily_income}
+                  onChange={(e) => setForm({ ...form, daily_income: e.target.value })}
+                  placeholder="5.00"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Duração (dias)</Label>
+                <Input
+                  type="number"
+                  value={form.duration_days}
+                  onChange={(e) => setForm({ ...form, duration_days: e.target.value })}
+                  placeholder="20"
+                />
+              </div>
+              <div>
+                <Label>Retorno Total (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={form.total_return}
+                  onChange={(e) => setForm({ ...form, total_return: e.target.value })}
+                  placeholder="100.00"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Máximo de Compras</Label>
+                <Input
+                  type="number"
+                  value={form.max_purchases}
+                  onChange={(e) => setForm({ ...form, max_purchases: e.target.value })}
+                  placeholder="1"
+                />
+              </div>
+              <div>
+                <Label>Tipo</Label>
+                <Select
+                  value={form.type}
+                  onValueChange={(value: 'DAILY' | 'END_CYCLE') => setForm({ ...form, type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DAILY">Diário</SelectItem>
+                    <SelectItem value="END_CYCLE">Fim de Ciclo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Descrição (Opcional)</Label>
+              <Textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Descrição do plano..."
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Ordem de Exibição</Label>
+                <Input
+                  type="number"
+                  value={form.order}
+                  onChange={(e) => setForm({ ...form, order: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
+              <div className="flex items-center space-x-2 pt-8">
+                <input
+                  type="checkbox"
+                  id="is_active_create"
+                  checked={form.is_active}
+                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="is_active_create">Plano Ativo</Label>
+              </div>
+            </div>
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_featured_create"
+                  checked={form.is_featured}
+                  onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="is_featured_create" className="font-semibold">Plano em Promoção/Destaque</Label>
+              </div>
+              {form.is_featured && (
+                <>
+                  <div>
+                    <Label>Cor do Destaque (Hex)</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={form.featured_color}
+                        onChange={(e) => setForm({ ...form, featured_color: e.target.value })}
+                        className="w-20 h-10"
+                      />
+                      <Input
+                        type="text"
+                        value={form.featured_color}
+                        onChange={(e) => setForm({ ...form, featured_color: e.target.value })}
+                        placeholder="#FF0000"
+                        pattern="^#[0-9A-Fa-f]{6}$"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Data/Hora de Término da Promoção</Label>
+                    <Input
+                      type="datetime-local"
+                      value={form.featured_ends_at}
+                      onChange={(e) => setForm({ ...form, featured_ends_at: e.target.value })}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Deixe vazio para promoção sem data de término</p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave}>Criar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+

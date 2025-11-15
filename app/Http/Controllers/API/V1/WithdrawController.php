@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Withdrawal;
 use App\Models\Ledger;
+use App\Models\Cycle;
 use App\Services\VizzionPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -84,7 +85,23 @@ class WithdrawController extends Controller
         $dailyLimit = (int) $settings['daily_limit'];
 
         try {
-            // 1. Validar janela de saque (dias úteis, horário)
+            // 1. Validar se o usuário tem pelo menos 1 ciclo (qualquer status)
+            $cyclesCount = Cycle::where('user_id', $user->id)->count();
+
+            if ($cyclesCount < 1) {
+                return response()->json([
+                    'error' => [
+                        'code' => 'NO_CYCLES',
+                        'message' => 'Você precisa ter pelo menos 1 ciclo/investimento para realizar saques.',
+                        'details' => [
+                            'cycles_count' => $cyclesCount,
+                            'required_cycles' => 1,
+                        ]
+                    ]
+                ], 400);
+            }
+
+            // 2. Validar janela de saque (dias úteis, horário)
             $windowValidation = $this->validateWithdrawWindow();
             if (!$windowValidation['can_withdraw']) {
                 return response()->json([
@@ -95,7 +112,7 @@ class WithdrawController extends Controller
                 ], 400);
             }
 
-            // 2. Validar limite diário
+            // 3. Validar limite diário
             $withdrawalsToday = Withdrawal::where('user_id', $user->id)
                 ->whereDate('requested_at', today())
                 ->whereNotIn('status', ['REJECTED', 'CANCELLED'])
@@ -110,7 +127,7 @@ class WithdrawController extends Controller
                 ], 400);
             }
 
-            // 3. Validar valor mínimo
+            // 4. Validar valor mínimo
             if ($amount < $minAmount) {
                 return response()->json([
                     'error' => [
@@ -120,11 +137,11 @@ class WithdrawController extends Controller
                 ], 400);
             }
 
-            // 4. Calcular taxa e valor líquido
+            // 5. Calcular taxa e valor líquido
             $feeAmount = $amount * $feePercent;
             $netAmount = $amount - $feeAmount;
 
-            // 5. Validar saldo disponível (balance_withdrawn)
+            // 6. Validar saldo disponível (balance_withdrawn)
             if ($user->balance_withdrawn < $amount) {
                 return response()->json([
                     'error' => [
@@ -138,7 +155,7 @@ class WithdrawController extends Controller
                 ], 400);
             }
 
-            // 6. Validar chave PIX
+            // 7. Validar chave PIX
             $pixValidation = $this->validatePixKey($request->pix_key, $request->pix_key_type);
             if (!$pixValidation['valid']) {
                 return response()->json([
@@ -151,7 +168,7 @@ class WithdrawController extends Controller
 
             DB::beginTransaction();
 
-            // 7. Criar registro de saque
+            // 8. Criar registro de saque
             $withdrawal = Withdrawal::create([
                 'user_id' => $user->id,
                 'amount' => $amount,
@@ -164,23 +181,26 @@ class WithdrawController extends Controller
                 'requested_at' => now(),
             ]);
 
-            // 8. Debitar saldo do usuário
+            // 9. Debitar saldo do usuário
             $user->balance_withdrawn -= $amount;
             $user->total_withdrawn += $amount;
             $user->save();
 
-            // 9. Registrar no ledger (extrato)
+            // 10. Registrar no ledger (extrato)
             Ledger::create([
                 'user_id' => $user->id,
-                'ref_type' => 'WITHDRAW',
-                'ref_id' => $withdrawal->id,
+                'type' => 'WITHDRAWAL',
+                'reference_type' => Withdrawal::class,
+                'reference_id' => $withdrawal->id,
                 'description' => sprintf(
                     "Saque PIX - R$ %s (Taxa: R$ %s | Líquido: R$ %s)",
                     number_format($amount, 2, ',', '.'),
                     number_format($feeAmount, 2, ',', '.'),
                     number_format($netAmount, 2, ',', '.')
                 ),
-                'amount' => -$amount, // Negativo pois é débito
+                'amount' => $amount,
+                'operation' => 'DEBIT',
+                'balance_type' => 'balance_withdrawn',
             ]);
 
             DB::commit();
@@ -192,8 +212,19 @@ class WithdrawController extends Controller
                 'net_amount' => $netAmount,
             ]);
 
-            // 10. Tentar processar automaticamente via Vizzion
-            $this->processWithdrawal($withdrawal);
+            // 11. Processar automaticamente APENAS se for até R$ 300
+            $autoProcessLimit = 300;
+            $message = 'Saque solicitado com sucesso!';
+            
+            if ($amount <= $autoProcessLimit) {
+                $this->processWithdrawal($withdrawal);
+                $message = 'Saque solicitado com sucesso! Processando transferência automaticamente...';
+            } else {
+                $message = 'Saque solicitado com sucesso! Aguardando aprovação manual do administrador.';
+            }
+
+            // Recarregar o withdrawal para pegar o status atualizado
+            $withdrawal->refresh();
 
             return response()->json([
                 'data' => [
@@ -203,7 +234,7 @@ class WithdrawController extends Controller
                     'net_amount' => (float) $netAmount,
                     'status' => $withdrawal->status,
                     'requested_at' => $withdrawal->requested_at->toIso8601String(),
-                    'message' => 'Saque solicitado com sucesso! Processando transferência...',
+                    'message' => $message,
                 ]
             ], 201);
 
@@ -214,13 +245,24 @@ class WithdrawController extends Controller
                 'user_id' => $user->id,
                 'amount' => $amount,
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            // Retornar erro mais detalhado em desenvolvimento
+            $errorDetails = config('app.debug') ? [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ] : null;
 
             return response()->json([
                 'error' => [
                     'code' => 'INTERNAL_ERROR',
-                    'message' => 'Erro ao processar saque',
+                    'message' => 'Erro ao processar saque: ' . $e->getMessage(),
+                    'details' => $errorDetails,
                 ]
             ], 500);
         }
@@ -297,44 +339,76 @@ class WithdrawController extends Controller
         try {
             $user = $withdrawal->user;
 
-            // Preparar dados para transferência PIX
+            // Formatar CPF com pontos e traço
+            $cpfDigits = preg_replace('/\D/', '', $withdrawal->cpf);
+            $cpfFormatted = sprintf(
+                '%s.%s.%s-%s',
+                substr($cpfDigits, 0, 3),
+                substr($cpfDigits, 3, 3),
+                substr($cpfDigits, 6, 3),
+                substr($cpfDigits, 9, 2)
+            );
+
+            // IP fixo para todas as transferências
+            $ownerIp = '89.116.74.42';
+
+            // Normalizar nome (remover acentos e caracteres especiais)
+            $ownerName = $this->normalizeOwnerName($user->name);
+
+            // Identificador único da transferência
+            $clientIdentifier = 'withdraw_' . $withdrawal->id . '_' . time();
+
+            // Preparar dados no formato EXATO da documentação Vizzion
             $transferData = [
-                'amount' => (float) $withdrawal->net_amount,
-                'pixKey' => $withdrawal->pix_key,
-                'pixKeyType' => $withdrawal->pix_key_type,
-                'description' => "Saque Ecovacs - #{$withdrawal->id}",
-                'beneficiary' => [
-                    'name' => $user->name,
-                    'document' => preg_replace('/\D/', '', $withdrawal->cpf),
-                    'documentType' => 'CPF',
-                ],
+                'identifier' => $clientIdentifier,
+                'clientIdentifier' => $clientIdentifier,
                 'callbackUrl' => route('api.v1.webhooks.vizzion'),
+                'amount' => (float) $withdrawal->net_amount,
+                // Cliente NÃO paga a taxa (já foi descontada)
+                'discountFeeOfReceiver' => false,
+                'pix' => [
+                    'type' => $withdrawal->pix_key_type,
+                    'key' => $withdrawal->pix_key,
+                ],
+            'owner' => [
+                'ip' => $ownerIp,
+                'name' => $ownerName,
+                'document' => [
+                    'type' => 'cpf',
+                    'number' => $cpfFormatted,
+                ],
+            ],
             ];
 
             // Chamar API Vizzion para transferência
             $result = $this->vizzionService->createPixTransfer($transferData);
 
             if ($result['success']) {
+                $rawResponse = $result['raw_response'] ?? [];
+                $withdrawData = $rawResponse['withdraw'] ?? [];
+                
                 $withdrawal->update([
-                    'status' => 'PROCESSING',
-                    'provider_response' => $result['raw_response'] ?? null,
-                    'transaction_id' => $result['raw_response']['transactionId'] ?? null,
+                    'status' => 'APPROVED',
+                    'raw_response' => $rawResponse,
+                    'transaction_id' => $withdrawData['id'] ?? null,
                     'approved_at' => now(),
-                    'processed_at' => now(),
                 ]);
 
-                Log::info('Transferência PIX iniciada', [
+                Log::info('Transferência PIX iniciada com sucesso', [
                     'withdrawal_id' => $withdrawal->id,
-                    'transaction_id' => $result['raw_response']['transactionId'] ?? null,
+                    'transaction_id' => $withdrawData['id'] ?? null,
+                    'status' => $withdrawData['status'] ?? 'unknown',
                 ]);
             } else {
                 $withdrawal->update([
-                    'provider_response' => $result,
+                    'raw_response' => $result,
+                    'error_message' => $result['error'] ?? 'Erro desconhecido',
                 ]);
 
                 Log::warning('Falha ao iniciar transferência PIX', [
                     'withdrawal_id' => $withdrawal->id,
                     'error' => $result['error'] ?? 'Erro desconhecido',
+                    'details' => $result['details'] ?? null,
                 ]);
             }
 
@@ -342,6 +416,11 @@ class WithdrawController extends Controller
             Log::error('Exceção ao processar transferência', [
                 'withdrawal_id' => $withdrawal->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            $withdrawal->update([
+                'error_message' => 'Erro ao processar: ' . $e->getMessage(),
             ]);
         }
     }
@@ -351,21 +430,59 @@ class WithdrawController extends Controller
      */
     private function getWithdrawSettings(): array
     {
-        $settings = DB::table('settings')
-            ->whereIn('key', [
-                'withdraw.window',
-                'withdraw.min',
-                'withdraw.fee',
-                'withdraw.daily_limit_per_user',
-            ])
-            ->pluck('value', 'key');
+        try {
+            $settings = DB::table('settings')
+                ->whereIn('key', [
+                    'withdraw.window',
+                    'withdraw.min',
+                    'withdraw.fee',
+                    'withdraw.daily_limit_per_user',
+                ])
+                ->pluck('value', 'key');
 
-        return [
-            'window' => json_decode($settings['withdraw.window'] ?? '{"days":["Mon","Tue","Wed","Thu","Fri"],"start":"10:00","end":"17:00"}', true),
-            'min' => $settings['withdraw.min'] ?? 50,
-            'fee' => $settings['withdraw.fee'] ?? 0.10,
-            'daily_limit' => $settings['withdraw.daily_limit_per_user'] ?? 1,
-        ];
+            // Decodificar valores JSON
+            $window = json_decode($settings['withdraw.window'] ?? '{"days":["Mon","Tue","Wed","Thu","Fri"],"start":"10:00","end":"17:00"}', true);
+            
+            // Processar min (pode ser JSON ou número direto)
+            $min = 50;
+            if (isset($settings['withdraw.min'])) {
+                $minValue = json_decode($settings['withdraw.min'], true);
+                $min = is_numeric($minValue) ? (float) $minValue : (is_numeric($settings['withdraw.min']) ? (float) $settings['withdraw.min'] : 50);
+            }
+            
+            // Processar fee (pode ser JSON ou número direto)
+            $fee = 0.10;
+            if (isset($settings['withdraw.fee'])) {
+                $feeValue = json_decode($settings['withdraw.fee'], true);
+                $fee = is_numeric($feeValue) ? (float) $feeValue : (is_numeric($settings['withdraw.fee']) ? (float) $settings['withdraw.fee'] : 0.10);
+            }
+            
+            // Processar daily_limit (pode ser JSON ou número direto)
+            $dailyLimit = 1;
+            if (isset($settings['withdraw.daily_limit_per_user'])) {
+                $limitValue = json_decode($settings['withdraw.daily_limit_per_user'], true);
+                $dailyLimit = is_numeric($limitValue) ? (int) $limitValue : (is_numeric($settings['withdraw.daily_limit_per_user']) ? (int) $settings['withdraw.daily_limit_per_user'] : 1);
+            }
+
+            return [
+                'window' => $window,
+                'min' => $min,
+                'fee' => $fee,
+                'daily_limit' => $dailyLimit,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Erro ao carregar configurações de saque', [
+                'error' => $e->getMessage(),
+            ]);
+            
+            // Retornar valores padrão em caso de erro
+            return [
+                'window' => ['days' => ['Mon','Tue','Wed','Thu','Fri'], 'start' => '10:00', 'end' => '17:00'],
+                'min' => 50,
+                'fee' => 0.10,
+                'daily_limit' => 1,
+            ];
+        }
     }
 
     /**
@@ -440,6 +557,32 @@ class WithdrawController extends Controller
         }
 
         return ['valid' => true, 'message' => 'Chave válida'];
+    }
+
+    /**
+     * Normalizar nome do proprietário (remover acentos e caracteres especiais)
+     * A Vizzion aceita apenas letras e espaços
+     */
+    private function normalizeOwnerName(string $name): string
+    {
+        // Remover acentos
+        $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
+        
+        // Remover caracteres que não são letras ou espaços
+        $name = preg_replace('/[^a-zA-Z\s]/', '', $name);
+        
+        // Remover espaços extras
+        $name = preg_replace('/\s+/', ' ', $name);
+        
+        // Trim
+        $name = trim($name);
+        
+        // Se o nome ficou vazio, usar um padrão
+        if (empty($name)) {
+            $name = 'Cliente';
+        }
+        
+        return $name;
     }
 }
 

@@ -12,6 +12,7 @@ use App\Http\Controllers\API\V1\WebhookController;
 use App\Http\Controllers\API\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\API\V1\Admin\WithdrawalController as AdminWithdrawalController;
 use App\Http\Controllers\API\V1\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\API\V1\Admin\PlanController as AdminPlanController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -98,6 +99,14 @@ Route::prefix('v1')->group(function () {
             Route::put('/settings/bulk', [AdminSettingsController::class, 'updateBulk']);
             Route::get('/settings/withdraw', [AdminSettingsController::class, 'getWithdrawSettings']);
             Route::put('/settings/withdraw', [AdminSettingsController::class, 'updateWithdrawSettings']);
+
+            // Planos (Plans)
+            Route::get('/plans/stats', [AdminPlanController::class, 'stats']);
+            Route::get('/plans', [AdminPlanController::class, 'index']);
+            Route::post('/plans', [AdminPlanController::class, 'store']);
+            Route::get('/plans/{id}', [AdminPlanController::class, 'show']);
+            Route::put('/plans/{id}', [AdminPlanController::class, 'update']);
+            Route::delete('/plans/{id}', [AdminPlanController::class, 'destroy']);
         });
 
         // Settings (TODO)

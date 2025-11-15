@@ -511,3 +511,9 @@ Essas queries ajudam a monitorar, debugar e otimizar o sistema de comissÃµes! ğŸ
 
 
 
+
+
+
+
+
+

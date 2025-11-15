@@ -122,3 +122,9 @@ Se retornar algo, confirma que há lockdown ativo.
 
 
 
+
+
+
+
+
+

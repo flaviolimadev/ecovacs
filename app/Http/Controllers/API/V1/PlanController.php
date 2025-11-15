@@ -23,10 +23,48 @@ class PlanController extends Controller
 
         $plans = $query->get();
 
-        // Agrupar por tipo
+        // Agrupar por tipo e incluir informações de promoção
         $groupedPlans = [
-            'standard' => $plans->where('type', 'DAILY')->values(),
-            'cycle' => $plans->where('type', 'END_CYCLE')->values(),
+            'standard' => $plans->where('type', 'DAILY')->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'image' => $plan->image,
+                    'price' => (float) $plan->price,
+                    'daily_income' => $plan->daily_income ? (float) $plan->daily_income : null,
+                    'duration_days' => $plan->duration_days,
+                    'total_return' => (float) $plan->total_return,
+                    'max_purchases' => $plan->max_purchases,
+                    'type' => $plan->type,
+                    'description' => $plan->description,
+                    'is_active' => $plan->is_active,
+                    'order' => $plan->order,
+                    'is_featured' => $plan->is_featured,
+                    'featured_color' => $plan->featured_color,
+                    'featured_ends_at' => $plan->featured_ends_at?->toIso8601String(),
+                    'is_promotion_active' => $plan->isPromotionActive(),
+                ];
+            })->values(),
+            'cycle' => $plans->where('type', 'END_CYCLE')->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'image' => $plan->image,
+                    'price' => (float) $plan->price,
+                    'daily_income' => $plan->daily_income ? (float) $plan->daily_income : null,
+                    'duration_days' => $plan->duration_days,
+                    'total_return' => (float) $plan->total_return,
+                    'max_purchases' => $plan->max_purchases,
+                    'type' => $plan->type,
+                    'description' => $plan->description,
+                    'is_active' => $plan->is_active,
+                    'order' => $plan->order,
+                    'is_featured' => $plan->is_featured,
+                    'featured_color' => $plan->featured_color,
+                    'featured_ends_at' => $plan->featured_ends_at?->toIso8601String(),
+                    'is_promotion_active' => $plan->isPromotionActive(),
+                ];
+            })->values(),
         ];
 
         return response()->json([

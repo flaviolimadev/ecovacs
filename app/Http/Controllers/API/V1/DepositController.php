@@ -100,7 +100,7 @@ class DepositController extends Controller
                         'price' => $amount,
                     ],
                 ],
-                'dueDate' => now()->addDay()->toDateString(),
+                'dueDate' => now()->addDays(2)->toDateString(),
                 'discountFeeOfReceiver' => false,
                 'pix' => [
                     'type' => 'email',
