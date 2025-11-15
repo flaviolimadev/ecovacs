@@ -127,9 +127,9 @@ class PlanController extends Controller
             'max_purchases' => 'required|integer|min:0',
             'type' => ['required', Rule::in(['DAILY', 'END_CYCLE'])],
             'description' => 'nullable|string',
-            'is_active' => 'boolean',
-            'order' => 'integer|min:0',
-            'is_featured' => 'boolean',
+            'is_active' => 'sometimes|boolean',
+            'order' => 'sometimes|integer|min:0',
+            'is_featured' => 'sometimes|boolean',
             'featured_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'featured_ends_at' => 'nullable|date',
         ]);

@@ -14,26 +14,7 @@ class UploadController extends Controller
      */
     public function uploadImage(Request $request)
     {
-        // Verificar autenticação
-        if (!$request->user()) {
-            return response()->json([
-                'error' => [
-                    'code' => 'UNAUTHENTICATED',
-                    'message' => 'Não autenticado',
-                ]
-            ], 401);
-        }
-
-        // Verificar se é admin
-        if ($request->user()->role !== 'admin') {
-            return response()->json([
-                'error' => [
-                    'code' => 'FORBIDDEN',
-                    'message' => 'Acesso negado. Apenas administradores podem fazer upload de imagens.',
-                ]
-            ], 403);
-        }
-
+        // O middleware 'admin' já verifica autenticação e role
         $request->validate([
             'image' => 'required|image|mimes:jpeg,jpg,png,webp|max:5120', // 5MB max
         ]);

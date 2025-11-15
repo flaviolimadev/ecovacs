@@ -18,7 +18,12 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token');
     if (token) {
+      // Garantir que o header Authorization seja sempre adicionado, mesmo para FormData
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Para FormData, não definir Content-Type manualmente (deixar o browser definir com boundary)
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },

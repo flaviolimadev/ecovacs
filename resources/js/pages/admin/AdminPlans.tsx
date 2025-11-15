@@ -257,11 +257,9 @@ export default function AdminPlans() {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await api.post('/admin/upload/image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      // O interceptor do axios já adiciona o token automaticamente
+      // E remove o Content-Type para FormData (deixa o browser definir com boundary)
+      const response = await api.post('/admin/upload/image', formData);
 
       const imageUrl = response.data.data.url;
       setForm({ ...form, image: imageUrl });
@@ -347,31 +345,52 @@ export default function AdminPlans() {
 
   const handleSave = async () => {
     try {
+      // Validação básica antes de enviar
+      if (!form.name || !form.image || !form.price || !form.duration_days || !form.total_return) {
+        toast({
+          title: "❌ Campos obrigatórios",
+          description: "Por favor, preencha todos os campos obrigatórios.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const data: any = {
-        name: form.name,
-        image: form.image,
+        name: form.name.trim(),
+        image: form.image.trim(),
         price: parseFloat(form.price),
         duration_days: parseInt(form.duration_days),
         total_return: parseFloat(form.total_return),
-        max_purchases: parseInt(form.max_purchases),
+        max_purchases: parseInt(form.max_purchases) || 1,
         type: form.type,
-        description: form.description || null,
-        is_active: form.is_active,
-        order: parseInt(form.order),
+        description: form.description?.trim() || null,
+        is_active: form.is_active !== undefined ? form.is_active : true,
+        order: parseInt(form.order) || 0,
       };
 
-      if (form.daily_income) {
+      // daily_income é opcional, mas se fornecido deve ser numérico
+      if (form.daily_income && form.daily_income.trim() !== '') {
         data.daily_income = parseFloat(form.daily_income);
       }
 
-      data.is_featured = form.is_featured;
+      // Campos de promoção
+      data.is_featured = form.is_featured || false;
       if (form.is_featured) {
+        // Validar cor se for promoção
+        if (!form.featured_color || !form.featured_color.match(/^#[0-9A-Fa-f]{6}$/)) {
+          toast({
+            title: "❌ Cor inválida",
+            description: "Por favor, escolha uma cor válida no formato hexadecimal (#RRGGBB).",
+            variant: "destructive",
+          });
+          return;
+        }
         data.featured_color = form.featured_color;
+        
         // Converter datetime-local para ISO string corretamente
-        if (form.featured_ends_at) {
+        if (form.featured_ends_at && form.featured_ends_at.trim() !== '') {
           try {
             // datetime-local vem no formato: YYYY-MM-DDTHH:mm
-            // Precisamos converter para ISO string
             const dateStr = form.featured_ends_at;
             const date = new Date(dateStr);
             
@@ -417,11 +436,38 @@ export default function AdminPlans() {
       resetForm();
       loadData();
     } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.response?.data?.error?.message || "Erro ao salvar plano.",
-        variant: "destructive",
-      });
+      console.error('Erro ao salvar plano:', error);
+      
+      // Tratar erros de validação (422)
+      if (error.response?.status === 422) {
+        const errorData = error.response.data;
+        const errorMessage = errorData?.error?.message || 'Dados inválidos';
+        const errorDetails = errorData?.error?.details;
+        
+        let description = errorMessage;
+        if (errorDetails) {
+          // Se houver detalhes de validação, mostrar os campos com erro
+          const fields = Object.keys(errorDetails).map(field => {
+            const messages = Array.isArray(errorDetails[field]) 
+              ? errorDetails[field].join(', ') 
+              : errorDetails[field];
+            return `${field}: ${messages}`;
+          }).join('\n');
+          description = `${errorMessage}\n${fields}`;
+        }
+        
+        toast({
+          title: "❌ Erro de Validação",
+          description: description,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "❌ Erro",
+          description: error.response?.data?.error?.message || error.message || "Erro ao salvar plano.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
