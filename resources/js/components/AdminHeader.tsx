@@ -1,4 +1,4 @@
-import { ArrowLeft, Users, DollarSign, Settings, Home } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Settings, Home, Package } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +21,11 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
       label: "Saques",
       icon: DollarSign,
       path: "/admin/withdrawals",
+    },
+    {
+      label: "Planos",
+      icon: Package,
+      path: "/admin/plans",
     },
     {
       label: "Configurações",
