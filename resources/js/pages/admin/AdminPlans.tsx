@@ -119,20 +119,35 @@ export default function AdminPlans() {
     }
 
     const updateTime = () => {
-      const now = new Date().getTime();
-      const end = new Date(form.featured_ends_at).getTime();
-      const diff = end - now;
+      try {
+        const now = new Date().getTime();
+        // datetime-local vem como YYYY-MM-DDTHH:mm, precisa ser convertido corretamente
+        const dateStr = form.featured_ends_at;
+        const endDate = new Date(dateStr);
+        
+        // Verificar se a data é válida
+        if (isNaN(endDate.getTime())) {
+          setTimeRemaining(null);
+          return;
+        }
+        
+        const end = endDate.getTime();
+        const diff = end - now;
 
-      if (diff <= 0) {
+        if (diff <= 0) {
+          setTimeRemaining(null);
+          return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeRemaining({ days, hours, minutes, seconds });
+      } catch (error) {
+        console.error('Erro ao calcular tempo restante:', error);
         setTimeRemaining(null);
-        return;
       }
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      setTimeRemaining({ days, hours, minutes, seconds });
     };
 
     updateTime();
@@ -233,6 +248,73 @@ export default function AdminPlans() {
       featured_color: "#FF0000",
       featured_ends_at: "",
     });
+    setImagePreview(null);
+  };
+
+  const handleImageUpload = async (file: File) => {
+    try {
+      setUploadingImage(true);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await api.post('/admin/upload/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const imageUrl = response.data.data.url;
+      setForm({ ...form, image: imageUrl });
+      setImagePreview(imageUrl);
+      
+      toast({
+        title: "✅ Imagem enviada!",
+        description: "A imagem foi carregada com sucesso.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "❌ Erro ao enviar imagem",
+        description: error.response?.data?.error?.message || "Erro ao fazer upload da imagem.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tipo de arquivo
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "❌ Arquivo inválido",
+          description: "Por favor, selecione uma imagem.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validar tamanho (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "❌ Arquivo muito grande",
+          description: "A imagem deve ter no máximo 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Criar preview local
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Fazer upload
+      handleImageUpload(file);
+    }
   };
 
   const handleCreate = () => {
@@ -285,7 +367,32 @@ export default function AdminPlans() {
       data.is_featured = form.is_featured;
       if (form.is_featured) {
         data.featured_color = form.featured_color;
-        data.featured_ends_at = form.featured_ends_at ? new Date(form.featured_ends_at).toISOString() : null;
+        // Converter datetime-local para ISO string corretamente
+        if (form.featured_ends_at) {
+          try {
+            // datetime-local vem no formato: YYYY-MM-DDTHH:mm
+            // Precisamos converter para ISO string
+            const dateStr = form.featured_ends_at;
+            const date = new Date(dateStr);
+            
+            // Verificar se a data é válida
+            if (isNaN(date.getTime())) {
+              throw new Error('Data inválida');
+            }
+            
+            data.featured_ends_at = date.toISOString();
+          } catch (error) {
+            console.error('Erro ao converter data:', error);
+            toast({
+              title: "❌ Erro na data",
+              description: "Por favor, verifique a data de término da promoção.",
+              variant: "destructive",
+            });
+            return; // Não salvar se a data for inválida
+          }
+        } else {
+          data.featured_ends_at = null;
+        }
       } else {
         data.featured_color = null;
         data.featured_ends_at = null;
