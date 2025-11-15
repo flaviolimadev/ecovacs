@@ -30,7 +30,10 @@ import {
   TrendingUp,
   DollarSign,
   X,
-  Clock
+  Clock,
+  Upload,
+  Image as ImageIcon,
+  Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AdminHeader } from "@/components/AdminHeader";
@@ -89,6 +92,8 @@ export default function AdminPlans() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<{ hours: number; minutes: number; seconds: number; days: number } | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [form, setForm] = useState({
     name: "",
     image: "",
@@ -238,6 +243,7 @@ export default function AdminPlans() {
 
   const handleEdit = (plan: Plan) => {
     setSelectedPlan(plan);
+    setImagePreview(plan.image);
     setForm({
       name: plan.name,
       image: plan.image,
@@ -542,12 +548,72 @@ export default function AdminPlans() {
               />
             </div>
             <div>
-              <Label>Imagem (URL ou caminho)</Label>
-              <Input
-                value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
-                placeholder="/assets/ecovacs-t8.jpg"
-              />
+              <Label>Imagem do Plano</Label>
+              <div className="space-y-3">
+                {/* Input de arquivo */}
+                <div className="flex items-center gap-3">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    {uploadingImage ? (
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">Enviando...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">
+                          <span className="font-semibold">Clique para enviar</span> ou arraste a imagem aqui
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP até 5MB</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      disabled={uploadingImage}
+                    />
+                  </label>
+                </div>
+
+                {/* Preview da imagem */}
+                {imagePreview && (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-gray-50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setForm({ ...form, image: "" });
+                      }}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Campo de URL alternativa */}
+                <div>
+                  <Label className="text-xs text-gray-500">Ou cole uma URL de imagem:</Label>
+                  <Input
+                    value={form.image}
+                    onChange={(e) => {
+                      setForm({ ...form, image: e.target.value });
+                      if (e.target.value) {
+                        setImagePreview(e.target.value);
+                      }
+                    }}
+                    placeholder="https://exemplo.com/imagem.jpg"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -756,12 +822,72 @@ export default function AdminPlans() {
               />
             </div>
             <div>
-              <Label>Imagem (URL ou caminho)</Label>
-              <Input
-                value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
-                placeholder="/assets/ecovacs-t8.jpg"
-              />
+              <Label>Imagem do Plano</Label>
+              <div className="space-y-3">
+                {/* Input de arquivo */}
+                <div className="flex items-center gap-3">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    {uploadingImage ? (
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">Enviando...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">
+                          <span className="font-semibold">Clique para enviar</span> ou arraste a imagem aqui
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP até 5MB</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      disabled={uploadingImage}
+                    />
+                  </label>
+                </div>
+
+                {/* Preview da imagem */}
+                {imagePreview && (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-gray-50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setForm({ ...form, image: "" });
+                      }}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Campo de URL alternativa */}
+                <div>
+                  <Label className="text-xs text-gray-500">Ou cole uma URL de imagem:</Label>
+                  <Input
+                    value={form.image}
+                    onChange={(e) => {
+                      setForm({ ...form, image: e.target.value });
+                      if (e.target.value) {
+                        setImagePreview(e.target.value);
+                      }
+                    }}
+                    placeholder="https://exemplo.com/imagem.jpg"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

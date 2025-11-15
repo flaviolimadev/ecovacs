@@ -107,6 +107,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/plans/{id}', [AdminPlanController::class, 'show']);
             Route::put('/plans/{id}', [AdminPlanController::class, 'update']);
             Route::delete('/plans/{id}', [AdminPlanController::class, 'destroy']);
+            
+            // Upload
+            Route::post('/upload/image', [\App\Http\Controllers\API\V1\Admin\UploadController::class, 'uploadImage']);
         });
 
         // Settings (TODO)
