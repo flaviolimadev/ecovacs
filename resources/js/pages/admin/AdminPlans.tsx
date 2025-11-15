@@ -29,7 +29,8 @@ import {
   Package,
   TrendingUp,
   DollarSign,
-  X
+  X,
+  Clock
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AdminHeader } from "@/components/AdminHeader";
@@ -87,6 +88,7 @@ export default function AdminPlans() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<{ hours: number; minutes: number; seconds: number; days: number } | null>(null);
   const [form, setForm] = useState({
     name: "",
     image: "",
@@ -103,6 +105,36 @@ export default function AdminPlans() {
     featured_color: "#FF0000",
     featured_ends_at: "",
   });
+
+  // Calcular tempo restante para exibir no formulário
+  useEffect(() => {
+    if (!form.is_featured || !form.featured_ends_at) {
+      setTimeRemaining(null);
+      return;
+    }
+
+    const updateTime = () => {
+      const now = new Date().getTime();
+      const end = new Date(form.featured_ends_at).getTime();
+      const diff = end - now;
+
+      if (diff <= 0) {
+        setTimeRemaining(null);
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeRemaining({ days, hours, minutes, seconds });
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+
+    return () => clearInterval(interval);
+  }, [form.is_featured, form.featured_ends_at]);
 
   // Debounce para busca
   useEffect(() => {
@@ -655,6 +687,45 @@ export default function AdminPlans() {
                       onChange={(e) => setForm({ ...form, featured_ends_at: e.target.value })}
                     />
                     <p className="text-xs text-gray-500 mt-1">Deixe vazio para promoção sem data de término</p>
+                    
+                    {/* Preview do tempo de disponibilidade */}
+                    {form.featured_ends_at && (
+                      <div className="mt-3 p-3 rounded-lg border-2" style={{ borderColor: form.featured_color, backgroundColor: `${form.featured_color}10` }}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="w-4 h-4" style={{ color: form.featured_color }} />
+                          <span className="text-sm font-semibold" style={{ color: form.featured_color }}>
+                            Tempo de Disponibilidade:
+                          </span>
+                        </div>
+                        {timeRemaining ? (
+                          <div className="space-y-1">
+                            <div className="text-lg font-mono font-bold" style={{ color: form.featured_color }}>
+                              {timeRemaining.days > 0 && `${timeRemaining.days}d `}
+                              {String(timeRemaining.hours).padStart(2, '0')}:
+                              {String(timeRemaining.minutes).padStart(2, '0')}:
+                              {String(timeRemaining.seconds).padStart(2, '0')}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              O plano estará disponível até: <strong>{new Date(form.featured_ends_at).toLocaleString('pt-BR')}</strong>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-600">
+                            Calculando tempo restante...
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {!form.featured_ends_at && (
+                      <div className="mt-3 p-3 rounded-lg bg-gray-100 border border-gray-300">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-gray-600" />
+                          <span className="text-sm text-gray-600">
+                            <strong>Disponível indefinidamente</strong> (sem data de término)
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -830,6 +901,45 @@ export default function AdminPlans() {
                       onChange={(e) => setForm({ ...form, featured_ends_at: e.target.value })}
                     />
                     <p className="text-xs text-gray-500 mt-1">Deixe vazio para promoção sem data de término</p>
+                    
+                    {/* Preview do tempo de disponibilidade */}
+                    {form.featured_ends_at && (
+                      <div className="mt-3 p-3 rounded-lg border-2" style={{ borderColor: form.featured_color, backgroundColor: `${form.featured_color}10` }}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="w-4 h-4" style={{ color: form.featured_color }} />
+                          <span className="text-sm font-semibold" style={{ color: form.featured_color }}>
+                            Tempo de Disponibilidade:
+                          </span>
+                        </div>
+                        {timeRemaining ? (
+                          <div className="space-y-1">
+                            <div className="text-lg font-mono font-bold" style={{ color: form.featured_color }}>
+                              {timeRemaining.days > 0 && `${timeRemaining.days}d `}
+                              {String(timeRemaining.hours).padStart(2, '0')}:
+                              {String(timeRemaining.minutes).padStart(2, '0')}:
+                              {String(timeRemaining.seconds).padStart(2, '0')}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              O plano estará disponível até: <strong>{new Date(form.featured_ends_at).toLocaleString('pt-BR')}</strong>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-600">
+                            Calculando tempo restante...
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {!form.featured_ends_at && (
+                      <div className="mt-3 p-3 rounded-lg bg-gray-100 border border-gray-300">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-gray-600" />
+                          <span className="text-sm text-gray-600">
+                            <strong>Disponível indefinidamente</strong> (sem data de término)
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
