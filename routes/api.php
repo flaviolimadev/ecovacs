@@ -13,6 +13,7 @@ use App\Http\Controllers\API\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\API\V1\Admin\WithdrawalController as AdminWithdrawalController;
 use App\Http\Controllers\API\V1\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\API\V1\Admin\PlanController as AdminPlanController;
+use App\Http\Controllers\API\V1\Admin\UploadController as AdminUploadController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -109,7 +110,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('/plans/{id}', [AdminPlanController::class, 'destroy']);
             
             // Upload
-            Route::post('/upload/image', [\App\Http\Controllers\API\V1\Admin\UploadController::class, 'uploadImage']);
+            Route::post('/upload/image', [AdminUploadController::class, 'uploadImage']);
         });
 
         // Settings (TODO)
