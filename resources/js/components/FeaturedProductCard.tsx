@@ -48,11 +48,16 @@ const FeaturedProductCard = ({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [activePurchases, setActivePurchases] = useState(0);
   const [checkingLimit, setCheckingLimit] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState<{ hours: number; minutes: number } | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
+  const [isExpired, setIsExpired] = useState(false);
 
   // Calcular tempo restante
   useEffect(() => {
-    if (!featuredEndsAt) return;
+    if (!featuredEndsAt) {
+      setTimeRemaining(null);
+      setIsExpired(false);
+      return;
+    }
 
     const updateTime = () => {
       const now = new Date().getTime();
@@ -61,16 +66,19 @@ const FeaturedProductCard = ({
 
       if (diff <= 0) {
         setTimeRemaining(null);
+        setIsExpired(true);
         return;
       }
 
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      setTimeRemaining({ hours, minutes });
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeRemaining({ hours, minutes, seconds });
+      setIsExpired(false);
     };
 
     updateTime();
-    const interval = setInterval(updateTime, 60000); // Atualizar a cada minuto
+    const interval = setInterval(updateTime, 1000); // Atualizar a cada segundo
 
     return () => clearInterval(interval);
   }, [featuredEndsAt]);
@@ -149,22 +157,51 @@ const FeaturedProductCard = ({
         className="relative rounded-2xl bg-card p-3 shadow-lg border-2"
         style={{ borderColor: featuredColor }}
       >
-        {/* Badge de Promoção */}
+        {/* Badge de Plano Limitado */}
         <div 
           className="absolute top-2 right-2 px-2 py-1 rounded-lg text-xs font-bold text-white z-10"
           style={{ backgroundColor: featuredColor }}
         >
-          🔥 PROMOÇÃO
+          ⚡ LIMITADO
         </div>
 
         {/* Relógio de Contagem Regressiva */}
-        {timeRemaining && (
+        {featuredEndsAt ? (
           <div 
-            className="absolute top-2 left-2 px-2 py-1 rounded-lg text-xs font-bold text-white z-10 flex items-center gap-1"
+            className="absolute top-2 left-2 px-3 py-1.5 rounded-lg text-xs font-bold text-white z-10 flex flex-col items-center gap-0.5 shadow-lg"
+            style={{ backgroundColor: featuredColor }}
+          >
+            {isExpired ? (
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span>Expirado</span>
+              </div>
+            ) : timeRemaining ? (
+              <>
+                <div className="flex items-center gap-1 text-[10px] opacity-90">
+                  <Clock className="w-2.5 h-2.5" />
+                  <span>Disponível por:</span>
+                </div>
+                <div className="text-sm font-mono">
+                  {String(timeRemaining.hours).padStart(2, '0')}:
+                  {String(timeRemaining.minutes).padStart(2, '0')}:
+                  {String(timeRemaining.seconds).padStart(2, '0')}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span>Calculando...</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div 
+            className="absolute top-2 left-2 px-3 py-1.5 rounded-lg text-xs font-bold text-white z-10 flex items-center gap-1 shadow-lg"
             style={{ backgroundColor: featuredColor }}
           >
             <Clock className="w-3 h-3" />
-            {timeRemaining.hours}h {timeRemaining.minutes}m
+            <span>Disponível</span>
           </div>
         )}
 
