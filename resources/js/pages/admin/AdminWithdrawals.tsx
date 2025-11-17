@@ -1,4 +1,4 @@
-import { Search, DollarSign, Clock, CheckCircle, XCircle, Eye, AlertCircle, Loader2 } from "lucide-react";
+import { Search, DollarSign, Clock, CheckCircle, XCircle, Eye, AlertCircle, Loader2, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -165,6 +165,29 @@ export default function AdminWithdrawals() {
       case 'process-vizzion': return "Transferência enviada para Vizzion com sucesso!";
       case 'paid': return "Saque marcado como pago!";
       case 'reject': return "Saque rejeitado e saldo estornado!";
+    }
+  };
+
+  const handleDelete = async (withdrawal: Withdrawal) => {
+    if (!confirm(`Tem certeza que deseja deletar o saque #${withdrawal.id}?\n\nEsta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/withdrawals/${withdrawal.id}`);
+      
+      toast({
+        title: "Sucesso!",
+        description: "Saque deletado com sucesso!",
+      });
+
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.error?.message || "Não foi possível deletar o saque.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -394,6 +417,15 @@ export default function AdminWithdrawals() {
                                 </Button>
                               </>
                             )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                              onClick={() => handleDelete(withdrawal)}
+                              title="Deletar saque"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

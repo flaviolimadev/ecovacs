@@ -93,6 +93,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/withdrawals/{id}/process-vizzion', [AdminWithdrawalController::class, 'processVizzionPayment']);
             Route::post('/withdrawals/{id}/mark-as-paid', [AdminWithdrawalController::class, 'markAsPaid']);
             Route::post('/withdrawals/{id}/reject', [AdminWithdrawalController::class, 'reject']);
+            Route::delete('/withdrawals/{id}', [AdminWithdrawalController::class, 'destroy']);
 
             // Configurações (Settings)
             Route::get('/settings', [AdminSettingsController::class, 'index']);

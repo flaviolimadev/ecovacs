@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Withdrawal;
 use App\Models\User;
+use App\Models\Ledger;
 use App\Services\VizzionPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -178,7 +179,7 @@ class WithdrawalController extends Controller
         try {
             DB::beginTransaction();
 
-            $withdrawal->markAsApproved();
+            $withdrawal->approve();
 
             // Aqui você pode integrar com a API de pagamento (Vizzion)
             // $result = $this->processPayment($withdrawal);
@@ -292,18 +293,18 @@ class WithdrawalController extends Controller
             $user->increment('balance_withdrawn', $withdrawal->amount);
 
             // Registrar no ledger
-            $user->ledger()->create([
+            Ledger::create([
+                'user_id' => $user->id,
                 'type' => 'REFUND',
-                'reference_type' => 'WITHDRAWAL',
+                'reference_type' => Withdrawal::class,
                 'reference_id' => $withdrawal->id,
                 'description' => 'Estorno de saque rejeitado: ' . $request->reason,
                 'amount' => $withdrawal->amount,
                 'operation' => 'CREDIT',
-                'balance_before' => $user->balance_withdrawn - $withdrawal->amount,
-                'balance_after' => $user->balance_withdrawn,
+                'balance_type' => 'balance_withdrawn',
             ]);
 
-            $withdrawal->markAsRejected($request->reason);
+            $withdrawal->reject($request->reason);
 
             DB::commit();
 
@@ -508,6 +509,69 @@ class WithdrawalController extends Controller
         }
         
         return $name;
+    }
+
+    /**
+     * Deletar um saque
+     */
+    public function destroy($id)
+    {
+        $withdrawal = Withdrawal::findOrFail($id);
+
+        try {
+            DB::beginTransaction();
+
+            // Se o saque ainda não foi pago, reverter o saldo do usuário
+            if (!in_array($withdrawal->status, ['PAID', 'REJECTED'])) {
+                $user = $withdrawal->user;
+                $user->increment('balance_withdrawn', $withdrawal->amount);
+                $user->decrement('total_withdrawn', $withdrawal->amount);
+
+                // Registrar no ledger se necessário
+                if ($withdrawal->status === 'REQUESTED' || $withdrawal->status === 'APPROVED') {
+                    Ledger::create([
+                        'user_id' => $user->id,
+                        'type' => 'REFUND',
+                        'reference_type' => Withdrawal::class,
+                        'reference_id' => $withdrawal->id,
+                        'description' => 'Estorno de saque deletado',
+                        'amount' => $withdrawal->amount,
+                        'operation' => 'CREDIT',
+                        'balance_type' => 'balance_withdrawn',
+                    ]);
+                }
+            }
+
+            // Deletar o saque
+            $withdrawal->delete();
+
+            DB::commit();
+
+            Log::info('Saque deletado pelo admin', [
+                'withdrawal_id' => $id,
+                'admin_id' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'message' => 'Saque deletado com sucesso!',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Erro ao deletar saque', [
+                'withdrawal_id' => $id,
+                'admin_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => [
+                    'code' => 'DELETE_ERROR',
+                    'message' => 'Erro ao deletar saque: ' . $e->getMessage(),
+                ]
+            ], 500);
+        }
     }
 }
 
