@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, UserPlus, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { trackCompleteRegistration } from "@/lib/facebookPixel";
 
 const ecovacsLogo = "/assets/ecovacs-logo.png";
 const Register = () => {
@@ -44,6 +45,16 @@ const Register = () => {
       });
     }
   }, [searchParams, toast]);
+
+  // Rastrear início do cadastro (Facebook Pixel)
+  useEffect(() => {
+    // Aguardar um pouco para garantir que o pixel está carregado
+    const timer = setTimeout(() => {
+      trackCompleteRegistration();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 

@@ -112,6 +112,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('auth_token', userToken);
       localStorage.setItem('user', JSON.stringify(userData));
 
+      // Rastrear cadastro concluído (Facebook Pixel)
+      try {
+        const { trackLeadCompleted } = await import('@/lib/facebookPixel');
+        trackLeadCompleted();
+      } catch (error) {
+        // Se o pixel não estiver disponível, não quebra o fluxo
+        console.warn('Erro ao rastrear Lead no Facebook Pixel:', error);
+      }
+
       toast({
         title: "Cadastro realizado!",
         description: "Sua conta foi criada com sucesso!",
