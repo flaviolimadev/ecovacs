@@ -14,6 +14,7 @@ use App\Http\Controllers\API\V1\Admin\WithdrawalController as AdminWithdrawalCon
 use App\Http\Controllers\API\V1\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\API\V1\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\API\V1\Admin\UploadController as AdminUploadController;
+use App\Http\Controllers\API\V1\Admin\PackageController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -112,6 +113,11 @@ Route::prefix('v1')->group(function () {
             
             // Upload
             Route::post('/upload/image', [AdminUploadController::class, 'uploadImage']);
+
+            // Pacotes/Planos - Estatísticas
+            Route::get('/packages/stats', [PackageController::class, 'stats']);
+            Route::get('/packages', [PackageController::class, 'index']);
+            Route::get('/packages/{id}', [PackageController::class, 'show']);
         });
 
         // Settings (TODO)

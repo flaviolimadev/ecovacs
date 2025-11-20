@@ -1,4 +1,4 @@
-import { ArrowLeft, Users, DollarSign, Settings, Home, Package } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Settings, Home, Package, BarChart3 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +26,11 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
       label: "Planos",
       icon: Package,
       path: "/admin/plans",
+    },
+    {
+      label: "Pacotes",
+      icon: BarChart3,
+      path: "/admin/packages",
     },
     {
       label: "Configurações",

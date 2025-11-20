@@ -188,6 +188,89 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
     });
   };
 
+  // Funções para filtros e paginação da rede
+  const filterAndSortUsers = (users: Array<{
+    id: number;
+    name: string;
+    email: string;
+    total_invested: number;
+    total_earned: number;
+    active_cycles: number;
+    created_at: string;
+  }>) => {
+    let filtered = [...users];
+
+    // Aplicar busca
+    if (networkSearch.trim()) {
+      const searchLower = networkSearch.toLowerCase();
+      filtered = filtered.filter(
+        (user) =>
+          user.name.toLowerCase().includes(searchLower) ||
+          user.email.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Aplicar ordenação
+    filtered.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (networkSortBy) {
+        case "name":
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case "email":
+          aValue = a.email.toLowerCase();
+          bValue = b.email.toLowerCase();
+          break;
+        case "invested":
+          aValue = a.total_invested;
+          bValue = b.total_invested;
+          break;
+        case "earned":
+          aValue = a.total_earned;
+          bValue = b.total_earned;
+          break;
+        case "cycles":
+          aValue = a.active_cycles;
+          bValue = b.active_cycles;
+          break;
+        default:
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+      }
+
+      if (networkSortOrder === "asc") {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
+    });
+
+    return filtered;
+  };
+
+  const getPaginatedUsers = (users: Array<any>, level: number) => {
+    const filtered = filterAndSortUsers(users);
+    const startIndex = (networkPage[level] - 1) * networkPerPage;
+    const endIndex = startIndex + networkPerPage;
+    return {
+      paginated: filtered.slice(startIndex, endIndex),
+      total: filtered.length,
+      totalPages: Math.ceil(filtered.length / networkPerPage),
+    };
+  };
+
+  const handleSort = (column: string) => {
+    if (networkSortBy === column) {
+      setNetworkSortOrder(networkSortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setNetworkSortBy(column);
+      setNetworkSortOrder("asc");
+    }
+  };
+
   if (!open || !userId) return null;
 
   return (
