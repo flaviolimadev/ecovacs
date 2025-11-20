@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/format";
 import { 
   User, 
   TrendingUp, 
@@ -33,7 +33,8 @@ import {
   Search,
   Filter,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  DollarSign
 } from "lucide-react";
 
 interface UserDetails {
@@ -113,6 +114,45 @@ interface UserDetails {
         }>;
       };
     };
+  };
+  deposits?: {
+    stats: {
+      total: number;
+      total_amount: number;
+      pending: number;
+      paid: number;
+    };
+    list: Array<{
+      id: number;
+      amount: number;
+      status: string;
+      transaction_id: string | null;
+      created_at: string;
+      paid_at: string | null;
+    }>;
+  };
+  withdrawals?: {
+    stats: {
+      total: number;
+      total_amount: number;
+      requested: number;
+      approved: number;
+      paid: number;
+      rejected: number;
+    };
+    list: Array<{
+      id: number;
+      amount: number;
+      fee_amount: number;
+      net_amount: number;
+      status: string;
+      pix_key: string;
+      pix_key_type: string;
+      transaction_id: string | null;
+      requested_at: string | null;
+      processed_at: string | null;
+      created_at: string;
+    }>;
   };
 }
 
@@ -349,23 +389,35 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                 </div>
               </Card>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <Card className="p-4">
                   <p className="text-sm text-gray-600">Saldo Investível</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    R$ {(details.user?.balance || 0).toFixed(2)}
+                    {formatCurrency(details.user?.balance || 0)}
                   </p>
                 </Card>
                 <Card className="p-4">
                   <p className="text-sm text-gray-600">Saldo para Saque</p>
                   <p className="text-2xl font-bold text-green-600">
-                    R$ {(details.user?.balance_withdrawn || 0).toFixed(2)}
+                    {formatCurrency(details.user?.balance_withdrawn || 0)}
                   </p>
                 </Card>
                 <Card className="p-4">
                   <p className="text-sm text-gray-600">Total Investido</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    R$ {(details.user?.total_invested || 0).toFixed(2)}
+                    {formatCurrency(details.user?.total_invested || 0)}
+                  </p>
+                </Card>
+                <Card className="p-4">
+                  <p className="text-sm text-gray-600">Total Depositado</p>
+                  <p className="text-2xl font-bold text-indigo-600">
+                    {formatCurrency(details.deposits?.stats?.total_amount || 0)}
+                  </p>
+                </Card>
+                <Card className="p-4">
+                  <p className="text-sm text-gray-600">Total Sacado</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {formatCurrency(details.user?.total_withdrawn || 0)}
                   </p>
                 </Card>
               </div>
@@ -420,13 +472,13 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                       {details.cycles.list.map((cycle) => (
                         <TableRow key={cycle.id}>
                           <TableCell className="font-medium">{cycle.plan_name}</TableCell>
-                          <TableCell>R$ {cycle.amount.toFixed(2)}</TableCell>
+                          <TableCell>{formatCurrency(cycle.amount)}</TableCell>
                           <TableCell>{getStatusBadge(cycle.status)}</TableCell>
                           <TableCell>
                             {cycle.days_paid}/{cycle.duration_days}
                           </TableCell>
                           <TableCell className="text-green-600">
-                            R$ {cycle.total_paid.toFixed(2)}
+                            {formatCurrency(cycle.total_paid)}
                           </TableCell>
                           <TableCell>{formatDate(cycle.started_at)}</TableCell>
                         </TableRow>
@@ -476,8 +528,8 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                               : "text-red-600 font-medium"
                           }
                         >
-                          {entry.operation === "CREDIT" ? "+" : "-"}R${" "}
-                          {entry.amount.toFixed(2)}
+                          {entry.operation === "CREDIT" ? "+" : "-"}{" "}
+                          {formatCurrency(entry.amount)}
                         </TableCell>
                         <TableCell>{entry.operation}</TableCell>
                         <TableCell>{formatDate(entry.created_at)}</TableCell>
@@ -506,17 +558,17 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                 <Card className="p-4">
                   <h3 className="font-semibold mb-2 text-sm text-gray-600">Total Investido</h3>
                   <p className="text-2xl font-bold text-green-600">
-                    R$ {details.referral_network?.by_level ? 
-                      Object.values(details.referral_network.by_level).reduce((sum: number, level: any) => sum + (level?.total_invested || 0), 0).toFixed(2) 
-                      : '0,00'}
+                    {formatCurrency(details.referral_network?.by_level ? 
+                      Object.values(details.referral_network.by_level).reduce((sum: number, level: any) => sum + (level?.total_invested || 0), 0)
+                      : 0)}
                   </p>
                 </Card>
                 <Card className="p-4">
                   <h3 className="font-semibold mb-2 text-sm text-gray-600">Total Ganho</h3>
                   <p className="text-2xl font-bold text-blue-600">
-                    R$ {details.referral_network?.by_level ? 
-                      Object.values(details.referral_network.by_level).reduce((sum: number, level: any) => sum + (level?.total_earned || 0), 0).toFixed(2) 
-                      : '0,00'}
+                    {formatCurrency(details.referral_network?.by_level ? 
+                      Object.values(details.referral_network.by_level).reduce((sum: number, level: any) => sum + (level?.total_earned || 0), 0)
+                      : 0)}
                   </p>
                 </Card>
               </div>
@@ -621,7 +673,7 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                           <div className="text-right">
                             <p className="text-sm text-gray-600">Total Investido</p>
                             <p className="font-bold text-green-600">
-                              R$ {levelData.total_invested.toFixed(2)}
+                              {formatCurrency(levelData.total_invested)}
                             </p>
                           </div>
                         </div>
@@ -670,10 +722,10 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                                       <TableCell className="font-medium">{user.name}</TableCell>
                                       <TableCell className="text-sm text-gray-600">{user.email}</TableCell>
                                       <TableCell className="text-right font-medium">
-                                        R$ {user.total_invested.toFixed(2)}
+                                        {formatCurrency(user.total_invested)}
                                       </TableCell>
                                       <TableCell className="text-right text-green-600 font-semibold">
-                                        R$ {user.total_earned.toFixed(2)}
+                                        {formatCurrency(user.total_earned)}
                                       </TableCell>
                                       <TableCell className="text-center">
                                         <Badge variant={user.active_cycles > 0 ? "default" : "secondary"}>
@@ -730,6 +782,191 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                   <p className="text-center text-gray-500">Carregando dados da rede...</p>
                 </Card>
               )}
+            </TabsContent>
+
+            {/* TAB 5: TRANSAÇÕES (DEPÓSITOS E SAQUES) */}
+            <TabsContent value="transactions" className="space-y-4">
+              {/* Estatísticas de Depósitos e Saques */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                    Depósitos
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Depositado</p>
+                      <p className="text-xl font-bold text-green-600">
+                        {formatCurrency(details.deposits?.stats?.total_amount || 0)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Total de Depósitos</p>
+                      <p className="text-xl font-bold">
+                        {details.deposits?.stats?.total || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Pagos</p>
+                      <p className="text-lg font-semibold text-green-600">
+                        {details.deposits?.stats?.paid || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Pendentes</p>
+                      <p className="text-lg font-semibold text-orange-600">
+                        {details.deposits?.stats?.pending || 0}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-blue-600" />
+                    Saques
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Sacado</p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {formatCurrency(details.withdrawals?.stats?.total_amount || 0)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Total de Saques</p>
+                      <p className="text-xl font-bold">
+                        {details.withdrawals?.stats?.total || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Pagos</p>
+                      <p className="text-lg font-semibold text-green-600">
+                        {details.withdrawals?.stats?.paid || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Pendentes</p>
+                      <p className="text-lg font-semibold text-orange-600">
+                        {(details.withdrawals?.stats?.requested || 0) + (details.withdrawals?.stats?.approved || 0)}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Tabela de Depósitos */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Depósitos ({details.deposits?.list?.length || 0})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {details.deposits?.list && details.deposits.list.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Valor</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Transaction ID</TableHead>
+                          <TableHead>Data</TableHead>
+                          <TableHead>Pago em</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {details.deposits.list.map((deposit) => (
+                          <TableRow key={deposit.id}>
+                            <TableCell className="font-medium">{deposit.id}</TableCell>
+                            <TableCell className="font-semibold text-green-600">
+                              {formatCurrency(deposit.amount)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                deposit.status === 'PAID' ? 'default' :
+                                deposit.status === 'PENDING' ? 'secondary' :
+                                'destructive'
+                              }>
+                                {deposit.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {deposit.transaction_id || 'N/A'}
+                            </TableCell>
+                            <TableCell>{formatDate(deposit.created_at)}</TableCell>
+                            <TableCell>
+                              {deposit.paid_at ? formatDate(deposit.paid_at) : 'N/A'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <p className="text-center text-gray-500 py-8">Nenhum depósito encontrado</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Tabela de Saques */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Saques ({details.withdrawals?.list?.length || 0})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {details.withdrawals?.list && details.withdrawals.list.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Valor</TableHead>
+                          <TableHead>Taxa</TableHead>
+                          <TableHead>Líquido</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Chave PIX</TableHead>
+                          <TableHead>Solicitado em</TableHead>
+                          <TableHead>Processado em</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {details.withdrawals.list.map((withdrawal) => (
+                          <TableRow key={withdrawal.id}>
+                            <TableCell className="font-medium">{withdrawal.id}</TableCell>
+                            <TableCell className="font-semibold text-blue-600">
+                              {formatCurrency(withdrawal.amount)}
+                            </TableCell>
+                            <TableCell className="text-red-600">
+                              {formatCurrency(withdrawal.fee_amount)}
+                            </TableCell>
+                            <TableCell className="font-semibold text-green-600">
+                              {formatCurrency(withdrawal.net_amount)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                withdrawal.status === 'PAID' ? 'default' :
+                                withdrawal.status === 'APPROVED' ? 'secondary' :
+                                withdrawal.status === 'REQUESTED' ? 'outline' :
+                                'destructive'
+                              }>
+                                {withdrawal.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {withdrawal.pix_key_type}: {withdrawal.pix_key}
+                            </TableCell>
+                            <TableCell>
+                              {withdrawal.requested_at ? formatDate(withdrawal.requested_at) : formatDate(withdrawal.created_at)}
+                            </TableCell>
+                            <TableCell>
+                              {withdrawal.processed_at ? formatDate(withdrawal.processed_at) : 'N/A'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <p className="text-center text-gray-500 py-8">Nenhum saque encontrado</p>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         ) : (

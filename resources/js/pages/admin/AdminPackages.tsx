@@ -22,6 +22,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { AdminHeader } from "@/components/AdminHeader";
+import { formatCurrency } from "@/lib/format";
 import {
   Search,
   Package,
@@ -256,10 +257,10 @@ export default function AdminPackages() {
                   <div>
                     <p className="text-sm text-gray-600">Total Investido</p>
                     <p className="text-2xl font-bold text-green-600">
-                      R$ {stats.financial.total_invested.toFixed(2)}
+                      {formatCurrency(stats.financial.total_invested)}
                     </p>
                     <p className="text-xs text-gray-600 mt-1">
-                      Retorno: R$ {stats.financial.total_return.toFixed(2)}
+                      Retorno: {formatCurrency(stats.financial.total_return)}
                     </p>
                   </div>
                   <DollarSign className="w-8 h-8 text-green-600" />
@@ -273,10 +274,10 @@ export default function AdminPackages() {
                   <div>
                     <p className="text-sm text-gray-600">Total Pago</p>
                     <p className="text-2xl font-bold text-blue-600">
-                      R$ {stats.financial.total_paid.toFixed(2)}
+                      {formatCurrency(stats.financial.total_paid)}
                     </p>
                     <p className="text-xs text-orange-600 mt-1">
-                      Pendente: R$ {stats.financial.pending_return.toFixed(2)}
+                      Pendente: {formatCurrency(stats.financial.pending_return)}
                     </p>
                   </div>
                   <CheckCircle className="w-8 h-8 text-blue-600" />
@@ -368,7 +369,7 @@ export default function AdminPackages() {
                             <div>
                               <p className="font-medium">{plan.name}</p>
                               <p className="text-xs text-gray-500">
-                                {plan.duration_days} dias • Retorno: R$ {plan.total_return.toFixed(2)}
+                                {plan.duration_days} dias • Retorno: {formatCurrency(plan.total_return)}
                               </p>
                             </div>
                           </div>
@@ -379,7 +380,7 @@ export default function AdminPackages() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          R$ {plan.price.toFixed(2)}
+                          {formatCurrency(plan.price)}
                         </TableCell>
                         <TableCell className="text-center">
                           <span className="font-semibold">{plan.stats.total_sold}</span>
@@ -395,7 +396,7 @@ export default function AdminPackages() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right font-semibold text-green-600">
-                          R$ {plan.stats.total_invested.toFixed(2)}
+                          {formatCurrency(plan.stats.total_invested)}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -461,7 +462,7 @@ export default function AdminPackages() {
                     <CardContent className="p-4">
                       <p className="text-sm text-gray-600">Total Investido</p>
                       <p className="text-xl font-bold text-green-600">
-                        R$ {selectedPlan.stats.total_invested.toFixed(2)}
+                        {formatCurrency(selectedPlan.stats.total_invested)}
                       </p>
                     </CardContent>
                   </Card>
@@ -469,7 +470,7 @@ export default function AdminPackages() {
                     <CardContent className="p-4">
                       <p className="text-sm text-gray-600">Total Pago</p>
                       <p className="text-xl font-bold text-blue-600">
-                        R$ {selectedPlan.stats.total_paid.toFixed(2)}
+                        {formatCurrency(selectedPlan.stats.total_paid)}
                       </p>
                     </CardContent>
                   </Card>
@@ -477,7 +478,7 @@ export default function AdminPackages() {
                     <CardContent className="p-4">
                       <p className="text-sm text-gray-600">Pendente</p>
                       <p className="text-xl font-bold text-orange-600">
-                        R$ {selectedPlan.stats.pending_return.toFixed(2)}
+                        {formatCurrency(selectedPlan.stats.pending_return)}
                       </p>
                     </CardContent>
                   </Card>
@@ -556,7 +557,7 @@ export default function AdminPackages() {
                                     </div>
                                   </TableCell>
                                   <TableCell className="font-medium">
-                                    R$ {cycle.amount.toFixed(2)}
+                                    {formatCurrency(cycle.amount)}
                                   </TableCell>
                                   <TableCell>{getStatusBadge(cycle.status)}</TableCell>
                                   <TableCell>
@@ -575,7 +576,7 @@ export default function AdminPackages() {
                                     </div>
                                   </TableCell>
                                   <TableCell className="text-right text-green-600 font-semibold">
-                                    R$ {cycle.total_paid.toFixed(2)}
+                                    {formatCurrency(cycle.total_paid)}
                                   </TableCell>
                                   <TableCell className="text-sm">
                                     {cycle.started_at ? formatDate(cycle.started_at) : "N/A"}

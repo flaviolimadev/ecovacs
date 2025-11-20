@@ -35,6 +35,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { AdminHeader } from "@/components/AdminHeader";
 import { UserDetailsModal } from "./UserDetailsModal";
+import { formatCurrency } from "@/lib/format";
 
 interface User {
   id: number;
@@ -292,7 +293,7 @@ export default function AdminUsers() {
                 <div>
                   <p className="text-sm text-gray-600">Saldo Total</p>
                   <p className="text-2xl font-bold">
-                    R$ {stats.balances.total_balance.toFixed(2)}
+                    {formatCurrency(stats.balances.total_balance)}
                   </p>
                 </div>
                 <DollarSign className="w-8 h-8 text-green-600" />
@@ -303,7 +304,7 @@ export default function AdminUsers() {
                 <div>
                   <p className="text-sm text-gray-600">Total Investido</p>
                   <p className="text-2xl font-bold">
-                    R$ {stats.balances.total_invested.toFixed(2)}
+                    {formatCurrency(stats.balances.total_invested)}
                   </p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-orange-600" />
@@ -373,10 +374,10 @@ export default function AdminUsers() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      R$ {user.balance.toFixed(2)}
+                      {formatCurrency(user.balance)}
                     </TableCell>
                     <TableCell className="text-right">
-                      R$ {user.balance_withdrawn.toFixed(2)}
+                      {formatCurrency(user.balance_withdrawn)}
                     </TableCell>
                     <TableCell className="font-mono text-xs">
                       {user.referral_code}
