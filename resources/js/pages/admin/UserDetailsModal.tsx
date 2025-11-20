@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { 
   User, 
   TrendingUp, 
@@ -26,7 +29,11 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Loader2
+  Loader2,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 interface UserDetails {
@@ -119,10 +126,22 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
   const [details, setDetails] = useState<UserDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Estados para filtros e paginação da rede
+  const [networkSearch, setNetworkSearch] = useState("");
+  const [networkLevelFilter, setNetworkLevelFilter] = useState<string>("all");
+  const [networkPage, setNetworkPage] = useState<{ [key: number]: number }>({ 1: 1, 2: 1, 3: 1 });
+  const [networkPerPage] = useState(10);
+  const [networkSortBy, setNetworkSortBy] = useState<string>("name");
+  const [networkSortOrder, setNetworkSortOrder] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     if (open && userId) {
       loadDetails();
+      // Resetar filtros ao abrir
+      setNetworkSearch("");
+      setNetworkLevelFilter("all");
+      setNetworkPage({ 1: 1, 2: 1, 3: 1 });
     } else {
       // Reset ao fechar
       setDetails(null);
@@ -393,16 +412,96 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
 
             {/* TAB 4: REDE DE INDICAÇÕES */}
             <TabsContent value="network" className="space-y-4">
+              {/* Resumo e Filtros */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-2 text-sm text-gray-600">Total de Indicados</h3>
+                  <p className="text-3xl font-bold text-primary">
+                    {details.referral_network?.total_referrals || 0}
+                  </p>
+                </Card>
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-2 text-sm text-gray-600">Total Investido</h3>
+                  <p className="text-2xl font-bold text-green-600">
+                    R$ {details.referral_network?.by_level ? 
+                      Object.values(details.referral_network.by_level).reduce((sum: number, level: any) => sum + (level?.total_invested || 0), 0).toFixed(2) 
+                      : '0,00'}
+                  </p>
+                </Card>
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-2 text-sm text-gray-600">Total Ganho</h3>
+                  <p className="text-2xl font-bold text-blue-600">
+                    R$ {details.referral_network?.by_level ? 
+                      Object.values(details.referral_network.by_level).reduce((sum: number, level: any) => sum + (level?.total_earned || 0), 0).toFixed(2) 
+                      : '0,00'}
+                  </p>
+                </Card>
+              </div>
+
+              {/* Filtros e Busca */}
               <Card className="p-4">
-                <h3 className="font-semibold mb-2">Total de Indicados</h3>
-                <p className="text-3xl font-bold text-primary">
-                  {details.referral_network?.total_referrals || 0}
-                </p>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Buscar por nome ou email..."
+                      value={networkSearch}
+                      onChange={(e) => {
+                        setNetworkSearch(e.target.value);
+                        // Resetar página ao buscar
+                        setNetworkPage({ 1: 1, 2: 1, 3: 1 });
+                      }}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Select value={networkLevelFilter} onValueChange={(value) => {
+                    setNetworkLevelFilter(value);
+                    setNetworkPage({ 1: 1, 2: 1, 3: 1 });
+                  }}>
+                    <SelectTrigger className="w-full md:w-[180px]">
+                      <Filter className="w-4 h-4 mr-2" />
+                      <SelectValue placeholder="Filtrar por nível" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os níveis</SelectItem>
+                      <SelectItem value="1">Nível 1</SelectItem>
+                      <SelectItem value="2">Nível 2</SelectItem>
+                      <SelectItem value="3">Nível 3</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={networkSortBy} onValueChange={setNetworkSortBy}>
+                    <SelectTrigger className="w-full md:w-[180px]">
+                      <SelectValue placeholder="Ordenar por" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Nome</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="invested">Investido</SelectItem>
+                      <SelectItem value="earned">Ganhos</SelectItem>
+                      <SelectItem value="cycles">Ciclos Ativos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setNetworkSortOrder(networkSortOrder === "asc" ? "desc" : "asc");
+                    }}
+                    className="w-full md:w-auto"
+                  >
+                    {networkSortOrder === "asc" ? "↑" : "↓"}
+                  </Button>
+                </div>
               </Card>
 
+              {/* Lista de Níveis */}
               {details.referral_network?.by_level ? (
                 (() => {
-                  const levelsWithData = [1, 2, 3]
+                  const levelsToShow = networkLevelFilter === "all" 
+                    ? [1, 2, 3] 
+                    : [parseInt(networkLevelFilter)];
+
+                  const levelsWithData = levelsToShow
                     .map((level) => {
                       const levelData = details.referral_network.by_level[level];
                       return levelData && levelData.count > 0 ? { level, levelData } : null;
@@ -413,56 +512,135 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                     return (
                       <Card className="p-8">
                         <p className="text-center text-gray-500">
-                          Este usuário ainda não possui indicados em sua rede.
+                          {networkLevelFilter !== "all" 
+                            ? `Nenhum indicado encontrado no nível ${networkLevelFilter}.`
+                            : "Este usuário ainda não possui indicados em sua rede."}
                         </p>
                       </Card>
                     );
                   }
 
-                  return levelsWithData.map(({ level, levelData }) => (
-                    <Card key={level} className="p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold">
-                          Nível {level} ({levelData.count} usuários)
-                        </h3>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600">Total Investido</p>
-                          <p className="font-bold text-green-600">
-                            R$ {levelData.total_invested.toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
+                  return levelsWithData.map(({ level, levelData }) => {
+                    const { paginated, total, totalPages } = getPaginatedUsers(levelData.users, level);
+                    const currentPage = networkPage[level] || 1;
 
-                      {levelData.users.length > 0 ? (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Nome</TableHead>
-                              <TableHead>Email</TableHead>
-                              <TableHead>Investido</TableHead>
-                              <TableHead>Ganhos</TableHead>
-                              <TableHead>Ciclos Ativos</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {levelData.users.map((user) => (
-                              <TableRow key={user.id}>
-                                <TableCell className="font-medium">{user.name}</TableCell>
-                                <TableCell>{user.email}</TableCell>
-                                <TableCell>R$ {user.total_invested.toFixed(2)}</TableCell>
-                                <TableCell className="text-green-600">
-                                  R$ {user.total_earned.toFixed(2)}
-                                </TableCell>
-                                <TableCell>{user.active_cycles}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      ) : (
-                        <p className="text-center text-gray-500 py-4">Nenhum indicado neste nível</p>
-                      )}
-                    </Card>
-                  ));
+                    return (
+                      <Card key={level} className="p-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default" className="text-sm">
+                              Nível {level}
+                            </Badge>
+                            <span className="text-sm text-gray-600">
+                              ({total} {total === 1 ? 'usuário' : 'usuários'})
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-gray-600">Total Investido</p>
+                            <p className="font-bold text-green-600">
+                              R$ {levelData.total_invested.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {paginated.length > 0 ? (
+                          <>
+                            <div className="overflow-x-auto">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead 
+                                      className="cursor-pointer hover:bg-gray-100"
+                                      onClick={() => handleSort("name")}
+                                    >
+                                      Nome {networkSortBy === "name" && (networkSortOrder === "asc" ? "↑" : "↓")}
+                                    </TableHead>
+                                    <TableHead 
+                                      className="cursor-pointer hover:bg-gray-100"
+                                      onClick={() => handleSort("email")}
+                                    >
+                                      Email {networkSortBy === "email" && (networkSortOrder === "asc" ? "↑" : "↓")}
+                                    </TableHead>
+                                    <TableHead 
+                                      className="cursor-pointer hover:bg-gray-100 text-right"
+                                      onClick={() => handleSort("invested")}
+                                    >
+                                      Investido {networkSortBy === "invested" && (networkSortOrder === "asc" ? "↑" : "↓")}
+                                    </TableHead>
+                                    <TableHead 
+                                      className="cursor-pointer hover:bg-gray-100 text-right"
+                                      onClick={() => handleSort("earned")}
+                                    >
+                                      Ganhos {networkSortBy === "earned" && (networkSortOrder === "asc" ? "↑" : "↓")}
+                                    </TableHead>
+                                    <TableHead 
+                                      className="cursor-pointer hover:bg-gray-100 text-center"
+                                      onClick={() => handleSort("cycles")}
+                                    >
+                                      Ciclos {networkSortBy === "cycles" && (networkSortOrder === "asc" ? "↑" : "↓")}
+                                    </TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {paginated.map((user) => (
+                                    <TableRow key={user.id}>
+                                      <TableCell className="font-medium">{user.name}</TableCell>
+                                      <TableCell className="text-sm text-gray-600">{user.email}</TableCell>
+                                      <TableCell className="text-right font-medium">
+                                        R$ {user.total_invested.toFixed(2)}
+                                      </TableCell>
+                                      <TableCell className="text-right text-green-600 font-semibold">
+                                        R$ {user.total_earned.toFixed(2)}
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Badge variant={user.active_cycles > 0 ? "default" : "secondary"}>
+                                          {user.active_cycles}
+                                        </Badge>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+
+                            {/* Paginação */}
+                            {totalPages > 1 && (
+                              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                                <div className="text-sm text-gray-600">
+                                  Mostrando {((currentPage - 1) * networkPerPage) + 1} a {Math.min(currentPage * networkPerPage, total)} de {total}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setNetworkPage({ ...networkPage, [level]: Math.max(1, currentPage - 1) })}
+                                    disabled={currentPage === 1}
+                                  >
+                                    <ChevronLeft className="w-4 h-4" />
+                                  </Button>
+                                  <div className="text-sm">
+                                    Página {currentPage} de {totalPages}
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setNetworkPage({ ...networkPage, [level]: Math.min(totalPages, currentPage + 1) })}
+                                    disabled={currentPage === totalPages}
+                                  >
+                                    <ChevronRight className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-center text-gray-500 py-4">
+                            {networkSearch ? "Nenhum resultado encontrado para a busca." : "Nenhum indicado neste nível"}
+                          </p>
+                        )}
+                      </Card>
+                    );
+                  });
                 })()
               ) : (
                 <Card className="p-8">
