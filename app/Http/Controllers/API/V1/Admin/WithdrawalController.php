@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Withdrawal;
 use App\Models\User;
 use App\Models\Ledger;
-use Illuminate\Support\Facades\DB;
 use App\Services\VizzionPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class WithdrawalController extends Controller
 {
@@ -19,7 +19,8 @@ class WithdrawalController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Withdrawal::with('user:id,name,email');
+        try {
+            $query = Withdrawal::with('user:id,name,email');
 
         // Filtros
         if ($request->has('status')) {
@@ -49,11 +50,11 @@ class WithdrawalController extends Controller
             'data' => $withdrawals->map(function ($withdrawal) {
                 return [
                     'id' => $withdrawal->id,
-                    'user' => [
+                    'user' => $withdrawal->user ? [
                         'id' => $withdrawal->user->id,
                         'name' => $withdrawal->user->name,
                         'email' => $withdrawal->user->email,
-                    ],
+                    ] : null,
                     'amount' => (float) $withdrawal->amount,
                     'fee_amount' => (float) $withdrawal->fee_amount,
                     'net_amount' => (float) $withdrawal->net_amount,
@@ -62,8 +63,8 @@ class WithdrawalController extends Controller
                     'cpf' => $withdrawal->cpf,
                     'status' => $withdrawal->status,
                     'transaction_id' => $withdrawal->transaction_id,
-                    'requested_at' => $withdrawal->requested_at?->toIso8601String(),
-                    'processed_at' => $withdrawal->processed_at?->toIso8601String(),
+                    'requested_at' => $withdrawal->requested_at ? Carbon::parse($withdrawal->requested_at)->setTimezone(config('app.timezone'))->toIso8601String() : null,
+                    'processed_at' => $withdrawal->processed_at ? Carbon::parse($withdrawal->processed_at)->setTimezone(config('app.timezone'))->toIso8601String() : null,
                     'error_message' => $withdrawal->error_message,
                 ];
             }),
@@ -74,6 +75,19 @@ class WithdrawalController extends Controller
                 'total' => $withdrawals->total(),
             ]
         ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao listar saques', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return response()->json([
+                'error' => [
+                    'code' => 'INTERNAL_ERROR',
+                    'message' => 'Erro ao carregar saques: ' . $e->getMessage(),
+                ]
+            ], 500);
+        }
     }
 
     /**
@@ -118,7 +132,8 @@ class WithdrawalController extends Controller
      */
     public function stats()
     {
-        $totalWithdrawals = Withdrawal::count();
+        try {
+            $totalWithdrawals = Withdrawal::count();
         $totalRequested = Withdrawal::where('status', 'REQUESTED')->count();
         $totalApproved = Withdrawal::where('status', 'APPROVED')->count();
         $totalPaid = Withdrawal::where('status', 'PAID')->count();
@@ -129,11 +144,24 @@ class WithdrawalController extends Controller
         $totalAmountPaid = Withdrawal::where('status', 'PAID')->sum('amount');
         $totalFees = Withdrawal::where('status', 'PAID')->sum('fee_amount');
 
-        $withdrawalsToday = Withdrawal::whereDate('requested_at', today())->count();
-        $withdrawalsThisWeek = Withdrawal::whereBetween('requested_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
-        $withdrawalsThisMonth = Withdrawal::whereMonth('requested_at', now()->month)->count();
+        $now = Carbon::now(config('app.timezone'));
+        $today = $now->copy()->startOfDay();
+        
+        $withdrawalsToday = Withdrawal::whereNotNull('requested_at')
+            ->whereDate('requested_at', $today->toDateString())
+            ->count();
+        
+        $withdrawalsThisWeek = Withdrawal::whereNotNull('requested_at')
+            ->whereBetween('requested_at', [$now->copy()->startOfWeek()->toDateTimeString(), $now->copy()->endOfWeek()->toDateTimeString()])
+            ->count();
+        
+        $withdrawalsThisMonth = Withdrawal::whereNotNull('requested_at')
+            ->whereMonth('requested_at', $now->month)
+            ->whereYear('requested_at', $now->year)
+            ->count();
 
-        $amountToday = Withdrawal::whereDate('requested_at', today())
+        $amountToday = Withdrawal::whereNotNull('requested_at')
+            ->whereDate('requested_at', $today->toDateString())
             ->whereIn('status', ['REQUESTED', 'APPROVED', 'PAID'])
             ->sum('amount');
 
@@ -173,6 +201,19 @@ class WithdrawalController extends Controller
                 ],
             ]
         ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao buscar estatísticas de saques', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return response()->json([
+                'error' => [
+                    'code' => 'INTERNAL_ERROR',
+                    'message' => 'Erro ao carregar estatísticas: ' . $e->getMessage(),
+                ]
+            ], 500);
+        }
     }
 
     /**
