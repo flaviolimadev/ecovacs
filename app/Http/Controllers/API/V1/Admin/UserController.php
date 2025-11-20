@@ -288,7 +288,7 @@ class UserController extends Controller
     {
         if ($level === 1) {
             // Nível 1: diretos
-            return User::where('referred_by_id', $userId)->get();
+            return User::where('referred_by', $userId)->get();
         }
 
         // Níveis 2 e 3: recursivo
@@ -299,7 +299,7 @@ class UserController extends Controller
             return collect([]);
         }
 
-        return User::whereIn('referred_by_id', $previousLevelIds)->get();
+        return User::whereIn('referred_by', $previousLevelIds)->get();
     }
 
     /**
