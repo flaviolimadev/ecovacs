@@ -15,6 +15,7 @@ use App\Http\Controllers\API\V1\Admin\SettingsController as AdminSettingsControl
 use App\Http\Controllers\API\V1\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\API\V1\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\API\V1\Admin\PackageController;
+use App\Http\Controllers\API\V1\Admin\DepositController as AdminDepositController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -95,6 +96,11 @@ Route::prefix('v1')->group(function () {
             Route::post('/withdrawals/{id}/mark-as-paid', [AdminWithdrawalController::class, 'markAsPaid']);
             Route::post('/withdrawals/{id}/reject', [AdminWithdrawalController::class, 'reject']);
             Route::delete('/withdrawals/{id}', [AdminWithdrawalController::class, 'destroy']);
+
+            // Depósitos (Deposits)
+            Route::get('/deposits', [AdminDepositController::class, 'index']);
+            Route::get('/deposits/stats', [AdminDepositController::class, 'stats']);
+            Route::get('/deposits/{id}', [AdminDepositController::class, 'show']);
 
             // Configurações (Settings)
             Route::get('/settings', [AdminSettingsController::class, 'index']);

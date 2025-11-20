@@ -22,6 +22,7 @@ import AdminWithdrawals from "./pages/admin/AdminWithdrawals";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminPlans from "./pages/admin/AdminPlans";
 import AdminPackages from "./pages/admin/AdminPackages";
+import AdminDeposits from "./pages/admin/AdminDeposits";
 import "../css/app.css";
 
 const queryClient = new QueryClient();
@@ -134,6 +135,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminPackages />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/deposits"
+              element={
+                <AdminRoute>
+                  <AdminDeposits />
                 </AdminRoute>
               }
             />
