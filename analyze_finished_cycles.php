@@ -18,12 +18,16 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+// Configurar timezone do Brasil
+date_default_timezone_set(config('app.timezone'));
+Carbon::setLocale('pt_BR');
+
 echo "\n";
 echo "=============================================\n";
 echo "  ANÁLISE DE CICLOS FINALIZADOS\n";
 echo "=============================================\n\n";
 
-$now = Carbon::now();
+$now = Carbon::now(config('app.timezone'));
 
 // 1. Buscar todos os ciclos
 $allCycles = Cycle::with(['user', 'plan'])->get();
@@ -53,9 +57,9 @@ foreach ($allCycles as $cycle) {
     $reason = [];
     
     // Verificar por data de término
-    if ($cycle->ends_at && Carbon::parse($cycle->ends_at)->lt($now)) {
+    if ($cycle->ends_at && Carbon::parse($cycle->ends_at)->setTimezone(config('app.timezone'))->lt($now)) {
         $shouldFinish = true;
-        $daysOverdue = Carbon::parse($cycle->ends_at)->diffInDays($now);
+        $daysOverdue = Carbon::parse($cycle->ends_at)->setTimezone(config('app.timezone'))->diffInDays($now);
         $reason[] = "Data de término passou há {$daysOverdue} dia(s)";
     }
     
@@ -83,7 +87,7 @@ foreach ($allCycles as $cycle) {
         
         // Verificar se ends_at ainda não chegou (com margem de 1 dia para evitar falsos positivos)
         if ($cycle->ends_at) {
-            $endsAt = Carbon::parse($cycle->ends_at);
+            $endsAt = Carbon::parse($cycle->ends_at)->setTimezone(config('app.timezone'));
             $daysDiff = $now->diffInDays($endsAt, false); // false = não absoluto, negativo se passou
             
             // Só considerar inconsistência se faltar mais de 1 dia
@@ -119,8 +123,8 @@ if (count($shouldBeFinished) > 0) {
         echo "Duração: {$cycle->duration_days} dias\n";
         echo "Dias pagos: {$cycle->days_paid}/{$cycle->duration_days}\n";
         echo "Status atual: {$cycle->status}\n";
-        echo "Iniciado em: " . Carbon::parse($cycle->started_at)->format('d/m/Y H:i:s') . "\n";
-        echo "Termina em: " . ($cycle->ends_at ? Carbon::parse($cycle->ends_at)->format('d/m/Y H:i:s') : 'N/A') . "\n";
+        echo "Iniciado em: " . Carbon::parse($cycle->started_at)->setTimezone(config('app.timezone'))->format('d/m/Y H:i:s') . "\n";
+        echo "Termina em: " . ($cycle->ends_at ? Carbon::parse($cycle->ends_at)->setTimezone(config('app.timezone'))->format('d/m/Y H:i:s') : 'N/A') . "\n";
         echo "Motivos para finalizar:\n";
         foreach ($item['reasons'] as $r) {
             echo "  - {$r}\n";

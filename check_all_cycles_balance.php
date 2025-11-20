@@ -14,12 +14,16 @@ use App\Models\Ledger;
 use App\Models\User;
 use Carbon\Carbon;
 
+// Configurar timezone do Brasil
+date_default_timezone_set(config('app.timezone'));
+Carbon::setLocale('pt_BR');
+
 echo "\n";
 echo "=============================================\n";
 echo "  VERIFICAÇÃO COMPLETA DE CICLOS\n";
 echo "=============================================\n\n";
 
-$now = Carbon::now();
+$now = Carbon::now(config('app.timezone'));
 $issues = [];
 $totalMissing = 0;
 
@@ -44,7 +48,7 @@ foreach ($allCycles as $cycle) {
         if ($cycle->status === 'ACTIVE') {
             // Se já completou todos os dias OU passou da data, deveria ter recebido
             if ($cycle->days_paid >= $cycle->duration_days || 
-                ($cycle->ends_at && Carbon::parse($cycle->ends_at)->lt($now))) {
+                ($cycle->ends_at && Carbon::parse($cycle->ends_at)->setTimezone(config('app.timezone'))->lt($now))) {
                 if ($cycle->total_paid < $expectedTotal) {
                     $missingAmount = $expectedTotal - $cycle->total_paid;
                     $issuesFound[] = "Falta creditar retorno final: R$ " . number_format($missingAmount, 2, ',', '.');
@@ -83,8 +87,8 @@ foreach ($allCycles as $cycle) {
             $issuesFound[] = "Ciclo completou todos os dias mas ainda está ATIVO";
         }
         
-        if ($cycle->ends_at && Carbon::parse($cycle->ends_at)->lt($now)) {
-            $daysOverdue = Carbon::parse($cycle->ends_at)->diffInDays($now);
+        if ($cycle->ends_at && Carbon::parse($cycle->ends_at)->setTimezone(config('app.timezone'))->lt($now)) {
+            $daysOverdue = Carbon::parse($cycle->ends_at)->setTimezone(config('app.timezone'))->diffInDays($now);
             $issuesFound[] = "Data de término passou há {$daysOverdue} dia(s) mas ainda está ATIVO";
         }
     }

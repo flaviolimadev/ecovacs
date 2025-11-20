@@ -74,8 +74,8 @@ class InvestmentController extends Controller
             // 4. Verificar se é a primeira compra do usuário
             $isFirstPurchase = Cycle::where('user_id', $user->id)->count() === 0;
 
-            // 5. Calcular datas e valores
-            $now = Carbon::now();
+            // 5. Calcular datas e valores (usando timezone do Brasil)
+            $now = Carbon::now(config('app.timezone'));
             $startedAt = $now;
             $endsAt = $now->copy()->addDays($plan->duration_days);
 
@@ -152,8 +152,8 @@ class InvestmentController extends Controller
                         'duration_days' => $cycle->duration_days,
                         'daily_income' => $cycle->daily_income ? (float) $cycle->daily_income : null,
                         'total_return' => (float) $cycle->total_return,
-                        'started_at' => $cycle->started_at,
-                        'ends_at' => $cycle->ends_at,
+                        'started_at' => $cycle->started_at ? Carbon::parse($cycle->started_at)->setTimezone(config('app.timezone'))->toIso8601String() : null,
+                        'ends_at' => $cycle->ends_at ? Carbon::parse($cycle->ends_at)->setTimezone(config('app.timezone'))->toIso8601String() : null,
                         'status' => $cycle->status,
                         'progress' => 0,
                     ],
@@ -225,9 +225,9 @@ class InvestmentController extends Controller
                     'total_return' => (float) ($cycle->total_return ?? 0),
                     'total_paid' => (float) ($cycle->total_paid ?? 0),
                     'days_paid' => $cycle->days_paid ?? 0,
-                    'started_at' => $cycle->started_at,
-                    'ends_at' => $cycle->ends_at,
-                    'last_payment_at' => $cycle->last_payment_at,
+                    'started_at' => $cycle->started_at ? Carbon::parse($cycle->started_at)->setTimezone(config('app.timezone'))->toIso8601String() : null,
+                    'ends_at' => $cycle->ends_at ? Carbon::parse($cycle->ends_at)->setTimezone(config('app.timezone'))->toIso8601String() : null,
+                    'last_payment_at' => $cycle->last_payment_at ? Carbon::parse($cycle->last_payment_at)->setTimezone(config('app.timezone'))->toIso8601String() : null,
                     'status' => $cycle->status,
                     'progress' => $cycle->getProgressPercentage(),
                     'is_first_purchase' => $cycle->is_first_purchase,
@@ -284,9 +284,9 @@ class InvestmentController extends Controller
                 'total_return' => (float) $cycle->total_return,
                 'total_paid' => (float) $cycle->total_paid,
                 'days_paid' => $cycle->days_paid,
-                'started_at' => $cycle->started_at,
-                'ends_at' => $cycle->ends_at,
-                'last_payment_at' => $cycle->last_payment_at,
+                'started_at' => $cycle->started_at ? Carbon::parse($cycle->started_at)->setTimezone(config('app.timezone'))->toIso8601String() : null,
+                'ends_at' => $cycle->ends_at ? Carbon::parse($cycle->ends_at)->setTimezone(config('app.timezone'))->toIso8601String() : null,
+                'last_payment_at' => $cycle->last_payment_at ? Carbon::parse($cycle->last_payment_at)->setTimezone(config('app.timezone'))->toIso8601String() : null,
                 'status' => $cycle->status,
                 'progress' => $cycle->getProgressPercentage(),
                 'is_first_purchase' => $cycle->is_first_purchase,

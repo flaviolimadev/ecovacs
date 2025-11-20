@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Withdrawal;
 use App\Models\User;
 use App\Models\Ledger;
+use Illuminate\Support\Facades\DB;
 use App\Services\VizzionPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -136,6 +137,15 @@ class WithdrawalController extends Controller
             ->whereIn('status', ['REQUESTED', 'APPROVED', 'PAID'])
             ->sum('amount');
 
+        // Total disponível para saque (soma de balance_withdrawn de todos os usuários)
+        $totalAvailable = User::sum('balance_withdrawn');
+        
+        // Saques pendentes (REQUESTED + APPROVED)
+        $pendingWithdrawals = Withdrawal::whereIn('status', ['REQUESTED', 'APPROVED'])->sum('amount');
+        
+        // Saldo líquido disponível (disponível - pendentes)
+        $liquidAvailable = $totalAvailable - $pendingWithdrawals;
+
         return response()->json([
             'data' => [
                 'total_withdrawals' => $totalWithdrawals,
@@ -150,6 +160,11 @@ class WithdrawalController extends Controller
                     'total_paid' => (float) $totalAmountPaid,
                     'total_fees' => (float) $totalFees,
                     'today' => (float) $amountToday,
+                ],
+                'available_balance' => [
+                    'total_available' => (float) $totalAvailable,
+                    'pending_withdrawals' => (float) $pendingWithdrawals,
+                    'liquid_available' => (float) $liquidAvailable,
                 ],
                 'period' => [
                     'today' => $withdrawalsToday,

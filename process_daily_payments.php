@@ -21,6 +21,10 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+// Configurar timezone do Brasil
+date_default_timezone_set(config('app.timezone'));
+Carbon::setLocale('pt_BR');
+
 // Verificar se foi passada uma hora específica como argumento
 $specificHour = null;
 if (isset($argv[1])) {
@@ -82,7 +86,7 @@ $pendingCycles = []; // Para armazenar ciclos aguardando com tempo restante
 
 foreach ($cycles as $cycle) {
     try {
-        $now = Carbon::now();
+        $now = Carbon::now(config('app.timezone'));
         
         // Se foi especificada uma hora, usar ela para comparação
         if ($specificHour !== null) {
@@ -96,7 +100,7 @@ foreach ($cycles as $cycle) {
         
         if ($lastPayment) {
             // Tem pagamento anterior
-            $lastPaymentTime = Carbon::parse($lastPayment->created_at);
+            $lastPaymentTime = Carbon::parse($lastPayment->created_at)->setTimezone(config('app.timezone'));
             
             // Verificar se último pagamento foi na mesma HORA de HOJE
             if ($lastPaymentTime->isSameDay($now) && $lastPaymentTime->hour == $now->hour) {
@@ -140,7 +144,7 @@ foreach ($cycles as $cycle) {
             }
         } else {
             // Primeiro pagamento
-            $startedAt = Carbon::parse($cycle->started_at);
+            $startedAt = Carbon::parse($cycle->started_at)->setTimezone(config('app.timezone'));
             
             if ($startedAt->isSameDay($now)) {
                 // Mesmo dia, não paga (precisa de pelo menos 1 dia)

@@ -19,12 +19,16 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+// Configurar timezone do Brasil
+date_default_timezone_set(config('app.timezone'));
+Carbon::setLocale('pt_BR');
+
 echo "\n";
 echo "=============================================\n";
 echo "  FINALIZAÇÃO DE CICLOS COMPLETADOS\n";
 echo "=============================================\n\n";
 
-$now = Carbon::now();
+$now = Carbon::now(config('app.timezone'));
 $finalized = 0;
 $errors = 0;
 

@@ -1,4 +1,5 @@
-import { Search, DollarSign, Clock, CheckCircle, XCircle, Eye, AlertCircle, Loader2, Trash2 } from "lucide-react";
+import { Search, DollarSign, Clock, CheckCircle, XCircle, Eye, AlertCircle, Loader2, Trash2, TrendingUp } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +48,11 @@ interface Stats {
     total_paid: number;
     total_fees: number;
     today: number;
+  };
+  available_balance?: {
+    total_available: number;
+    pending_withdrawals: number;
+    liquid_available: number;
   };
   period: {
     today: number;
@@ -231,55 +237,118 @@ export default function AdminWithdrawals() {
       <div className="p-6 max-w-7xl mx-auto">
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Solicitados</p>
-                    <p className="text-2xl font-bold text-yellow-600">{stats.by_status.requested}</p>
-                  </div>
-                  <Clock className="w-8 h-8 text-yellow-600" />
-                </div>
-              </CardContent>
-            </Card>
+          <>
+            {/* Saldo Disponível para Saque */}
+            {stats.available_balance && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <Card className={stats.available_balance.liquid_available < 0 ? "border-red-500 border-2" : ""}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Disponível para Saque</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {formatCurrency(stats.available_balance.total_available)}
+                        </p>
+                      </div>
+                      <TrendingUp className="w-8 h-8 text-green-600" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pagos</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.by_status.paid}</p>
-                  </div>
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Saques Pendentes</p>
+                        <p className="text-2xl font-bold text-orange-600">
+                          {formatCurrency(stats.available_balance.pending_withdrawals)}
+                        </p>
+                      </div>
+                      <Clock className="w-8 h-8 text-orange-600" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Pago</p>
-                    <p className="text-2xl font-bold">R$ {stats.amounts.total_paid.toFixed(2)}</p>
-                  </div>
-                  <DollarSign className="w-8 h-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
+                <Card className={stats.available_balance.liquid_available < 0 ? "border-red-500 border-2 bg-red-50" : ""}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Saldo Líquido Disponível</p>
+                        <p className={`text-2xl font-bold ${
+                          stats.available_balance.liquid_available < 0 
+                            ? "text-red-600" 
+                            : "text-blue-600"
+                        }`}>
+                          {formatCurrency(stats.available_balance.liquid_available)}
+                        </p>
+                        {stats.available_balance.liquid_available < 0 && (
+                          <p className="text-xs text-red-600 mt-1 font-semibold">
+                            ⚠️ Saldo insuficiente!
+                          </p>
+                        )}
+                      </div>
+                      <DollarSign className={`w-8 h-8 ${
+                        stats.available_balance.liquid_available < 0 
+                          ? "text-red-600" 
+                          : "text-blue-600"
+                      }`} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Hoje</p>
-                    <p className="text-2xl font-bold">{stats.period.today}</p>
+            {/* Estatísticas de Saques */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Solicitados</p>
+                      <p className="text-2xl font-bold text-yellow-600">{stats.by_status.requested}</p>
+                    </div>
+                    <Clock className="w-8 h-8 text-yellow-600" />
                   </div>
-                  <AlertCircle className="w-8 h-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Pagos</p>
+                      <p className="text-2xl font-bold text-green-600">{stats.by_status.paid}</p>
+                    </div>
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Pago</p>
+                      <p className="text-2xl font-bold">{formatCurrency(stats.amounts.total_paid)}</p>
+                    </div>
+                    <DollarSign className="w-8 h-8 text-primary" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Hoje</p>
+                      <p className="text-2xl font-bold">{stats.period.today}</p>
+                    </div>
+                    <AlertCircle className="w-8 h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
         )}
 
         {/* Filters */}
