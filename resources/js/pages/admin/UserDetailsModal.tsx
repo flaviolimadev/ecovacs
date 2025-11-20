@@ -208,7 +208,7 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
             <TabsContent value="overview" className="space-y-4">
               <Card className="p-4">
                 <h3 className="font-semibold mb-4">Informações Pessoais</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">Nome</p>
                     <p className="font-medium">{details.user?.name || "N/A"}</p>
@@ -228,6 +228,17 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                   <div>
                     <p className="text-sm text-gray-600">Código de Indicação</p>
                     <p className="font-mono font-medium">{details.user?.referral_code || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Indicado por</p>
+                    {details.user?.referred_by ? (
+                      <div>
+                        <p className="font-medium">{details.user.referred_by.name}</p>
+                        <p className="text-sm text-gray-500">{details.user.referred_by.email}</p>
+                      </div>
+                    ) : (
+                      <p className="font-medium text-gray-400">N/A</p>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Cadastrado em</p>
@@ -389,55 +400,75 @@ export function UserDetailsModal({ userId, open, onClose }: UserDetailsModalProp
                 </p>
               </Card>
 
-              {details.referral_network?.by_level && [1, 2, 3].map((level) => {
-                const levelData = details.referral_network.by_level[level];
-                if (!levelData) return null;
+              {details.referral_network?.by_level ? (
+                (() => {
+                  const levelsWithData = [1, 2, 3]
+                    .map((level) => {
+                      const levelData = details.referral_network.by_level[level];
+                      return levelData && levelData.count > 0 ? { level, levelData } : null;
+                    })
+                    .filter(Boolean);
 
-                return (
-                  <Card key={level} className="p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold">
-                        Nível {level} ({levelData.count} usuários)
-                      </h3>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-600">Total Investido</p>
-                        <p className="font-bold text-green-600">
-                          R$ {levelData.total_invested.toFixed(2)}
+                  if (levelsWithData.length === 0) {
+                    return (
+                      <Card className="p-8">
+                        <p className="text-center text-gray-500">
+                          Este usuário ainda não possui indicados em sua rede.
                         </p>
-                      </div>
-                    </div>
+                      </Card>
+                    );
+                  }
 
-                    {levelData.users.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Nome</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Investido</TableHead>
-                            <TableHead>Ganhos</TableHead>
-                            <TableHead>Ciclos Ativos</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {levelData.users.map((user) => (
-                            <TableRow key={user.id}>
-                              <TableCell className="font-medium">{user.name}</TableCell>
-                              <TableCell>{user.email}</TableCell>
-                              <TableCell>R$ {user.total_invested.toFixed(2)}</TableCell>
-                              <TableCell className="text-green-600">
-                                R$ {user.total_earned.toFixed(2)}
-                              </TableCell>
-                              <TableCell>{user.active_cycles}</TableCell>
+                  return levelsWithData.map(({ level, levelData }) => (
+                    <Card key={level} className="p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold">
+                          Nível {level} ({levelData.count} usuários)
+                        </h3>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">Total Investido</p>
+                          <p className="font-bold text-green-600">
+                            R$ {levelData.total_invested.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {levelData.users.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Nome</TableHead>
+                              <TableHead>Email</TableHead>
+                              <TableHead>Investido</TableHead>
+                              <TableHead>Ganhos</TableHead>
+                              <TableHead>Ciclos Ativos</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <p className="text-center text-gray-500 py-4">Nenhum indicado neste nível</p>
-                    )}
-                  </Card>
-                );
-              })}
+                          </TableHeader>
+                          <TableBody>
+                            {levelData.users.map((user) => (
+                              <TableRow key={user.id}>
+                                <TableCell className="font-medium">{user.name}</TableCell>
+                                <TableCell>{user.email}</TableCell>
+                                <TableCell>R$ {user.total_invested.toFixed(2)}</TableCell>
+                                <TableCell className="text-green-600">
+                                  R$ {user.total_earned.toFixed(2)}
+                                </TableCell>
+                                <TableCell>{user.active_cycles}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <p className="text-center text-gray-500 py-4">Nenhum indicado neste nível</p>
+                      )}
+                    </Card>
+                  ));
+                })()
+              ) : (
+                <Card className="p-8">
+                  <p className="text-center text-gray-500">Carregando dados da rede...</p>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         ) : (

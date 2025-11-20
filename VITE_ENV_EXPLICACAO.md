@@ -189,3 +189,4 @@ FRONTEND_URL="https://clickads.pro"  # Só afeta backend (links de indicação)
 
 
 
+

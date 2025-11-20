@@ -387,3 +387,4 @@ progress = (days_paid / duration_days) * 100
 
 
 
+

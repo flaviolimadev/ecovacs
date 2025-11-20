@@ -48,6 +48,11 @@ interface User {
   total_invested: number;
   total_earned: number;
   referral_code: string;
+  referred_by?: {
+    id: number;
+    name: string;
+    email: string;
+  };
   created_at: string;
 }
 
@@ -339,6 +344,7 @@ export default function AdminUsers() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Indicado por</TableHead>
                   <TableHead className="text-right">Saldo Investir</TableHead>
                   <TableHead className="text-right">Saldo Sacar</TableHead>
                   <TableHead>Código</TableHead>
@@ -355,6 +361,16 @@ export default function AdminUsers() {
                       <Badge variant={user.role === "admin" ? "default" : "secondary"}>
                         {user.role}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {user.referred_by ? (
+                        <div className="text-sm">
+                          <div className="font-medium">{user.referred_by.name}</div>
+                          <div className="text-xs text-gray-500">{user.referred_by.email}</div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">N/A</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       R$ {user.balance.toFixed(2)}
