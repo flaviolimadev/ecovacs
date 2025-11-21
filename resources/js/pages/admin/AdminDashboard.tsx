@@ -38,15 +38,24 @@ const AdminDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
+      console.log('🔄 Carregando dados do dashboard...');
+      
       const [statsRes, depositsRes] = await Promise.all([
         api.get('/api/v1/admin/dashboard/stats'),
         api.get('/api/v1/admin/dashboard/recent-deposits'),
       ]);
 
+      console.log('📊 Stats recebidas:', statsRes.data);
+      console.log('💰 Depósitos recebidos:', depositsRes.data.data);
+
       setStats(statsRes.data);
       setRecentDeposits(depositsRes.data.data);
-    } catch (error) {
-      console.error('Erro ao carregar dashboard:', error);
+      
+      console.log('✅ Dashboard carregado com sucesso!');
+    } catch (error: any) {
+      console.error('❌ Erro ao carregar dashboard:', error);
+      console.error('Response:', error.response?.data);
+      console.error('Status:', error.response?.status);
     } finally {
       setLoading(false);
     }
@@ -106,7 +115,7 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm opacity-90 mb-2">Total de Usuários</p>
               <div className="flex items-center text-xs">
                 <span className="opacity-75">
-                  💰 {stats?.new_users_today || 0} novos hoje
+                  ✨ {stats?.new_users_today || 0} novos hoje
                 </span>
               </div>
             </div>
