@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, TrendingDown, TrendingUp, Wallet, AlertCircle } from 'lucide-react';
+import { AdminHeader } from '@/components/AdminHeader';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 
@@ -25,6 +27,7 @@ interface RecentDeposit {
 }
 
 const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentDeposits, setRecentDeposits] = useState<RecentDeposit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,14 +76,19 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
+      <>
+        <AdminHeader title="Dashboard" subtitle="Visão geral do sistema" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <>
+      <AdminHeader title="Dashboard" subtitle="Visão geral do sistema em tempo real" />
+      <div className="p-6 bg-gray-50 min-h-screen">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Total de Usuários */}
@@ -232,14 +240,17 @@ const AdminDashboard: React.FC = () => {
           <div className="p-6">
             <div className="space-y-4">
               {/* Depósitos Pendentes */}
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg hover:shadow-md transition-shadow cursor-pointer">
+              <div 
+                onClick={() => navigate('/admin/deposits')}
+                className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white">
                     <TrendingDown className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Depósitos Pendentes</p>
-                    <p className="text-xs text-gray-600">Requerem aprovação</p>
+                    <p className="text-xs text-gray-600">Clique para visualizar</p>
                   </div>
                 </div>
                 <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-lg px-4 py-2">
@@ -248,14 +259,17 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Saques Pendentes */}
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg hover:shadow-md transition-shadow cursor-pointer">
+              <div 
+                onClick={() => navigate('/admin/withdrawals')}
+                className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white">
                     <TrendingUp className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Saques Pendentes</p>
-                    <p className="text-xs text-gray-600">Aguardando processamento</p>
+                    <p className="text-xs text-gray-600">Clique para processar</p>
                   </div>
                 </div>
                 <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-lg px-4 py-2">
@@ -264,14 +278,17 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Usuários Novos Hoje */}
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg hover:shadow-md transition-shadow cursor-pointer">
+              <div 
+                onClick={() => navigate('/admin/users')}
+                className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white">
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Novos Usuários</p>
-                    <p className="text-xs text-gray-600">Cadastrados hoje</p>
+                    <p className="text-xs text-gray-600">Clique para gerenciar</p>
                   </div>
                 </div>
                 <Badge className="bg-green-500 hover:bg-green-600 text-white text-lg px-4 py-2">
@@ -283,6 +300,7 @@ const AdminDashboard: React.FC = () => {
         </Card>
       </div>
     </div>
+    </>
   );
 };
 
