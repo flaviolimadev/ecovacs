@@ -16,6 +16,7 @@ use App\Http\Controllers\API\V1\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\API\V1\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\API\V1\Admin\PackageController;
 use App\Http\Controllers\API\V1\Admin\DepositController as AdminDepositController;
+use App\Http\Controllers\API\V1\Admin\DashboardController as AdminDashboardController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -79,6 +80,10 @@ Route::prefix('v1')->group(function () {
 
         // Admin Routes (protegidas por middleware admin)
         Route::prefix('admin')->middleware('admin')->group(function () {
+            // Dashboard
+            Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats']);
+            Route::get('/dashboard/recent-deposits', [AdminDashboardController::class, 'recentDeposits']);
+
             // Usuários
             Route::get('/users/stats', [AdminUserController::class, 'stats']);
             Route::get('/users', [AdminUserController::class, 'index']);

@@ -13,6 +13,11 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
 
   const menuItems = [
     {
+      label: "Dashboard",
+      icon: BarChart3,
+      path: "/admin/dashboard",
+    },
+    {
       label: "Usuários",
       icon: Users,
       path: "/admin/users",
@@ -34,7 +39,7 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
     },
     {
       label: "Pacotes",
-      icon: BarChart3,
+      icon: Package,
       path: "/admin/packages",
     },
     {
