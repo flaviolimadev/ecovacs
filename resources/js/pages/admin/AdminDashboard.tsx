@@ -41,8 +41,8 @@ const AdminDashboard: React.FC = () => {
       console.log('🔄 Carregando dados do dashboard...');
       
       const [statsRes, depositsRes] = await Promise.all([
-        api.get('/api/v1/admin/dashboard/stats'),
-        api.get('/api/v1/admin/dashboard/recent-deposits'),
+        api.get('/admin/dashboard/stats'),
+        api.get('/admin/dashboard/recent-deposits'),
       ]);
 
       console.log('📊 Stats recebidas:', statsRes.data);
