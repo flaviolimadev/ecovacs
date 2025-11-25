@@ -262,6 +262,21 @@ const Withdraw = () => {
               </div>
             </Card>
 
+            {/* Card Destaque - Saques Todos os Dias */}
+            <Card className="border-primary/50 bg-gradient-to-r from-primary/20 to-accent/20 p-4">
+              <div className="flex items-center justify-center gap-3">
+                <Clock className="h-6 w-6 text-primary" />
+                <div className="text-center">
+                  <p className="text-lg font-bold text-primary">
+                    ✅ Saques Disponíveis Todos os Dias!
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Solicite seu saque a qualquer momento
+                  </p>
+                </div>
+              </div>
+            </Card>
+
             <Card className="border-warning/30 bg-warning/10 p-4">
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
@@ -269,7 +284,6 @@ const Withdraw = () => {
                   <p>• Valor mínimo: R$ {minAmount.toFixed(2)}</p>
                   <p>• Taxa de saque: {(fee * 100).toFixed(0)}%</p>
                   <p>• Limite: 1 saque por dia</p>
-                  <p>• Disponível todos os dias</p>
                   {!canWithdraw && <p>• {settings?.validation_message}</p>}
                 </div>
               </div>
