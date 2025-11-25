@@ -148,7 +148,17 @@ const Earnings = () => {
         {/* Grid de Investimentos Ativos */}
         {investments.length > 0 ? (
           <>
-            <h2 className="text-base font-bold text-foreground mb-4">Investimentos Ativos</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-foreground">Investimentos Ativos</h2>
+              <Button
+                onClick={() => navigate("/plans")}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                + Novo Investimento
+              </Button>
+            </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {investments.map((investment) => (
                 <PlanCard
