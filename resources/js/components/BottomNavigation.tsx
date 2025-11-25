@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Home, Users, CircleDollarSign, User } from "lucide-react";
+import { Home, CreditCard, DollarSign, Package, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface NavItem {
@@ -14,10 +14,11 @@ const BottomNavigation = () => {
   const location = useLocation();
 
   const navItems: NavItem[] = [
-    { id: "home", path: "/", icon: Home, label: "Início" },
-    { id: "members", path: "/members", icon: Users, label: "Membro" },
-    { id: "earnings", path: "/earnings", icon: CircleDollarSign, label: "Rendimentos" },
-    { id: "user", path: "/profile", icon: User, label: "Utilizador" },
+    { id: "home", path: "/", icon: Home, label: "Home" },
+    { id: "recharge", path: "/deposit", icon: CreditCard, label: "Recharge" },
+    { id: "withdraw", path: "/withdraw", icon: DollarSign, label: "Withdraw" },
+    { id: "planos", path: "/earnings", icon: Package, label: "Planos" },
+    { id: "profile", path: "/profile", icon: User, label: "Profile" },
   ];
 
   return (

@@ -42,7 +42,7 @@ const ProfileActionGrid = () => {
       icon: FileText,
       label: "extrato",
       color: "from-purple-400 to-purple-600",
-      onClick: () => navigate("/earnings"),
+      onClick: () => navigate("/statement"),
     },
     {
       id: "contact",
