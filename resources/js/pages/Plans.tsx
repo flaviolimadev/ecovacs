@@ -65,14 +65,18 @@ const Plans = () => {
   const handleSelectPlan = async (plan: Plan) => {
     if (purchasingPlanId) return; // Prevenir múltiplos cliques
 
+    console.log('🎯 Iniciando investimento:', plan.name, 'ID:', plan.id);
+
     try {
       setPurchasingPlanId(plan.id);
       
       // Chamar API para criar investimento
-      // O backend faz todas as validações: saldo, limite de compras, etc.
-      await api.post('/investments', {
+      console.log('📤 Enviando requisição para /investments com plan_id:', plan.id);
+      const response = await api.post('/investments', {
         plan_id: plan.id,
       });
+
+      console.log('✅ Resposta da API:', response.data);
 
       toast({
         title: "Investimento Realizado! 🎉",
@@ -80,16 +84,22 @@ const Plans = () => {
       });
 
       // Aguardar um pouco e navegar para investimentos
+      console.log('🔄 Redirecionando para /earnings em 1.5s...');
       setTimeout(() => {
+        console.log('➡️ Navegando para /earnings');
         navigate("/earnings");
       }, 1500);
 
     } catch (error: any) {
+      console.error('❌ Erro ao investir:', error);
+      console.error('📋 Erro completo:', error.response);
+      
       const errorData = error.response?.data;
       
       // Tratar erro de saldo insuficiente
       if (errorData?.error === 'INSUFFICIENT_BALANCE') {
         const missing = errorData.data?.missing || 0;
+        console.log('💰 Saldo insuficiente. Faltam:', missing);
         toast({
           title: "Saldo Insuficiente",
           description: `Você precisa de mais R$ ${missing.toFixed(2)} para investir neste plano.`,
@@ -107,6 +117,7 @@ const Plans = () => {
       
       // Tratar erro de limite de compras
       if (errorData?.error === 'PURCHASE_LIMIT_REACHED') {
+        console.log('🚫 Limite de compras atingido');
         toast({
           title: "Limite Atingido",
           description: `Você já possui o máximo de investimentos ativos deste plano.`,
@@ -116,6 +127,7 @@ const Plans = () => {
       }
       
       // Erro genérico
+      console.log('⚠️ Erro genérico:', errorData?.message);
       toast({
         title: "Erro",
         description: errorData?.message || "Não foi possível realizar o investimento.",
