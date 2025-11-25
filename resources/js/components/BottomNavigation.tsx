@@ -17,7 +17,7 @@ const BottomNavigation = () => {
     { id: "home", path: "/", icon: Home, label: "Home" },
     { id: "recharge", path: "/deposit", icon: CreditCard, label: "Recharge" },
     { id: "withdraw", path: "/withdraw", icon: DollarSign, label: "Withdraw" },
-    { id: "planos", path: "/earnings", icon: Package, label: "Planos" },
+    { id: "planos", path: "/plans", icon: Package, label: "Planos" },
     { id: "profile", path: "/profile", icon: User, label: "Profile" },
   ];
 
