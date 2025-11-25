@@ -19,7 +19,7 @@ import banner3 from "@/assets/banner-3.jpg";
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [balanceWithdrawn, setBalanceWithdrawn] = useState(0);
+  const [balance, setBalance] = useState(0);
   const [feedData, setFeedData] = useState<any[]>([]);
   
   const banners = [
@@ -38,7 +38,8 @@ const Index = () => {
   const loadUserData = async () => {
     try {
       const response = await api.get("/profile");
-      setBalanceWithdrawn(response.data.balance_withdrawn || 0);
+      // balance = saldo para investir/comprar planos
+      setBalance(response.data.data.balance || 0);
     } catch (error) {
       console.error("Error loading user data:", error);
     }
@@ -101,9 +102,9 @@ const Index = () => {
               />
             </div>
             <div className="flex flex-col items-end">
-              <span className="text-xs text-muted-foreground">Saldo Disponível</span>
-              <span className="text-lg font-bold text-success">
-                R$ {balanceWithdrawn.toFixed(2)}
+              <span className="text-xs text-muted-foreground">Saldo p/ Investir</span>
+              <span className="text-lg font-bold text-primary">
+                R$ {balance.toFixed(2)}
               </span>
             </div>
           </div>
