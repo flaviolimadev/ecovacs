@@ -14,11 +14,11 @@ const BottomNavigation = () => {
   const location = useLocation();
 
   const navItems: NavItem[] = [
-    { id: "home", path: "/", icon: Home, label: "Home" },
-    { id: "recharge", path: "/deposit", icon: CreditCard, label: "Recharge" },
-    { id: "withdraw", path: "/withdraw", icon: DollarSign, label: "Withdraw" },
+    { id: "home", path: "/", icon: Home, label: "Início" },
+    { id: "recharge", path: "/deposit", icon: CreditCard, label: "Depositar" },
+    { id: "withdraw", path: "/withdraw", icon: DollarSign, label: "Sacar" },
     { id: "planos", path: "/plans", icon: Package, label: "Planos" },
-    { id: "profile", path: "/profile", icon: User, label: "Profile" },
+    { id: "profile", path: "/profile", icon: User, label: "Perfil" },
   ];
 
   return (
