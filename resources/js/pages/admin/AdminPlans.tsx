@@ -697,7 +697,7 @@ export default function AdminPlans() {
               <Input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Ex: 🤖 Ecovacs Deebot T8 Robot"
+                placeholder="Ex: 💎 Plano Ouro Premium"
               />
             </div>
             <div>
@@ -971,7 +971,7 @@ export default function AdminPlans() {
               <Input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Ex: 🤖 Ecovacs Deebot T8 Robot"
+                placeholder="Ex: 💎 Plano Ouro Premium"
               />
             </div>
             <div>

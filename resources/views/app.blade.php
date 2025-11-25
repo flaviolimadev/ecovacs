@@ -9,37 +9,37 @@
         <meta http-equiv="content-language" content="pt-BR">
         
         <!-- SEO Meta Tags -->
-        <title>Ecovacs Robotics - Plataforma de Investimentos Inteligentes</title>
-        <meta name="description" content="Invista em tecnologia de ponta com a Ecovacs Robotics. Planos de rendimento progressivo com comissões atrativas e sistema de indicação multinível. Inovação e rentabilidade ao seu alcance.">
-        <meta name="keywords" content="ecovacs, robotics, investimentos, tecnologia, robôs inteligentes, rendimento progressivo, plataforma de investimentos, comissões, indicação, MLM">
-        <meta name="author" content="Ecovacs Robotics">
+        <title>AngloGold - Plataforma de Investimentos em Ouro</title>
+        <meta name="description" content="Invista em ouro com segurança na AngloGold. Planos de rendimento progressivo com comissões atrativas e sistema de indicação multinível. Rentabilidade e estabilidade ao seu alcance.">
+        <meta name="keywords" content="anglogold, ouro, investimentos, gold, investimento em ouro, rendimento progressivo, plataforma de investimentos, comissões, indicação, MLM">
+        <meta name="author" content="AngloGold">
         <meta name="robots" content="index, follow">
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ config('app.url') }}">
-        <meta property="og:title" content="Ecovacs Robotics - Plataforma de Investimentos Inteligentes">
-        <meta property="og:description" content="Invista em tecnologia de ponta com a Ecovacs Robotics. Planos de rendimento progressivo com comissões atrativas e sistema de indicação multinível.">
-        <meta property="og:image" content="{{ config('app.url') }}/assets/logo.jpg">
+        <meta property="og:title" content="AngloGold - Plataforma de Investimentos em Ouro">
+        <meta property="og:description" content="Invista em ouro com segurança na AngloGold. Planos de rendimento progressivo com comissões atrativas e sistema de indicação multinível.">
+        <meta property="og:image" content="{{ config('app.url') }}/favicon.png">
         <meta property="og:locale" content="pt_BR">
         
         <!-- Twitter -->
         <meta property="twitter:card" content="summary_large_image">
         <meta property="twitter:url" content="{{ config('app.url') }}">
-        <meta property="twitter:title" content="Ecovacs Robotics - Plataforma de Investimentos Inteligentes">
-        <meta property="twitter:description" content="Invista em tecnologia de ponta com a Ecovacs Robotics. Planos de rendimento progressivo com comissões atrativas.">
-        <meta property="twitter:image" content="{{ config('app.url') }}/assets/logo.jpg">
+        <meta property="twitter:title" content="AngloGold - Plataforma de Investimentos em Ouro">
+        <meta property="twitter:description" content="Invista em ouro com segurança na AngloGold. Planos de rendimento progressivo com comissões atrativas.">
+        <meta property="twitter:image" content="{{ config('app.url') }}/favicon.png">
         
         <!-- Favicon -->
-        <link rel="icon" type="image/png" href="/assets/faviiconvacs.png">
-        <link rel="shortcut icon" type="image/png" href="/assets/faviiconvacs.png">
-        <link rel="apple-touch-icon" href="/assets/faviiconvacs.png">
+        <link rel="icon" type="image/png" href="/favicon.png">
+        <link rel="shortcut icon" type="image/png" href="/favicon.png">
+        <link rel="apple-touch-icon" href="/favicon.png">
         
         <!-- CSRF Token -->
         <meta name="csrf-token" content="{{ csrf_token() }}">
         
         <!-- Theme Color -->
-        <meta name="theme-color" content="#0EA5E9">
+        <meta name="theme-color" content="#8B3A3A">
         
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">

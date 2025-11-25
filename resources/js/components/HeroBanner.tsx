@@ -33,7 +33,7 @@ const HeroBanner = () => {
         >
           <img
             src={image}
-            alt={`Ecovacs ${index + 1}`}
+            alt={`AngloGold ${index + 1}`}
             className="h-full w-full object-cover"
           />
         </div>
