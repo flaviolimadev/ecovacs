@@ -16,6 +16,7 @@ import Withdraw from "./pages/Withdraw";
 import Statement from "./pages/Statement";
 import DailyReward from "./pages/DailyReward";
 import About from "./pages/About";
+import Plans from "./pages/Plans";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -112,6 +113,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <About />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/plans"
+              element={
+                <ProtectedRoute>
+                  <Plans />
                 </ProtectedRoute>
               }
             />
