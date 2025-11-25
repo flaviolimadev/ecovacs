@@ -12,9 +12,9 @@ import FloatingMessageButton from "@/components/FloatingMessageButton";
 import WelcomePopup from "@/components/WelcomePopup";
 import { toast } from "sonner";
 import angloGoldLogo from "@/assets/anglogold-logo.png";
-import banner1 from "@/assets/banner-1.jpg";
-import banner2 from "@/assets/banner-2.jpg";
-import banner3 from "@/assets/banner-3.jpg";
+import banner1 from "@/assets/asdr.jpeg";
+import banner2 from "@/assets/123fdrt.jpeg";
+import banner3 from "@/assets/image.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -23,9 +23,9 @@ const Index = () => {
   const [feedData, setFeedData] = useState<any[]>([]);
   
   const banners = [
-    { id: 1, image: banner1, alt: "AngloGold Investment Platform" },
-    { id: 2, image: banner2, alt: "Earn Daily with Gold Investments" },
-    { id: 3, image: banner3, alt: "Join our Community" },
+    { id: 1, image: banner1, alt: "AngloGold - Referência Mundial na Produção de Ouro" },
+    { id: 2, image: banner2, alt: "Invista em Ouro com Segurança" },
+    { id: 3, image: banner3, alt: "Pepitas de Ouro - Investimento Sólido" },
   ];
 
   useEffect(() => {
