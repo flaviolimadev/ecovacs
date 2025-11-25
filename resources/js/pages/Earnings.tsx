@@ -66,12 +66,13 @@ const Earnings = () => {
     loadData();
   }, []);
 
-  const handleSelectPlan = (planName: string, planId: number) => {
+  const handleViewDetails = (planName: string, planId: number) => {
+    // Poderia navegar para uma página de detalhes do investimento
+    // Por enquanto, apenas mostra um toast informativo
     toast({
-      title: "Investimento Selecionado",
-      description: `${planName}`,
+      title: "Investimento Ativo",
+      description: `${planName} - Visualizando progresso do investimento`,
     });
-    // Aqui você pode adicionar navegação ou ação específica
   };
 
   if (isLoading) {
@@ -159,7 +160,8 @@ const Earnings = () => {
                   cycle={investment.duration_days}
                   totalReturn={investment.total_return}
                   badge={investment.status === 'active' ? 'Ativo' : undefined}
-                  onSelect={() => handleSelectPlan(investment.plan_name, investment.id)}
+                  onSelect={() => handleViewDetails(investment.plan_name, investment.id)}
+                  buttonText="Ver Detalhes"
                   customContent={
                     <div className="space-y-2 pt-2 border-t border-border">
                       <div className="flex items-center justify-between text-xs">

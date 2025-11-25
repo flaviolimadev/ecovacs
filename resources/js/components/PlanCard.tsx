@@ -14,6 +14,7 @@ interface PlanCardProps {
   onSelect: () => void;
   customContent?: React.ReactNode;
   disabled?: boolean;
+  buttonText?: string; // Texto customizável para o botão
 }
 
 const PlanCard = ({
@@ -27,6 +28,7 @@ const PlanCard = ({
   onSelect,
   customContent,
   disabled = false,
+  buttonText = "Investir Agora",
 }: PlanCardProps) => {
   const profitPercentage = ((totalReturn - investment) / investment * 100).toFixed(0);
 
@@ -115,7 +117,7 @@ const PlanCard = ({
             size="lg"
             disabled={disabled}
           >
-            {disabled ? "Processando..." : "Investir Agora"}
+            {disabled ? "Processando..." : buttonText}
           </Button>
         </div>
       </Card>
