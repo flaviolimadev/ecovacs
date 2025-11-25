@@ -70,7 +70,7 @@ const Index = () => {
         navigate("/withdraw");
         break;
       case "Plans":
-        navigate("/earnings");
+        navigate("/plans");
         break;
       case "Referral":
         navigate("/members");
