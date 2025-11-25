@@ -270,9 +270,6 @@ const Withdraw = () => {
                   <p className="text-lg font-bold text-primary">
                     ✅ Saques Disponíveis Todos os Dias!
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Solicite seu saque a qualquer momento
-                  </p>
                 </div>
               </div>
             </Card>
