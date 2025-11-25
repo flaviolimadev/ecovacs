@@ -13,24 +13,24 @@ class WithdrawSettingsSeeder extends Seeder
             [
                 'key' => 'withdraw.window',
                 'value' => json_encode([
-                    'days' => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                    'days' => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                     'start' => '10:00',
                     'end' => '17:00',
                 ]),
                 'group' => 'withdraw',
-                'description' => 'Janela de horário permitida para saques (dias úteis, 10h-17h)',
+                'description' => 'Janela de horário permitida para saques (Segunda a Domingo, 10h-17h)',
             ],
             [
                 'key' => 'withdraw.min',
-                'value' => '50',
+                'value' => '30',
                 'group' => 'withdraw',
                 'description' => 'Valor mínimo de saque em reais',
             ],
             [
                 'key' => 'withdraw.fee',
-                'value' => '0.10',
+                'value' => '0.12',
                 'group' => 'withdraw',
-                'description' => 'Taxa de saque (percentual, ex: 0.10 = 10%)',
+                'description' => 'Taxa de saque (percentual, ex: 0.12 = 12%)',
             ],
             [
                 'key' => 'withdraw.daily_limit_per_user',

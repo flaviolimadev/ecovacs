@@ -217,7 +217,7 @@ const Members = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 rounded-lg bg-accent/10">
                   <span className="text-sm text-foreground">Nível 1</span>
-                  <span className="text-sm font-bold text-accent">15%</span>
+                  <span className="text-sm font-bold text-accent">25%</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-primary/10">
                   <span className="text-sm text-foreground">Nível 2</span>
@@ -235,11 +235,11 @@ const Members = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 rounded-lg bg-accent/10">
                   <span className="text-sm text-foreground">Nível 1</span>
-                  <span className="text-sm font-bold text-accent">8%</span>
+                  <span className="text-sm font-bold text-accent">13%</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-primary/10">
                   <span className="text-sm text-foreground">Nível 2</span>
-                  <span className="text-sm font-bold text-primary">2%</span>
+                  <span className="text-sm font-bold text-primary">1%</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-success/10">
                   <span className="text-sm text-foreground">Nível 3</span>

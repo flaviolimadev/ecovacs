@@ -24,7 +24,7 @@ const Withdraw = () => {
   const [settings, setSettings] = useState<any>(null);
   const [loadingSettings, setLoadingSettings] = useState(true);
 
-  const minAmount = settings?.min_amount || 50;
+  const minAmount = settings?.min_amount || 30;
   const fee = settings?.fee_percent || 0.10;
   const availableBalance = user?.balance_withdrawn || 0;
   const hasWithdrawnToday = settings?.has_withdrawn_today || false;
@@ -211,7 +211,7 @@ const Withdraw = () => {
     }
   };
 
-  const quickAmounts = [50, 100, 200, 500, 1000];
+  const quickAmounts = [30, 50, 100, 200, 500];
 
   const isWithdrawTimeValid = () => {
     const now = new Date();

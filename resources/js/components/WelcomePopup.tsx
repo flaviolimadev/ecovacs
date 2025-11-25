@@ -108,7 +108,7 @@ const WelcomePopup = () => {
                     <p className="font-bold text-primary text-[10px]">1ª Compra</p>
                   </div>
                   <div className="space-y-1 text-[10px]">
-                    <p className="text-foreground"><strong className="text-primary">15%</strong> Nível A</p>
+                    <p className="text-foreground"><strong className="text-primary">25%</strong> Nível A</p>
                     <p className="text-foreground"><strong className="text-primary">2%</strong> Nível B</p>
                     <p className="text-foreground"><strong className="text-primary">1%</strong> Nível C</p>
                   </div>
@@ -126,8 +126,8 @@ const WelcomePopup = () => {
                     <p className="font-bold text-warning text-[10px]">Demais</p>
                   </div>
                   <div className="space-y-1 text-[10px]">
-                    <p className="text-foreground"><strong className="text-warning">8%</strong> Nível A</p>
-                    <p className="text-foreground"><strong className="text-warning">2%</strong> Nível B</p>
+                    <p className="text-foreground"><strong className="text-warning">13%</strong> Nível A</p>
+                    <p className="text-foreground"><strong className="text-warning">1%</strong> Nível B</p>
                     <p className="text-foreground"><strong className="text-warning">1%</strong> Nível C</p>
                   </div>
                 </motion.div>

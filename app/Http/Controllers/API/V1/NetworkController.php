@@ -278,13 +278,13 @@ class NetworkController extends Controller
                 ],
                 'percentages_config' => [
                     'first_purchase' => [
-                        ['level' => 1, 'percentage' => 15.00],
+                        ['level' => 1, 'percentage' => 25.00],
                         ['level' => 2, 'percentage' => 2.00],
                         ['level' => 3, 'percentage' => 1.00],
                     ],
                     'subsequent_purchase' => [
-                        ['level' => 1, 'percentage' => 8.00],
-                        ['level' => 2, 'percentage' => 2.00],
+                        ['level' => 1, 'percentage' => 13.00],
+                        ['level' => 2, 'percentage' => 1.00],
                         ['level' => 3, 'percentage' => 1.00],
                     ],
                     'residual' => [

@@ -15,14 +15,14 @@ class ProcessReferralCommissions
      * Percentuais de comissão por nível
      */
     private const FIRST_PURCHASE_RATES = [
-        1 => 15.00,  // Nível 1: 15%
+        1 => 25.00,  // Nível 1: 25%
         2 => 2.00,   // Nível 2: 2%
         3 => 1.00,   // Nível 3: 1%
     ];
 
     private const SUBSEQUENT_PURCHASE_RATES = [
-        1 => 8.00,   // Nível 1: 8%
-        2 => 2.00,   // Nível 2: 2%
+        1 => 13.00,  // Nível 1: 13%
+        2 => 1.00,   // Nível 2: 1%
         3 => 1.00,   // Nível 3: 1%
     ];
 

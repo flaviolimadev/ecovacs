@@ -34,7 +34,7 @@ const Deposit = () => {
   const [checking, setChecking] = useState(false);
   const [depositData, setDepositData] = useState<DepositData | null>(null);
 
-  const minAmount = 50;
+  const minAmount = 30;
 
   const handleAmountChange = (value: string) => {
     // Remove non-numeric characters except comma and dot
@@ -174,7 +174,7 @@ const Deposit = () => {
     }
   };
 
-  const quickAmounts = [50, 100, 200, 500, 1000];
+  const quickAmounts = [30, 50, 100, 200, 500];
 
   return (
     <div className="min-h-screen bg-background pb-20">
