@@ -35,11 +35,24 @@ const Plans = () => {
     const loadPlans = async () => {
       try {
         setIsLoading(true);
-        // Usar endpoint correto /plans ao invés de /admin/plans
+        console.log('📤 Buscando planos da API...');
+        
         const response = await api.get('/plans');
+        console.log('📥 Resposta da API:', response.data);
+        
+        // O backend retorna os planos agrupados por tipo: { data: { standard: [], cycle: [] } }
+        const plansData = response.data.data;
+        
+        // Combinar planos de ambos os tipos
+        const allPlans = [
+          ...(plansData.standard || []),
+          ...(plansData.cycle || [])
+        ];
+        
+        console.log('📦 Total de planos encontrados:', allPlans.length);
         
         // Ordenar por ordem e por preço
-        const sortedPlans = response.data.data.sort((a: Plan, b: Plan) => {
+        const sortedPlans = allPlans.sort((a: Plan, b: Plan) => {
           if (a.order !== b.order) {
             return a.order - b.order;
           }
@@ -48,10 +61,11 @@ const Plans = () => {
         
         setPlans(sortedPlans);
       } catch (error: any) {
-        console.error("Failed to load plans:", error);
+        console.error("❌ Erro ao carregar planos:", error);
+        console.error("📋 Detalhes do erro:", error.response);
         toast({
           title: "Erro",
-          description: "Não foi possível carregar os planos disponíveis.",
+          description: error.response?.data?.message || "Não foi possível carregar os planos disponíveis.",
           variant: "destructive",
         });
       } finally {
