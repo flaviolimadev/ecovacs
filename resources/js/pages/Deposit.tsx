@@ -1,11 +1,13 @@
-import { ArrowLeft, Wallet, Copy, Check, QrCode, Loader2, RefreshCw } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Copy, CheckCircle2, Loader2, RefreshCw, QrCode } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
+import BottomNavigation from "@/components/BottomNavigation";
 import api from "@/lib/api";
 
 interface DepositData {
@@ -175,260 +177,211 @@ const Deposit = () => {
   const quickAmounts = [50, 100, 200, 500, 1000];
 
   return (
-    <div className="relative min-h-screen bg-background pb-8 notranslate" translate="no">
-      {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6 rounded-b-3xl notranslate" translate="no">
-        <div className="flex items-center justify-between mb-4">
-          <button 
-            onClick={() => step === "payment" ? setStep("input") : navigate("/profile")} 
-            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+    <div className="min-h-screen bg-background pb-20">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-lg">
+        <div className="flex items-center gap-4 px-4 py-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => step === "payment" ? setStep("input") : navigate("/")}
+            className="hover:bg-secondary"
           >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-xl font-semibold flex-1 text-center">Depositar</h1>
-          <div className="w-10"></div>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-bold text-foreground">Recarregar Conta</h1>
         </div>
-        <div className="flex justify-center">
-          <div className="bg-white/20 p-4 rounded-full">
-            <Wallet className="w-8 h-8" />
-          </div>
-        </div>
-      </div>
+      </header>
 
-      <div className="px-4 mt-6">
-        {step === "input" ? (
-          <>
-            {/* Amount Input */}
-            <Card className="p-6 notranslate" translate="no" data-no-translate="true">
-              <div className="text-center mb-6 notranslate" translate="no">
-                <Label className="text-sm text-muted-foreground">Quanto deseja depositar?</Label>
-                <div className="relative mt-3 notranslate" translate="no">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground notranslate" translate="no">
-                    R$
-                  </span>
-                  <Input
-                    type="text"
-                    placeholder="0,00"
-                    value={amount}
-                    onChange={(e) => handleAmountChange(e.target.value)}
-                    className="text-3xl font-bold text-center h-16 pl-16 notranslate"
-                    translate="no"
-                    autoComplete="off"
-                    data-no-translate="true"
-                    data-form-type="other"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2 notranslate" translate="no">
-                  Valor mínimo: R$ {minAmount.toFixed(2)}
-                </p>
-              </div>
-
-              {/* Quick Amount Buttons */}
-              <div className="space-y-3">
-                <Label className="text-xs text-muted-foreground">Valores rápidos:</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {quickAmounts.map((value) => (
-                    <Button
-                      key={value}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setAmount(value.toString())}
-                      className="h-12"
-                    >
-                      R$ {value}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* CPF Input */}
-              <div className="mt-6 notranslate" translate="no" data-no-translate="true">
-                <Label htmlFor="cpf" className="text-sm text-muted-foreground notranslate" translate="no">CPF do Titular *</Label>
-                <Input
-                  id="cpf"
-                  type="text"
-                  placeholder="000.000.000-00"
-                  value={cpf}
-                  onChange={(e) => handleCPFChange(e.target.value)}
-                  maxLength={14}
-                  className="mt-1 h-12 notranslate"
-                  translate="no"
-                  autoComplete="off"
-                  data-no-translate="true"
-                  data-form-type="other"
-                  inputMode="numeric"
-                />
-              </div>
-            </Card>
-
-            {/* Info Card */}
-            <Card className="p-4 mt-4 bg-blue-50 border-blue-200">
-              <h3 className="font-semibold text-sm text-blue-900 mb-2">ℹ️ Informações Importantes</h3>
-              <ul className="text-xs text-blue-700 space-y-1">
-                <li>• Depósitos via PIX são confirmados em até 5 minutos</li>
-                <li>• Valor mínimo de depósito: R$ {minAmount.toFixed(2)}</li>
-                <li>• O saldo é creditado automaticamente após confirmação</li>
-                <li>• Em caso de dúvidas, entre em contato com o suporte</li>
-              </ul>
-            </Card>
-
-            <Button 
-              onClick={handleContinue} 
-              className="w-full mt-6 h-12 text-base notranslate"
-              translate="no"
-              disabled={!amount || getNumericAmount() < minAmount || !cpf || cpf.replace(/\D/g, '').length !== 11 || loading}
+      <div className="container max-w-lg px-4 py-6">
+        <AnimatePresence mode="wait">
+          {step === "input" ? (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Gerando PIX...
-                </>
-              ) : (
-                'Continuar'
-              )}
-            </Button>
-          </>
-        ) : (
-          <>
-            {/* Payment Screen */}
-            <Card className="p-6 notranslate" translate="no" data-no-translate="true">
-              <div className="text-center mb-6 notranslate" translate="no">
-                <p className="text-sm text-muted-foreground mb-2">Valor do depósito</p>
-                <p className="text-4xl font-bold text-primary notranslate" translate="no">R$ {depositData?.amount.toFixed(2)}</p>
-              </div>
+              <Card className="overflow-hidden border-border bg-card p-6 shadow-sm">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="amount" className="text-foreground">
+                      Valor do Depósito (R$)
+                    </Label>
+                    <Input
+                      id="amount"
+                      type="text"
+                      placeholder="Ex: 50.00"
+                      value={amount}
+                      onChange={(e) => handleAmountChange(e.target.value)}
+                      className="border-border bg-background"
+                    />
+                    <p className="text-xs text-muted-foreground">Valor mínimo: R$ {minAmount.toFixed(2)}</p>
+                  </div>
 
-              <div className="space-y-4 notranslate" translate="no">
-                {/* QR Code */}
-                <div className="space-y-3 notranslate" translate="no">
-                  <Label className="text-sm font-semibold text-center block">Escaneie o QR Code</Label>
-                  {depositData?.qr_code_base64 ? (
-                    <div className="bg-white rounded-xl p-4 flex items-center justify-center border-2 border-border notranslate" translate="no">
-                      <img 
-                        src={depositData.qr_code_base64} 
-                        alt="QR Code PIX" 
-                        className="w-64 h-64 object-contain notranslate"
-                        translate="no"
-                      />
-                    </div>
-                  ) : depositData?.qr_code_image ? (
-                    <div className="bg-white rounded-xl p-4 flex items-center justify-center border-2 border-border">
-                      <img 
-                        src={depositData.qr_code_image} 
-                        alt="QR Code PIX" 
-                        className="w-64 h-64 object-contain"
-                      />
-                    </div>
-                  ) : (
-                    <div className="bg-muted/30 rounded-xl p-8 flex items-center justify-center border-2 border-dashed border-border">
-                      <div className="text-center">
-                        <QrCode className="w-48 h-48 mx-auto text-muted-foreground/30" />
-                        <p className="text-xs text-muted-foreground mt-2">Gerando QR Code...</p>
-                      </div>
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="cpf" className="text-foreground">
+                      CPF do Titular
+                    </Label>
+                    <Input
+                      id="cpf"
+                      type="text"
+                      placeholder="000.000.000-00"
+                      maxLength={14}
+                      value={cpf}
+                      onChange={(e) => handleCPFChange(e.target.value)}
+                      className="border-border bg-background"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleContinue}
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    size="lg"
+                    disabled={!amount || getNumericAmount() < minAmount || !cpf || cpf.replace(/\D/g, '').length !== 11 || loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Gerando PIX...
+                      </>
+                    ) : (
+                      'Gerar QR Code PIX'
+                    )}
+                  </Button>
+                </div>
+              </Card>
+
+              <Card className="mt-4 border-warning/30 bg-warning/10 p-4">
+                <h3 className="mb-2 text-sm font-semibold text-foreground">
+                  Instruções:
+                </h3>
+                <ul className="space-y-1 text-xs text-muted-foreground">
+                  <li>• Digite o valor que deseja depositar</li>
+                  <li>• Informe seu CPF para identificação</li>
+                  <li>• Será gerado um QR Code PIX para pagamento</li>
+                  <li>• O saldo é creditado em até 2 minutos</li>
+                </ul>
+              </Card>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="qrcode"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="space-y-4"
+            >
+              <Card className="overflow-hidden border-border bg-card p-6 shadow-sm">
+                <div className="mb-4 text-center">
+                  <h2 className="text-lg font-bold text-foreground">
+                    Escaneie o QR Code
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Valor: R$ {depositData?.amount.toFixed(2)}
+                  </p>
                 </div>
 
-                {/* Separador */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                {depositData?.qr_code_base64 || depositData?.qr_code_image ? (
+                  <div className="flex justify-center rounded-lg bg-white p-4">
+                    <img 
+                      src={depositData.qr_code_base64 || depositData.qr_code_image} 
+                      alt="QR Code PIX" 
+                      className="w-56 h-56 object-contain"
+                    />
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      ou
-                    </span>
+                ) : (
+                  <div className="flex justify-center rounded-lg bg-muted/30 p-8 border-2 border-dashed border-border">
+                    <div className="text-center">
+                      <QrCode className="w-40 h-40 mx-auto text-muted-foreground/30" />
+                      <p className="text-xs text-muted-foreground mt-2">Gerando QR Code...</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* PIX Copia e Cola */}
-                <div className="space-y-3 notranslate" translate="no" data-no-translate="true">
-                  <Label className="text-sm font-semibold">Código PIX Copia e Cola</Label>
-                  
-                  {depositData?.qr_code ? (
+                <div className="mt-6 space-y-3">
+                  {depositData?.qr_code && (
                     <>
-                      {/* Mostrar código (truncado) */}
-                      <div className="bg-muted/50 p-3 rounded-lg border border-border notranslate" translate="no">
-                        <p className="text-xs font-mono break-all text-muted-foreground notranslate" translate="no" data-no-translate="true">
-                          {depositData.qr_code.substring(0, 100)}...
+                      <div className="rounded-lg bg-muted p-3">
+                        <p className="mb-1 text-xs font-semibold text-foreground">
+                          Chave PIX Copia e Cola:
+                        </p>
+                        <p className="break-all text-xs text-muted-foreground">
+                          {depositData.qr_code.substring(0, 50)}...
                         </p>
                       </div>
-                      
-                      {/* Botão copiar */}
+
                       <Button
-                        variant="default"
-                        size="lg"
-                        className="w-full notranslate"
-                        translate="no"
                         onClick={handleCopyPixCode}
+                        variant="outline"
+                        className="w-full"
+                        size="lg"
                       >
                         {copied ? (
                           <>
-                            <Check className="w-5 h-5 mr-2" />
-                            Código Copiado!
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-success" />
+                            Copiado!
                           </>
                         ) : (
                           <>
-                            <Copy className="w-5 h-5 mr-2" />
-                            Copiar Código PIX
+                            <Copy className="mr-2 h-4 w-4" />
+                            Copiar Chave PIX
                           </>
                         )}
                       </Button>
                     </>
-                  ) : (
-                    <p className="text-xs text-muted-foreground text-center py-4">
-                      Código PIX não disponível
-                    </p>
                   )}
+
+                  <Button
+                    onClick={handleCheckStatus}
+                    className="w-full"
+                    disabled={checking}
+                  >
+                    {checking ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Verificando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Verificar Pagamento
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      setStep("input");
+                      setDepositData(null);
+                      setAmount("");
+                      setCpf("");
+                    }}
+                    variant="ghost"
+                    className="w-full"
+                  >
+                    Fazer Novo Depósito
+                  </Button>
                 </div>
-              </div>
-            </Card>
+              </Card>
 
-            <Card className="p-4 mt-4 bg-yellow-50 border-yellow-200">
-              <h3 className="font-semibold text-sm text-yellow-900 mb-2">📱 Como pagar</h3>
-              <ol className="text-xs text-yellow-700 space-y-1.5 list-decimal list-inside">
-                <li>Abra o app do seu banco</li>
-                <li>Escolha pagar com PIX</li>
-                <li>Escaneie o QR Code ou cole o código</li>
-                <li>Confirme o pagamento de R$ {depositData?.amount.toFixed(2)}</li>
-                <li>Clique em "Verificar Pagamento" após pagar</li>
-              </ol>
-            </Card>
-
-            <div className="flex flex-col gap-3 mt-6">
-              <Button 
-                onClick={handleCheckStatus}
-                className="w-full h-12"
-                disabled={checking}
-              >
-                {checking ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Verificando...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Verificar Pagamento
-                  </>
-                )}
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setStep("input");
-                  setDepositData(null);
-                  setAmount("");
-                  setCpf("");
-                }}
-                className="w-full"
-              >
-                Voltar
-              </Button>
-            </div>
-          </>
-        )}
+              <Card className="border-success/30 bg-success/10 p-4">
+                <h3 className="mb-2 text-sm font-semibold text-foreground">
+                  Próximos passos:
+                </h3>
+                <ol className="space-y-1 text-xs text-muted-foreground">
+                  <li>1. Abra o app do seu banco</li>
+                  <li>2. Escolha pagar com PIX</li>
+                  <li>3. Escaneie o QR Code ou cole a chave</li>
+                  <li>4. Confirme o pagamento</li>
+                  <li>5. Seu saldo será creditado automaticamente</li>
+                </ol>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
+      <BottomNavigation />
     </div>
   );
 };

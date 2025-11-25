@@ -1,22 +1,26 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Copy, Share2, Users, Users2, TrendingUp, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, Copy, Share2, Users, Users2, TrendingUp, CheckCircle2, Loader2, Info, Target } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
+import TeamLevelCard from "@/components/TeamLevelCard";
+import MembersList from "@/components/MembersList";
+import GoalsSection from "@/components/GoalsSection";
+import CommissionDetailsDialog from "@/components/CommissionDetailsDialog";
 import { networkAPI } from "@/lib/api";
 
-interface Member {
-  id: string;
-  name: string;
-  level: 1 | 2 | 3;
-  purchases: number;
-  totalEarned: number;
-  joinDate: string;
-  status: "active" | "inactive";
+interface TeamStats {
+  level: string;
+  members: number;
+  activeMembers: number;
+  inactiveMembers: number;
+  subtitle: string;
+  totalDeposits: number;
+  color: "yellow" | "green" | "red";
 }
 
 const Members = () => {
@@ -24,13 +28,8 @@ const Members = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [referralCode, setReferralCode] = useState("");
   const [referralLink, setReferralLink] = useState("");
-  const [members, setMembers] = useState<Member[]>([]);
-  const [stats, setStats] = useState({
-    level1: 0,
-    level2: 0,
-    level3: 0,
-    totalEarned: 0,
-  });
+  const [teamStats, setTeamStats] = useState<TeamStats[]>([]);
+  const [directNetworkVolume, setDirectNetworkVolume] = useState(0);
 
   useEffect(() => {
     const loadNetworkData = async () => {
@@ -44,40 +43,21 @@ const Members = () => {
         setReferralCode(data.referral_code || "");
         setReferralLink(data.referral_link || "");
         
-        // Buscar membros da rede
-        try {
-          const membersResponse = await networkAPI.getMembers();
-          const membersData = membersResponse.data.data || [];
-          
-          // Formatar membros para o formato esperado
-          const formattedMembers: Member[] = membersData.map((member: any) => ({
-            id: member.id.toString(),
-            name: member.name || member.email || "Usuário",
-            level: member.level || 1,
-            purchases: member.total_investments || 0,
-            totalEarned: member.total_commissions || 0,
-            joinDate: member.created_at || new Date().toISOString(),
-            status: member.has_active_investments ? "active" : "inactive",
-          }));
-          
-          setMembers(formattedMembers);
-          
-          // Calcular estatísticas
-          const level1Count = formattedMembers.filter(m => m.level === 1).length;
-          const level2Count = formattedMembers.filter(m => m.level === 2).length;
-          const level3Count = formattedMembers.filter(m => m.level === 3).length;
-          const totalEarned = formattedMembers.reduce((sum, m) => sum + m.totalEarned, 0);
-          
-          setStats({
-            level1: level1Count,
-            level2: level2Count,
-            level3: level3Count,
-            totalEarned,
-          });
-        } catch (error) {
-          // Se não houver endpoint de membros, usar dados vazios
-          console.log("Members endpoint not available, using empty data");
-        }
+        // Formatar dados para os TeamLevelCards
+        const formattedStats: TeamStats[] = data.levels.map((level: any, index: number) => ({
+          level: level.level_name,
+          members: level.members,
+          activeMembers: level.active_members || 0,
+          inactiveMembers: level.inactive_members || 0,
+          subtitle: `Número de Membros ${level.level_name}`,
+          totalDeposits: level.total_deposits || 0,
+          color: index === 0 ? "yellow" : index === 1 ? "green" : "red"
+        }));
+        
+        setTeamStats(formattedStats);
+        
+        // Volume direto da rede (nível A)
+        setDirectNetworkVolume(formattedStats[0]?.totalDeposits || 0);
       } catch (error: any) {
         toast({
           title: "Erro",
@@ -116,32 +96,6 @@ const Members = () => {
     }
   };
 
-  const getLevelColor = (level: number) => {
-    switch (level) {
-      case 1:
-        return "text-accent";
-      case 2:
-        return "text-primary";
-      case 3:
-        return "text-success";
-      default:
-        return "text-muted-foreground";
-    }
-  };
-
-  const getLevelBg = (level: number) => {
-    switch (level) {
-      case 1:
-        return "bg-accent/20";
-      case 2:
-        return "bg-primary/20";
-      case 3:
-        return "bg-success/20";
-      default:
-        return "bg-muted";
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -166,6 +120,9 @@ const Members = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold text-foreground">Programa de Indicação</h1>
+          <div className="ml-auto">
+            <CommissionDetailsDialog />
+          </div>
         </div>
       </header>
 
@@ -206,50 +163,56 @@ const Members = () => {
           </div>
         </Card>
 
-        {/* Estatísticas */}
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="border-accent/30 bg-card p-4 text-center">
-            <Users className="h-6 w-6 text-accent mx-auto mb-2" />
-            <p className="text-xl font-bold text-foreground">{stats.level1}</p>
-            <p className="text-xs text-muted-foreground">Nível 1</p>
-          </Card>
-          
-          <Card className="border-primary/30 bg-card p-4 text-center">
-            <Users2 className="h-6 w-6 text-primary mx-auto mb-2" />
-            <p className="text-xl font-bold text-foreground">{stats.level2}</p>
-            <p className="text-xs text-muted-foreground">Nível 2</p>
-          </Card>
-          
-          <Card className="border-success/30 bg-card p-4 text-center">
-            <TrendingUp className="h-6 w-6 text-success mx-auto mb-2" />
-            <p className="text-xl font-bold text-foreground">{stats.level3}</p>
-            <p className="text-xs text-muted-foreground">Nível 3</p>
-          </Card>
-
-          <Card className="border-border bg-gradient-to-br from-primary to-primary/80 p-4 text-center">
-            <p className="text-xs text-primary-foreground/90 mb-1">Ganhos</p>
-            <p className="text-sm font-bold text-primary-foreground">R$ {stats.totalEarned.toFixed(2)}</p>
-          </Card>
+        {/* Cards de Estatísticas por Nível */}
+        <div>
+          <p className="text-center text-sm text-muted-foreground mb-4">Número da Equipe:</p>
+          <div className="grid grid-cols-3 gap-3">
+            {teamStats.length > 0 ? (
+              teamStats.map((stat) => (
+                <TeamLevelCard key={stat.level} {...stat} />
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-8 text-muted-foreground">
+                <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>Você ainda não tem membros na sua rede</p>
+                <p className="text-xs mt-1">Compartilhe seu código para começar!</p>
+              </div>
+            )}
+          </div>
         </div>
+        
+        {/* Seção de Metas de Volume */}
+        <GoalsSection currentVolume={directNetworkVolume} />
 
-        {/* Tabela de Comissões */}
+        {/* Tabela de Comissões - Mantida como referência rápida */}
         <Card className="border-border bg-card p-6">
-          <h3 className="text-sm font-bold text-foreground mb-4">Tabela de Comissões</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-foreground">Tabela de Comissões</h3>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-xs text-primary hover:text-primary/80"
+              onClick={() => document.querySelector('[data-commission-details]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
+            >
+              <Info className="w-3 h-3 mr-1" />
+              Ver Detalhes
+            </Button>
+          </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-2">Primeira Compra</p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 rounded-lg bg-accent/10">
-                  <span className="text-sm text-foreground">Nível 1</span>
+                  <span className="text-sm text-foreground">Nível A</span>
                   <span className="text-sm font-bold text-accent">15%</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-primary/10">
-                  <span className="text-sm text-foreground">Nível 2</span>
+                  <span className="text-sm text-foreground">Nível B</span>
                   <span className="text-sm font-bold text-primary">2%</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-success/10">
-                  <span className="text-sm text-foreground">Nível 3</span>
+                  <span className="text-sm text-foreground">Nível C</span>
                   <span className="text-sm font-bold text-success">1%</span>
                 </div>
               </div>
@@ -259,34 +222,16 @@ const Members = () => {
               <p className="text-xs font-semibold text-muted-foreground mb-2">Segunda Compra em Diante</p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 rounded-lg bg-accent/10">
-                  <span className="text-sm text-foreground">Nível 1</span>
+                  <span className="text-sm text-foreground">Nível A</span>
                   <span className="text-sm font-bold text-accent">8%</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-primary/10">
-                  <span className="text-sm text-foreground">Nível 2</span>
+                  <span className="text-sm text-foreground">Nível B</span>
                   <span className="text-sm font-bold text-primary">2%</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-success/10">
-                  <span className="text-sm text-foreground">Nível 3</span>
+                  <span className="text-sm text-foreground">Nível C</span>
                   <span className="text-sm font-bold text-success">1%</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Residual sobre Lucros</p>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-accent/10">
-                  <span className="text-sm text-foreground">Nível 1</span>
-                  <span className="text-sm font-bold text-accent">2,5%</span>
-                </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-primary/10">
-                  <span className="text-sm text-foreground">Nível 2</span>
-                  <span className="text-sm font-bold text-primary">0,5%</span>
-                </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-success/10">
-                  <span className="text-sm text-foreground">Nível 3</span>
-                  <span className="text-sm font-bold text-success">0,15%</span>
                 </div>
               </div>
             </div>
@@ -295,73 +240,18 @@ const Members = () => {
 
         {/* Como Funciona */}
         <Card className="border-warning/30 bg-warning/10 p-4">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Como Funciona?</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-3">💡 Como Funciona?</h3>
           <div className="space-y-2 text-xs text-foreground">
-            <p>• <strong>Nível 1:</strong> Pessoas que você indicou diretamente</p>
-            <p>• <strong>Nível 2:</strong> Pessoas indicadas pelos seus indicados</p>
-            <p>• <strong>Nível 3:</strong> Pessoas indicadas pelos indicados de nível 2</p>
+            <p>• <strong>Nível A:</strong> Indicações diretas (15% → 8%)</p>
+            <p>• <strong>Nível B:</strong> Indicações de segundo nível (2%)</p>
+            <p>• <strong>Nível C:</strong> Indicações de terceiro nível (1%)</p>
             <p className="mt-3 pt-3 border-t border-warning/30">
-              <strong>Importante:</strong> As comissões são calculadas sobre o valor do pacote comprado e sobre os lucros gerados.
+              <strong>Importante:</strong> Percentuais aplicados na primeira e demais compras. Toque no ícone ℹ️ acima para ver detalhes completos!
             </p>
           </div>
         </Card>
-
-        {/* Lista de Indicados */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-bold text-foreground">Minha Rede ({members.length})</h3>
-          
-          {members.length === 0 ? (
-            <Card className="border-border bg-card p-8">
-              <div className="text-center text-muted-foreground">
-                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="font-medium">Nenhum membro ainda</p>
-                <p className="text-xs mt-1">Compartilhe seu código para começar a construir sua rede!</p>
-              </div>
-            </Card>
-          ) : (
-            members.map((member) => (
-              <motion.div
-                key={member.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card className="border-border bg-card p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex-shrink-0 rounded-full ${getLevelBg(member.level)} p-2.5`}>
-                      {member.level === 1 && <Users className={`h-5 w-5 ${getLevelColor(1)}`} />}
-                      {member.level === 2 && <Users2 className={`h-5 w-5 ${getLevelColor(2)}`} />}
-                      {member.level === 3 && <TrendingUp className={`h-5 w-5 ${getLevelColor(3)}`} />}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold text-foreground text-sm truncate">{member.name}</p>
-                        {member.status === "active" && (
-                          <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span>Nível {member.level}</span>
-                        <span>•</span>
-                        <span>{member.purchases} compra{member.purchases !== 1 ? 's' : ''}</span>
-                        <span>•</span>
-                        <span>{new Date(member.joinDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex-shrink-0 text-right">
-                      <p className="text-sm font-bold text-success">
-                        +R$ {member.totalEarned.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            ))
-          )}
-        </div>
+        {/* Lista Completa de Membros */}
+        <MembersList />
       </div>
 
       <BottomNavigation />
