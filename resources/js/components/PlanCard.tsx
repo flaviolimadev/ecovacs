@@ -13,6 +13,7 @@ interface PlanCardProps {
   badge?: string;
   onSelect: () => void;
   customContent?: React.ReactNode;
+  disabled?: boolean;
 }
 
 const PlanCard = ({
@@ -25,6 +26,7 @@ const PlanCard = ({
   badge,
   onSelect,
   customContent,
+  disabled = false,
 }: PlanCardProps) => {
   const profitPercentage = ((totalReturn - investment) / investment * 100).toFixed(0);
 
@@ -111,8 +113,9 @@ const PlanCard = ({
             onClick={onSelect}
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
             size="lg"
+            disabled={disabled}
           >
-            Investir Agora
+            {disabled ? "Processando..." : "Investir Agora"}
           </Button>
         </div>
       </Card>

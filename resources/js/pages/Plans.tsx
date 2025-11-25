@@ -29,17 +29,14 @@ const Plans = () => {
   const { toast } = useToast();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [purchasingPlanId, setPurchasingPlanId] = useState<number | null>(null);
 
   useEffect(() => {
     const loadPlans = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get('/admin/plans', {
-          params: {
-            status: 'active',
-            per_page: 100,
-          }
-        });
+        // Usar endpoint correto /plans ao invés de /admin/plans
+        const response = await api.get('/plans');
         
         // Ordenar por ordem e por preço
         const sortedPlans = response.data.data.sort((a: Plan, b: Plan) => {
@@ -66,64 +63,66 @@ const Plans = () => {
   }, []);
 
   const handleSelectPlan = async (plan: Plan) => {
-    // Verificar se o usuário tem saldo suficiente
+    if (purchasingPlanId) return; // Prevenir múltiplos cliques
+
     try {
-      const profileResponse = await api.get('/profile');
-      const userBalance = profileResponse.data.data.balance;
-
-      if (userBalance < plan.price) {
-        toast({
-          title: "Saldo Insuficiente",
-          description: `Você precisa de R$ ${plan.price.toFixed(2)} para investir neste plano. Saldo atual: R$ ${userBalance.toFixed(2)}`,
-          variant: "destructive",
-        });
-        
-        // Perguntar se quer fazer depósito
-        setTimeout(() => {
-          if (confirm("Deseja fazer um depósito agora?")) {
-            navigate("/deposit");
-          }
-        }, 500);
-        return;
-      }
-
-      // Navegar para confirmação ou criar investimento direto
-      // Por enquanto, vamos apenas mostrar um toast e criar o investimento
-      const confirmPurchase = confirm(
-        `Confirma a compra do ${plan.name}?\n\n` +
-        `Valor: R$ ${plan.price.toFixed(2)}\n` +
-        `Lucro ${plan.type === 'DAILY' ? 'diário' : 'no final'}: R$ ${plan.daily_income?.toFixed(2) || plan.total_return.toFixed(2)}\n` +
-        `Duração: ${plan.duration_days} dias\n` +
-        `Retorno Total: R$ ${plan.total_return.toFixed(2)}`
-      );
-
-      if (!confirmPurchase) return;
-
-      setIsLoading(true);
+      setPurchasingPlanId(plan.id);
       
+      // Chamar API para criar investimento
+      // O backend faz todas as validações: saldo, limite de compras, etc.
       await api.post('/investments', {
         plan_id: plan.id,
-        amount: plan.price,
       });
 
       toast({
-        title: "Investimento Realizado!",
+        title: "Investimento Realizado! 🎉",
         description: `Você investiu no ${plan.name}. Seu lucro começará em breve!`,
       });
 
-      // Navegar para a página de investimentos
+      // Aguardar um pouco e navegar para investimentos
       setTimeout(() => {
         navigate("/earnings");
       }, 1500);
 
     } catch (error: any) {
+      const errorData = error.response?.data;
+      
+      // Tratar erro de saldo insuficiente
+      if (errorData?.error === 'INSUFFICIENT_BALANCE') {
+        const missing = errorData.data?.missing || 0;
+        toast({
+          title: "Saldo Insuficiente",
+          description: `Você precisa de mais R$ ${missing.toFixed(2)} para investir neste plano.`,
+          variant: "destructive",
+        });
+        
+        // Perguntar se quer fazer depósito
+        setTimeout(() => {
+          if (window.confirm("Deseja fazer um depósito agora?")) {
+            navigate("/deposit");
+          }
+        }, 1000);
+        return;
+      }
+      
+      // Tratar erro de limite de compras
+      if (errorData?.error === 'PURCHASE_LIMIT_REACHED') {
+        toast({
+          title: "Limite Atingido",
+          description: `Você já possui o máximo de investimentos ativos deste plano.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Erro genérico
       toast({
         title: "Erro",
-        description: error.response?.data?.message || "Não foi possível realizar o investimento.",
+        description: errorData?.message || "Não foi possível realizar o investimento.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setPurchasingPlanId(null);
     }
   };
 
@@ -184,6 +183,7 @@ const Plans = () => {
                 totalReturn={plan.total_return}
                 badge={plan.is_featured ? "Destaque" : undefined}
                 onSelect={() => handleSelectPlan(plan)}
+                disabled={purchasingPlanId === plan.id}
               />
             ))}
           </div>
@@ -226,4 +226,3 @@ const Plans = () => {
 };
 
 export default Plans;
-
