@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { LucideIcon, Lock, DollarSign, FileText, MessageCircle, Info, Users, Download, LogOut } from "lucide-react";
+import { LucideIcon, Lock, Package, FileText, MessageCircle, Info, Users, Download, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import ChangePasswordDialog from "./ChangePasswordDialog";
@@ -34,11 +34,11 @@ const ProfileActionGrid = () => {
       onClick: () => setChangePasswordOpen(true),
     },
     {
-      id: "withdraw",
-      icon: DollarSign,
-      label: "saque",
+      id: "investments",
+      icon: Package,
+      label: "investimentos",
       color: "from-orange-400 to-orange-600",
-      onClick: () => navigate("/withdraw"),
+      onClick: () => navigate("/earnings"),
     },
     {
       id: "balance",
