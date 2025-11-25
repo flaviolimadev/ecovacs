@@ -117,5 +117,6 @@ export const networkAPI = {
   getTree: (level?: number) => api.get('/network/tree', { params: { level } }),
   getReferralLink: () => api.get('/network/referral-link'),
   getCommissionDetails: () => api.get('/network/commission-details'),
+  getMembers: () => api.get('/network/members'),
 };
 

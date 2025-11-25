@@ -12,6 +12,7 @@ interface PlanCardProps {
   totalReturn: number;
   badge?: string;
   onSelect: () => void;
+  customContent?: React.ReactNode;
 }
 
 const PlanCard = ({
@@ -23,6 +24,7 @@ const PlanCard = ({
   totalReturn,
   badge,
   onSelect,
+  customContent,
 }: PlanCardProps) => {
   const profitPercentage = ((totalReturn - investment) / investment * 100).toFixed(0);
 
@@ -101,6 +103,9 @@ const PlanCard = ({
               </div>
             </div>
           </div>
+
+          {/* Custom Content (usado para mostrar progresso em investimentos ativos) */}
+          {customContent}
 
           <Button
             onClick={onSelect}
