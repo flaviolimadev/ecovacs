@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Eye, EyeOff, LogIn, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, LogIn, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import angloGoldLogo from "@/assets/anglogold-logo.png";
 
-const ecovacsLogo = "/assets/ecovacs-logo.png";
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -22,12 +23,14 @@ const Login = () => {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
+      toast.error("Por favor, preencha todos os campos");
       return;
     }
 
     setIsLoading(true);
     try {
       await login(formData.email, formData.password);
+      toast.success("Bem-vindo de volta!");
       navigate("/");
     } catch (error) {
       // Erro já tratado no AuthContext
@@ -35,83 +38,192 @@ const Login = () => {
       setIsLoading(false);
     }
   };
-  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
-      {/* Background decorative elements */}
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl"></div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 0.1, scale: 1 }}
+          transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+          className="absolute -top-20 -left-20 w-96 h-96 bg-primary rounded-full blur-3xl"
+        />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 0.1, scale: 1 }}
+          transition={{ duration: 2, delay: 1, repeat: Infinity, repeatType: "reverse" }}
+          className="absolute -bottom-20 -right-20 w-96 h-96 bg-accent rounded-full blur-3xl"
+        />
       </div>
 
-      <Card className="w-full max-w-md relative z-10 p-8 shadow-2xl border-none bg-white/95 backdrop-blur-sm">
-        {/* Back button */}
-        
-
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <img src={ecovacsLogo} alt="Ecovacs Robotics" className="h-16" />
-        </div>
-
-        {/* Title */}
-        <div className="text-center mb-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md relative z-10"
+      >
+        {/* Logo and Title */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-center mb-8"
+        >
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="inline-block mb-6"
+          >
+            <img 
+              src={angloGoldLogo} 
+              alt="AngloGold" 
+              className="h-16 w-auto mx-auto"
+            />
+          </motion.div>
           
-          <p className="text-gray-600">Entre na sua conta para continuar</p>
-        </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
+            Bem-vindo de volta
+            <Sparkles className="w-6 h-6 text-accent" />
+          </h1>
+          <p className="text-muted-foreground">Entre na sua conta para continuar</p>
+        </motion.div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email */}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-700 font-medium">
-              E-mail
-            </Label>
-            <Input id="email" type="email" placeholder="seu@email.com" value={formData.email} onChange={e => setFormData({
-            ...formData,
-            email: e.target.value
-          })} className="h-12 border-2 focus:border-primary" />
-          </div>
+        {/* Login Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
+          className="bg-card border border-border rounded-2xl shadow-2xl p-8 backdrop-blur-sm"
+        >
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="space-y-2"
+            >
+              <Label htmlFor="email" className="text-sm font-semibold text-foreground">
+                E-mail
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="h-12 bg-background/50 border-2 border-border focus:border-primary transition-colors"
+                autoComplete="email"
+              />
+            </motion.div>
 
-          {/* Password */}
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-gray-700 font-medium">
-              Senha
-            </Label>
-            <div className="relative">
-              <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={formData.password} onChange={e => setFormData({
-              ...formData,
-              password: e.target.value
-            })} className="h-12 border-2 focus:border-primary pr-12" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+            {/* Password */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+              className="space-y-2"
+            >
+              <Label htmlFor="password" className="text-sm font-semibold text-foreground">
+                Senha
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="h-12 bg-background/50 border-2 border-border focus:border-primary transition-colors pr-12"
+                  autoComplete="current-password"
+                />
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </motion.button>
+              </div>
+            </motion.div>
+
+            {/* Submit Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Button
+                type="submit"
+                className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold shadow-lg transition-all"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="mr-2 h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full"
+                    />
+                    Entrando...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-5 h-5 mr-2" />
+                    Entrar
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          </form>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-card text-muted-foreground">ou</span>
             </div>
           </div>
 
-          {/* Submit Button */}
-          <Button type="submit" className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold shadow-lg" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                Entrando...
-              </>
-            ) : (
-              <>
-                <LogIn className="w-5 h-5 mr-2" />
-                Entrar
-              </>
-            )}
-          </Button>
-        </form>
+          {/* Register Link */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="text-center"
+          >
+            <p className="text-muted-foreground text-sm">
+              Não tem uma conta?{" "}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/register")}
+                className="text-primary font-semibold hover:text-primary/80 transition-colors"
+              >
+                Cadastre-se agora
+              </motion.button>
+            </p>
+          </motion.div>
+        </motion.div>
 
-        {/* Register Link */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            Não tem uma conta?{" "}
-            <button onClick={() => navigate("/register")} className="text-primary font-semibold hover:underline">
-              Cadastre-se
-            </button>
-          </p>
-        </div>
-      </Card>
-    </div>;
+        {/* Footer */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="text-center text-xs text-muted-foreground mt-6"
+        >
+          Ao entrar, você concorda com nossos{" "}
+          <button className="underline hover:text-foreground transition-colors">
+            Termos de Uso
+          </button>
+        </motion.p>
+      </motion.div>
+    </div>
+  );
 };
+
 export default Login;
