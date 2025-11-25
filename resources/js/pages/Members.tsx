@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Copy, Share2, Users, Users2, TrendingUp, CheckCircle2, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
 import { networkAPI } from "@/lib/api";
 
@@ -21,6 +21,7 @@ interface Referral {
 
 const Members = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [referralCode, setReferralCode] = useState("");
   const [referralLink, setReferralLink] = useState("");
@@ -36,6 +37,8 @@ const Members = () => {
     const loadNetworkData = async () => {
       try {
         setIsLoading(true);
+        
+        // Carregar dados em paralelo para otimizar velocidade
         const [statsResponse, membersResponse] = await Promise.all([
           networkAPI.getStats(),
           networkAPI.getMembers(),
@@ -102,31 +105,41 @@ const Members = () => {
     }
   };
 
-  const getLevelColor = (level: number) => {
+  // Memoizar funções de cor para evitar recálculos
+  const getLevelColor = useMemo(() => (level: number) => {
     switch (level) {
-      case 1:
-        return "text-accent";
-      case 2:
-        return "text-primary";
-      case 3:
-        return "text-success";
-      default:
-        return "text-muted-foreground";
+      case 1: return "text-accent";
+      case 2: return "text-primary";
+      case 3: return "text-success";
+      default: return "text-muted-foreground";
     }
-  };
+  }, []);
 
-  const getLevelBg = (level: number) => {
+  const getLevelBg = useMemo(() => (level: number) => {
     switch (level) {
-      case 1:
-        return "bg-accent/20";
-      case 2:
-        return "bg-primary/20";
-      case 3:
-        return "bg-success/20";
-      default:
-        return "bg-muted";
+      case 1: return "bg-accent/20";
+      case 2: return "bg-primary/20";
+      case 3: return "bg-success/20";
+      default: return "bg-muted";
     }
-  };
+  }, []);
+
+  // Loading Screen Completo
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-background z-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-lg font-semibold text-foreground">Carregando sua rede...</p>
+            <p className="text-sm text-muted-foreground">Buscando indicados e estatísticas</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -144,7 +157,12 @@ const Members = () => {
         </div>
       </header>
 
-      <div className="container max-w-lg px-4 py-6 space-y-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="container max-w-lg px-4 py-6 space-y-6"
+      >
         {/* Código de Indicação */}
         <Card className="border-accent/30 bg-gradient-to-br from-accent/10 to-accent/5 p-6">
           <div className="space-y-4">
@@ -274,14 +292,9 @@ const Members = () => {
               <p className="text-xs mt-1">Compartilhe seu código para começar!</p>
             </div>
           ) : (
-            mockReferrals.map((referral) => (
-              <motion.div
-                key={referral.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card className="border-border bg-card p-4">
+            <div className="space-y-3">
+              {mockReferrals.map((referral, index) => (
+                <Card key={referral.id} className="border-border bg-card p-4">
                   <div className="flex items-center gap-3">
                     <div className={`flex-shrink-0 rounded-full ${getLevelBg(referral.level)} p-2.5`}>
                       {referral.level === 1 && <Users className={`h-5 w-5 ${getLevelColor(1)}`} />}
@@ -291,7 +304,7 @@ const Members = () => {
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold text-foreground text-sm">{referral.name}</p>
+                        <p className="font-semibold text-foreground text-sm truncate">{referral.name}</p>
                         {referral.status === "active" && (
                           <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
                         )}
@@ -313,11 +326,11 @@ const Members = () => {
                     </div>
                   </div>
                 </Card>
-              </motion.div>
-            ))
+              ))}
+            </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       <BottomNavigation />
     </div>
