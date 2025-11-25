@@ -185,6 +185,18 @@ const Plans = () => {
       </header>
 
       <div className="container max-w-6xl px-4 py-6">
+        {/* Botão para Ver Planos Ativos */}
+        <div className="mb-4 flex justify-end">
+          <Button
+            onClick={() => navigate("/earnings")}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            📊 Ver Meus Planos Ativos
+          </Button>
+        </div>
+
         {/* Banner Informativo */}
         <div className="mb-6 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 p-4 border border-primary/20">
           <h2 className="mb-2 text-base font-bold text-foreground">
