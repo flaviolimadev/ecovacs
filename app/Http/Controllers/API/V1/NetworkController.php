@@ -118,7 +118,7 @@ class NetworkController extends Controller
             // Calcular comissões ganhas pelo upline com este membro
             $totalCommissionEarned = DB::table('commissions')
                 ->where('user_id', $referral->user_id) // Upline (quem está vendo a rede)
-                ->where('referral_id', $referredUser->id) // Downline (o membro referido)
+                ->where('from_user_id', $referredUser->id) // Downline (o membro referido)
                 ->sum('amount');
             
             return [
