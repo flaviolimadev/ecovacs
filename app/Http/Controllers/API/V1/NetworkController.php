@@ -63,6 +63,11 @@ class NetworkController extends Controller
         $directMembers = Referral::where('user_id', $user->id)
             ->where('level', 1)
             ->count();
+        
+        // Total de comissões ganhas
+        $totalCommissionEarned = DB::table('commissions')
+            ->where('user_id', $user->id)
+            ->sum('amount');
 
         return response()->json([
             'data' => [
@@ -71,6 +76,7 @@ class NetworkController extends Controller
                 'active_members' => $totalActiveMembers,
                 'inactive_members' => $totalInactiveMembers,
                 'direct_members' => $directMembers,
+                'total_commission_earned' => (float) $totalCommissionEarned,
                 'referral_code' => $user->referral_code,
                 'referral_link' => config('app.frontend_url') . "/register?ref={$user->referral_code}",
             ],
@@ -106,20 +112,31 @@ class NetworkController extends Controller
             // Contar investimentos ativos
             $activeCycles = $referredUser->cycles()->where('status', 'ACTIVE')->count();
             
+            // Contar total de compras (todos os ciclos)
+            $totalPurchases = $referredUser->cycles()->count();
+            
+            // Calcular comissões ganhas pelo upline com este membro
+            $totalCommissionEarned = DB::table('commissions')
+                ->where('user_id', $referral->user_id) // Upline (quem está vendo a rede)
+                ->where('referral_id', $referredUser->id) // Downline (o membro referido)
+                ->sum('amount');
+            
             return [
                 'id' => $referredUser->id,
                 'name' => $referredUser->name,
                 'email' => $referredUser->email,
-                'phone' => $referredUser->phone, // Adicionar telefone
+                'phone' => $referredUser->phone,
                 'level' => $referral->level,
                 'level_name' => chr(64 + $referral->level), // A, B, C
                 'total_invested' => (float) ($referredUser->total_invested ?? 0),
                 'total_earned' => (float) ($referredUser->total_earned ?? 0),
+                'total_purchases' => $totalPurchases, // Total de compras (ciclos)
+                'total_commission_earned' => (float) $totalCommissionEarned, // Comissão ganha pelo upline
                 'referral_code' => $referredUser->referral_code,
                 'created_at' => $referredUser->created_at,
-                'is_active' => $hasInvestments, // Baseado em ter pelo menos 1 investimento
-                'user_status' => $userStatus, // "active" ou "inactive"
-                'active_cycles' => $activeCycles, // Quantidade de ciclos ativos
+                'is_active' => $hasInvestments,
+                'user_status' => $userStatus,
+                'active_cycles' => $activeCycles,
             ];
         });
 
