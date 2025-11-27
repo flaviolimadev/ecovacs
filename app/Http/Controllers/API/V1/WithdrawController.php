@@ -507,10 +507,9 @@ class WithdrawController extends Controller
         
         // Validar dia da semana
         if (!in_array($dayOfWeek, $window['days'])) {
-            $dayName = $now->locale('pt_BR')->dayName;
             return [
                 'can_withdraw' => false,
-                'message' => "Saques não são permitidos aos finais de semana. Hoje é {$dayName}.",
+                'message' => "Saques disponíveis todos os dias, das {$window['start']} às {$window['end']}.",
             ];
         }
         
@@ -518,7 +517,7 @@ class WithdrawController extends Controller
         if ($currentTime < $window['start'] || $currentTime >= $window['end']) {
             return [
                 'can_withdraw' => false,
-                'message' => "Saques só são permitidos de segunda a sexta, das {$window['start']} às {$window['end']}. Horário atual: {$currentTime}.",
+                'message' => "Saques disponíveis todos os dias, das {$window['start']} às {$window['end']}. Horário atual: {$currentTime}.",
             ];
         }
         
