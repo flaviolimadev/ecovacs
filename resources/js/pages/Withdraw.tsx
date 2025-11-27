@@ -262,18 +262,6 @@ const Withdraw = () => {
               </div>
             </Card>
 
-            {/* Card Destaque - Saques Todos os Dias */}
-            <Card className="border-primary/50 bg-gradient-to-r from-primary/20 to-accent/20 p-4">
-              <div className="flex items-center justify-center gap-3">
-                <Clock className="h-6 w-6 text-primary" />
-                <div className="text-center">
-                  <p className="text-lg font-bold text-primary">
-                    ✅ Saques Disponíveis Todos os Dias!
-                  </p>
-                </div>
-              </div>
-            </Card>
-
             <Card className="border-warning/30 bg-warning/10 p-4">
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
