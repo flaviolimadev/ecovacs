@@ -25,7 +25,7 @@ class DepositController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'amount' => 'required|numeric|min:50',
+            'amount' => 'required|numeric|min:30',
             'cpf' => 'required|string|regex:/^\d{11}$/',
         ]);
 
