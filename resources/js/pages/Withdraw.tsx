@@ -316,8 +316,8 @@ const Withdraw = () => {
                 )}
 
                 {/* Formulário */}
-                <Card className="border-border bg-card p-6 shadow-sm">
-                  <div className="space-y-5">
+                <Card className="border-border bg-card p-6 shadow-sm" translate="no">
+                  <div className="space-y-5 notranslate">
                     {/* Valor do Saque */}
                     <div className="space-y-3">
                       <Label htmlFor="amount" className="text-base font-semibold text-foreground">
@@ -333,7 +333,9 @@ const Withdraw = () => {
                           placeholder="0,00"
                           value={amount}
                           onChange={(e) => handleAmountChange(e.target.value)}
-                          className="pl-10 text-lg font-semibold border-2 border-border focus:border-success h-12"
+                          className="pl-10 text-lg font-semibold border-2 border-border focus:border-success h-12 notranslate"
+                          translate="no"
+                          autoComplete="off"
                           disabled={!canWithdraw}
                         />
                       </div>
@@ -395,7 +397,9 @@ const Withdraw = () => {
                         maxLength={14}
                         value={cpf}
                         onChange={(e) => handleCpfChange(e.target.value)}
-                        className="border-2 border-border focus:border-success h-11"
+                        className="border-2 border-border focus:border-success h-11 notranslate"
+                        translate="no"
+                        autoComplete="off"
                         disabled={!canWithdraw}
                       />
                     </div>
@@ -412,7 +416,8 @@ const Withdraw = () => {
                           setPixKeyType(e.target.value as typeof pixKeyType);
                           setPixKey("");
                         }}
-                        className="flex h-11 w-full rounded-md border-2 border-border bg-background px-3 py-2 text-sm focus:border-success focus:outline-none"
+                        className="flex h-11 w-full rounded-md border-2 border-border bg-background px-3 py-2 text-sm focus:border-success focus:outline-none notranslate"
+                        translate="no"
                         disabled={!canWithdraw}
                       >
                         <option value="cpf">CPF</option>
@@ -439,7 +444,9 @@ const Withdraw = () => {
                         value={pixKey}
                         onChange={(e) => handlePixKeyChange(e.target.value)}
                         maxLength={pixKeyType === "cpf" ? 14 : pixKeyType === "phone" ? 15 : undefined}
-                        className="border-2 border-border focus:border-success h-11"
+                        className="border-2 border-border focus:border-success h-11 notranslate"
+                        translate="no"
+                        autoComplete="off"
                         disabled={!canWithdraw}
                       />
                     </div>
@@ -472,7 +479,7 @@ const Withdraw = () => {
                 className="space-y-4"
               >
                 {/* Confirmação */}
-                <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-success/10 via-primary/10 to-accent/10 p-8 text-center shadow-xl">
+                <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-success/10 via-primary/10 to-accent/10 p-8 text-center shadow-xl notranslate" translate="no">
                   <div className="absolute inset-0 bg-grid-white/5 [mask-image:radial-gradient(white,transparent_85%)]" />
                   
                   <div className="relative">

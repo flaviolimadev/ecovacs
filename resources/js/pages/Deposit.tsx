@@ -217,8 +217,8 @@ const Deposit = () => {
               </Card>
 
               {/* Formulário */}
-              <Card className="border-border bg-card p-6 shadow-sm">
-                <div className="space-y-5">
+              <Card className="border-border bg-card p-6 shadow-sm" translate="no">
+                <div className="space-y-5 notranslate">
                   {/* Valor */}
                   <div className="space-y-3">
                     <Label htmlFor="amount" className="text-base font-semibold text-foreground">
@@ -234,7 +234,9 @@ const Deposit = () => {
                         placeholder="0,00"
                         value={amount}
                         onChange={(e) => handleAmountChange(e.target.value)}
-                        className="pl-10 text-lg font-semibold border-2 border-border focus:border-primary h-12"
+                        className="pl-10 text-lg font-semibold border-2 border-border focus:border-primary h-12 notranslate"
+                        translate="no"
+                        autoComplete="off"
                       />
                     </div>
                     
@@ -276,7 +278,9 @@ const Deposit = () => {
                         maxLength={14}
                         value={cpf}
                         onChange={(e) => handleCPFChange(e.target.value)}
-                        className="pl-10 border-2 border-border focus:border-primary h-12"
+                        className="pl-10 border-2 border-border focus:border-primary h-12 notranslate"
+                        translate="no"
+                        autoComplete="off"
                       />
                     </div>
                   </div>
@@ -358,7 +362,7 @@ const Deposit = () => {
               </Card>
 
               {/* QR Code */}
-              <Card className="border-border bg-card p-6 shadow-sm">
+              <Card className="border-border bg-card p-6 shadow-sm notranslate" translate="no">
                 {depositData?.qr_code_base64 || depositData?.qr_code_image ? (
                   <div className="flex justify-center rounded-xl bg-white p-6 shadow-inner">
                     <img 
