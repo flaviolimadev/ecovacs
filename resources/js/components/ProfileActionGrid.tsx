@@ -52,7 +52,7 @@ const ProfileActionGrid = () => {
       icon: MessageCircle,
       label: "contato",
       color: "from-cyan-400 to-cyan-600",
-      onClick: () => window.open("https://chat.whatsapp.com/ENpJ4S4bAIgAtMqCUcri1z?mode=hqrt3", "_blank"),
+      onClick: () => window.open("https://chat.whatsapp.com/DYJ9jX7Kw4a3kUGejmwhR1?mode=hqrt1", "_blank"),
     },
     {
       id: "about",

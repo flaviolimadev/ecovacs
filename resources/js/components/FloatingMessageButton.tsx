@@ -2,7 +2,7 @@ import { MessageCircle } from "lucide-react";
 
 const FloatingMessageButton = () => {
   const handleWhatsAppClick = () => {
-    window.open('https://chat.whatsapp.com/ENpJ4S4bAIgAtMqCUcri1z?mode=hqrt3', '_blank');
+    window.open('https://chat.whatsapp.com/DYJ9jX7Kw4a3kUGejmwhR1?mode=hqrt1', '_blank');
   };
 
   return (
