@@ -220,6 +220,7 @@ const Plans = () => {
                 cycle={plan.duration_days}
                 totalReturn={plan.total_return}
                 badge={plan.is_featured ? "Destaque" : undefined}
+                maxPurchases={plan.max_purchases}
                 onSelect={() => handleSelectPlan(plan)}
                 disabled={purchasingPlanId === plan.id}
               />

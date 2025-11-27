@@ -11,6 +11,7 @@ interface PlanCardProps {
   cycle: number;
   totalReturn: number;
   badge?: string;
+  maxPurchases?: number; // Limite de compras por usuário
   onSelect: () => void;
   customContent?: React.ReactNode;
   disabled?: boolean;
@@ -25,6 +26,7 @@ const PlanCard = ({
   cycle,
   totalReturn,
   badge,
+  maxPurchases,
   onSelect,
   customContent,
   disabled = false,
@@ -88,6 +90,16 @@ const PlanCard = ({
               </div>
             </div>
           </div>
+
+          {/* Limite de compras por usuário */}
+          {maxPurchases !== undefined && maxPurchases > 0 && (
+            <div className="flex items-center justify-center gap-2 rounded-lg bg-warning/10 border border-warning/30 p-2">
+              <DollarSign className="h-4 w-4 text-warning" />
+              <span className="text-xs font-semibold text-foreground">
+                Limite: {maxPurchases} {maxPurchases === 1 ? 'compra' : 'compras'} por usuário
+              </span>
+            </div>
+          )}
 
           <div className="rounded-lg border-2 border-success/30 bg-success/5 p-3">
             <div className="flex items-center justify-between">
