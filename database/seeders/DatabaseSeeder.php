@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         // Chamar seeders personalizados
         $this->call([
             AdminUserSeeder::class,
-            PlansSeeder::class,
+            // PlansSeeder::class, // ❌ DESABILITADO - Não modificar planos no deploy
         ]);
     }
 }
