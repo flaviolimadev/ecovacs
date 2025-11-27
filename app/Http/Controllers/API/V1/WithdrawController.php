@@ -505,13 +505,14 @@ class WithdrawController extends Controller
         $dayOfWeek = $now->format('D'); // Mon, Tue, etc.
         $currentTime = $now->format('H:i');
         
-        // Validar dia da semana
-        if (!in_array($dayOfWeek, $window['days'])) {
-            return [
-                'can_withdraw' => false,
-                'message' => "Saques disponíveis todos os dias, das {$window['start']} às {$window['end']}.",
-            ];
-        }
+        // Validar dia da semana (agora permite todos os dias)
+        // Comentado porque permite Segunda a Domingo
+        // if (!in_array($dayOfWeek, $window['days'])) {
+        //     return [
+        //         'can_withdraw' => false,
+        //         'message' => "Saques disponíveis todos os dias, das {$window['start']} às {$window['end']}.",
+        //     ];
+        // }
         
         // Validar horário
         if ($currentTime < $window['start'] || $currentTime >= $window['end']) {
