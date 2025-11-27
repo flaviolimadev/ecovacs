@@ -251,7 +251,6 @@ const Plans = () => {
             <li>✅ Escolha seu plano de investimento</li>
             <li>✅ O valor será debitado do seu saldo disponível</li>
             <li>✅ Receba lucros diariamente durante o ciclo</li>
-            <li>✅ Ao final do ciclo, seus ganhos são liberados para saque</li>
             <li>✅ Você pode ter múltiplos investimentos ativos simultaneamente</li>
             <li>⚠️ Certifique-se de ter saldo suficiente antes de investir</li>
           </ul>

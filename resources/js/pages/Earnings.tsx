@@ -230,7 +230,6 @@ const Earnings = () => {
             <li>✅ Seus investimentos ativos aparecem aqui</li>
             <li>✅ Acompanhe o progresso diário de cada plano</li>
             <li>✅ Receba lucros diariamente durante o ciclo</li>
-            <li>✅ Ao final do ciclo, o valor total é liberado para saque</li>
             <li>✅ Você pode ter múltiplos investimentos ativos simultaneamente</li>
           </ul>
         </div>
