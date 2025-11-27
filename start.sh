@@ -34,7 +34,7 @@ php artisan storage:link || true
 # Seeders (apenas se tabelas estiverem vazias)
 echo "👤 Verificando seeders..."
 php artisan db:seed --class=AdminUserSeeder --force || true
-php artisan db:seed --class=PlansSeeder --force || true
+# php artisan db:seed --class=PlansSeeder --force || true  # ❌ DESABILITADO - Não modificar planos
 
 # Otimizar para produção
 echo "⚡ Otimizando aplicação..."
