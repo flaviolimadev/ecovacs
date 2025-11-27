@@ -269,7 +269,9 @@ const Withdraw = () => {
                   <p>• Valor mínimo: R$ {minAmount.toFixed(2)}</p>
                   <p>• Taxa de saque: {(fee * 100).toFixed(0)}%</p>
                   <p>• Limite: 1 saque por dia</p>
-                  {!canWithdraw && <p>• {settings?.validation_message}</p>}
+                  <p>• Disponível todos os dias</p>
+                  <p>• Horário: 10h às 17h</p>
+                  {!canWithdraw && <p className="text-destructive font-semibold">• {settings?.validation_message}</p>}
                 </div>
               </div>
             </Card>
