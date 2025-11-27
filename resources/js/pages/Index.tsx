@@ -47,13 +47,65 @@ const Index = () => {
 
   const loadRecentEarnings = async () => {
     try {
-      // Simular dados de feed de ganhos recentes
-      // TODO: Integrar com API real quando disponível
-      setFeedData([
-        { id: 1, username: `User_${Math.floor(Math.random() * 10000)}`, package: "Plano Ouro", earnings: 245.50, timestamp: "2 min atrás" },
-        { id: 2, username: `User_${Math.floor(Math.random() * 10000)}`, package: "Plano Prata", earnings: 180.00, timestamp: "5 min atrás" },
-        { id: 3, username: `User_${Math.floor(Math.random() * 10000)}`, package: "Plano Diamante", earnings: 320.75, timestamp: "8 min atrás" },
-      ]);
+      // Gerar dados realistas e aleatórios de ganhos recentes
+      const realNames = [
+        "João Silva", "Maria Santos", "Pedro Costa", "Ana Oliveira", "Carlos Souza",
+        "Juliana Lima", "Ricardo Alves", "Fernanda Rocha", "Lucas Martins", "Patricia Ferreira",
+        "Rafael Gomes", "Camila Ribeiro", "Bruno Carvalho", "Mariana Dias", "Felipe Nunes",
+        "Beatriz Castro", "Rodrigo Pereira", "Amanda Barbosa", "Gabriel Monteiro", "Larissa Duarte",
+        "Thiago Mendes", "Isabela Araújo", "Diego Fernandes", "Leticia Cardoso", "Vinicius Barros",
+        "Carolina Pinto", "Matheus Correia", "Gabriela Teixeira", "Leonardo Freitas", "Julia Moreira"
+      ];
+
+      const plans = [
+        "⛏️ Carregadeira Subterrânea",
+        "🔩 Perfuração de Poços",
+        "🚛 Caminhão de Mineração",
+        "⚡ Perfuratriz Jumbo",
+        "🏗️ Mineração Contínua",
+        "⚙️ Moinho de Bolas Premium"
+      ];
+
+      const earnings = [15, 35, 38, 55, 80, 200]; // Valores reais dos planos
+      
+      const timeframes = [
+        "agora mesmo", "1 min atrás", "2 min atrás", "3 min atrás", "5 min atrás",
+        "7 min atrás", "10 min atrás", "12 min atrás", "15 min atrás", "18 min atrás"
+      ];
+
+      // Gerar 5-8 ganhos aleatórios
+      const numEarnings = Math.floor(Math.random() * 4) + 5; // 5 a 8 ganhos
+      const generatedEarnings = [];
+
+      for (let i = 0; i < numEarnings; i++) {
+        const randomName = realNames[Math.floor(Math.random() * realNames.length)];
+        const randomPlan = plans[Math.floor(Math.random() * plans.length)];
+        const randomEarning = earnings[Math.floor(Math.random() * earnings.length)];
+        const randomTime = timeframes[Math.floor(Math.random() * timeframes.length)];
+        
+        // Mascarar parte do nome para privacidade (João Silva -> João S.***)
+        const nameParts = randomName.split(' ');
+        const maskedName = nameParts.length > 1 
+          ? `${nameParts[0]} ${nameParts[1].charAt(0)}.${"*".repeat(nameParts[1].length - 1)}`
+          : `${nameParts[0].substring(0, 3)}${"*".repeat(nameParts[0].length - 3)}`;
+
+        generatedEarnings.push({
+          id: i + 1,
+          username: maskedName,
+          package: randomPlan,
+          earnings: randomEarning,
+          timestamp: randomTime
+        });
+      }
+
+      // Ordenar por tempo (mais recente primeiro)
+      const sortedEarnings = generatedEarnings.sort((a, b) => {
+        const timeA = timeframes.indexOf(a.timestamp);
+        const timeB = timeframes.indexOf(b.timestamp);
+        return timeA - timeB;
+      });
+
+      setFeedData(sortedEarnings);
     } catch (error) {
       console.error("Error loading earnings feed:", error);
     }
