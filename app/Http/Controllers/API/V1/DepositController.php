@@ -95,7 +95,7 @@ class DepositController extends Controller
                 'products' => [
                     [
                         'id' => 'deposit-' . time(),
-                        'name' => 'Depósito Ecovacs',
+                        'name' => 'Mentoria premiun',
                         'quantity' => 1,
                         'price' => $amount,
                     ],
