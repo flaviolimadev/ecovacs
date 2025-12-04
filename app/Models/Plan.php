@@ -92,4 +92,12 @@ class Plan extends Model
 
         return $this->featured_ends_at->isFuture();
     }
+
+    /**
+     * Relacionamento com ciclos/investimentos
+     */
+    public function cycles()
+    {
+        return $this->hasMany(Cycle::class);
+    }
 }

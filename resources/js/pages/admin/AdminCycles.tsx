@@ -112,10 +112,10 @@ export default function AdminCycles() {
 
   // Filtros
   const [search, setSearch] = useState("");
-  const [selectedUser, setSelectedUser] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedType, setSelectedType] = useState("");
+  const [selectedUser, setSelectedUser] = useState("all");
+  const [selectedPlan, setSelectedPlan] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
 
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
@@ -147,10 +147,10 @@ export default function AdminCycles() {
       };
 
       if (search) params.search = search;
-      if (selectedUser) params.user_id = selectedUser;
-      if (selectedPlan) params.plan_id = selectedPlan;
-      if (selectedStatus) params.status = selectedStatus;
-      if (selectedType) params.type = selectedType;
+      if (selectedUser && selectedUser !== "all") params.user_id = selectedUser;
+      if (selectedPlan && selectedPlan !== "all") params.plan_id = selectedPlan;
+      if (selectedStatus && selectedStatus !== "all") params.status = selectedStatus;
+      if (selectedType && selectedType !== "all") params.type = selectedType;
 
       const cyclesRes = await api.get("/admin/cycles", { params });
       setCycles(cyclesRes.data.data);
@@ -264,10 +264,10 @@ export default function AdminCycles() {
 
   const clearFilters = () => {
     setSearch("");
-    setSelectedUser("");
-    setSelectedPlan("");
-    setSelectedStatus("");
-    setSelectedType("");
+    setSelectedUser("all");
+    setSelectedPlan("all");
+    setSelectedStatus("all");
+    setSelectedType("all");
     setCurrentPage(1);
   };
 
@@ -374,7 +374,7 @@ export default function AdminCycles() {
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         {user.name}
@@ -391,7 +391,7 @@ export default function AdminCycles() {
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {plans.map((plan) => (
                       <SelectItem key={plan.id} value={plan.id.toString()}>
                         {plan.name}
@@ -408,7 +408,7 @@ export default function AdminCycles() {
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="ACTIVE">Ativo</SelectItem>
                     <SelectItem value="FINISHED">Finalizado</SelectItem>
                     <SelectItem value="CANCELLED">Cancelado</SelectItem>
@@ -423,7 +423,7 @@ export default function AdminCycles() {
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="DAILY">Diário</SelectItem>
                     <SelectItem value="END_CYCLE">Fim do Ciclo</SelectItem>
                   </SelectContent>
