@@ -118,6 +118,78 @@ export default function AdminDeposits() {
     }
   };
 
+  const handleMarkAsPaid = async (depositId: number) => {
+    if (!confirm("Tem certeza que deseja marcar este depósito como PAGO? Isso irá creditar o valor no saldo do usuário.")) {
+      return;
+    }
+
+    try {
+      await api.post(`/admin/deposits/${depositId}/mark-as-paid`);
+      toast({
+        title: "Sucesso!",
+        description: "Depósito marcado como pago.",
+      });
+      loadData();
+      if (detailsOpen && selectedDeposit?.id === depositId) {
+        setDetailsOpen(false);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.message || "Não foi possível alterar o status.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMarkAsCancelled = async (depositId: number) => {
+    if (!confirm("Tem certeza que deseja CANCELAR este depósito? Se estiver pago, o valor será estornado do saldo do usuário.")) {
+      return;
+    }
+
+    try {
+      await api.post(`/admin/deposits/${depositId}/mark-as-cancelled`);
+      toast({
+        title: "Sucesso!",
+        description: "Depósito cancelado.",
+      });
+      loadData();
+      if (detailsOpen && selectedDeposit?.id === depositId) {
+        setDetailsOpen(false);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.message || "Não foi possível cancelar o depósito.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMarkAsPending = async (depositId: number) => {
+    if (!confirm("Tem certeza que deseja marcar este depósito como PENDENTE? Se estiver pago, o valor será estornado do saldo do usuário.")) {
+      return;
+    }
+
+    try {
+      await api.post(`/admin/deposits/${depositId}/mark-as-pending`);
+      toast({
+        title: "Sucesso!",
+        description: "Depósito marcado como pendente.",
+      });
+      loadData();
+      if (detailsOpen && selectedDeposit?.id === depositId) {
+        setDetailsOpen(false);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.message || "Não foi possível alterar o status.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "destructive" | "outline" | "secondary"> = {
       PAID: "default",
@@ -311,14 +383,52 @@ export default function AdminDeposits() {
                           <TableCell>{formatDate(deposit.created_at)}</TableCell>
                           <TableCell>{formatDate(deposit.paid_at)}</TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetails(deposit)}
-                              title="Ver detalhes"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewDetails(deposit)}
+                                title="Ver detalhes"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              
+                              {deposit.status !== 'PAID' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleMarkAsPaid(deposit.id)}
+                                  title="Marcar como pago"
+                                  className="text-green-600 hover:text-green-700"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </Button>
+                              )}
+                              
+                              {deposit.status !== 'PENDING' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleMarkAsPending(deposit.id)}
+                                  title="Marcar como pendente"
+                                  className="text-yellow-600 hover:text-yellow-700"
+                                >
+                                  <Clock className="w-4 h-4" />
+                                </Button>
+                              )}
+                              
+                              {deposit.status !== 'CANCELLED' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleMarkAsCancelled(deposit.id)}
+                                  title="Cancelar"
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -482,6 +592,62 @@ export default function AdminDeposits() {
                         </a>
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+
+                {/* Ações de Alteração de Status */}
+                <Card className="border-2 border-dashed">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Alterar Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-2 flex-wrap">
+                      {depositDetails.status !== 'PAID' && (
+                        <Button
+                          onClick={() => handleMarkAsPaid(depositDetails.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Marcar como PAGO
+                        </Button>
+                      )}
+                      
+                      {depositDetails.status !== 'PENDING' && (
+                        <Button
+                          onClick={() => handleMarkAsPending(depositDetails.id)}
+                          variant="outline"
+                          className="border-yellow-600 text-yellow-600 hover:bg-yellow-50"
+                        >
+                          <Clock className="w-4 h-4 mr-2" />
+                          Marcar como PENDENTE
+                        </Button>
+                      )}
+                      
+                      {depositDetails.status !== 'CANCELLED' && (
+                        <Button
+                          onClick={() => handleMarkAsCancelled(depositDetails.id)}
+                          variant="outline"
+                          className="border-red-600 text-red-600 hover:bg-red-50"
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          CANCELAR
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-yellow-800">
+                          <p className="font-semibold mb-1">⚠️ Atenção:</p>
+                          <ul className="list-disc list-inside space-y-1">
+                            <li><strong>Marcar como PAGO:</strong> Credita o valor no saldo investível do usuário.</li>
+                            <li><strong>Marcar como PENDENTE/CANCELAR:</strong> Se estiver PAGO, o valor será estornado do saldo do usuário.</li>
+                            <li>Todas as alterações são registradas no ledger para auditoria.</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>

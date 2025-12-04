@@ -108,6 +108,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/deposits', [AdminDepositController::class, 'index']);
             Route::get('/deposits/stats', [AdminDepositController::class, 'stats']);
             Route::get('/deposits/{id}', [AdminDepositController::class, 'show']);
+            Route::post('/deposits/{id}/mark-as-paid', [AdminDepositController::class, 'markAsPaid']);
+            Route::post('/deposits/{id}/mark-as-cancelled', [AdminDepositController::class, 'markAsCancelled']);
+            Route::post('/deposits/{id}/mark-as-pending', [AdminDepositController::class, 'markAsPending']);
 
             // Configurações (Settings)
             Route::get('/settings', [AdminSettingsController::class, 'index']);
