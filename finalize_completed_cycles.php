@@ -62,85 +62,32 @@ foreach ($cyclesToFinalize as $cycle) {
         $user = $cycle->user;
         $plan = $cycle->plan;
         
-        // Verificar se há valor a ser creditado ao finalizar
-        $remainingPayment = 0;
-        $description = '';
+        // =====================================================
+        // IMPORTANTE: Não adicionar nenhum valor aos saldos!
+        // =====================================================
+        // Os ciclos já receberam tudo que tinham para receber
+        // através dos pagamentos diários. Aqui apenas finalizamos
+        // o ciclo mudando o status para FINISHED.
+        // =====================================================
         
-        if ($cycle->type === 'END_CYCLE') {
-            // Ciclo END_CYCLE: creditar o retorno total se ainda não foi pago
-            if ($cycle->total_paid < $cycle->total_return) {
-                $remainingPayment = $cycle->total_return - $cycle->total_paid;
-                $description = sprintf(
-                    'Ciclo #%d finalizado - Retorno total do plano "%s"',
-                    $cycle->id,
-                    $plan ? $plan->name : 'N/A'
-                );
-            }
-        } else {
-            // Ciclo DAILY: verificar se há algum valor pendente
-            // (geralmente já foi pago durante os dias, mas verificar mesmo assim)
-            $expectedTotal = $cycle->daily_income * $cycle->duration_days;
-            if ($cycle->total_paid < $expectedTotal) {
-                $remainingPayment = $expectedTotal - $cycle->total_paid;
-                $description = sprintf(
-                    'Ciclo #%d finalizado - Ajuste de rendimentos do plano "%s"',
-                    $cycle->id,
-                    $plan ? $plan->name : 'N/A'
-                );
-            }
-        }
+        // Registrar no ledger informando a finalização (sem valor)
+        \App\Models\Ledger::create([
+            'user_id' => $user->id,
+            'type' => 'EARNING',
+            'reference_type' => Cycle::class,
+            'reference_id' => $cycle->id,
+            'description' => sprintf(
+                'Ciclo #%d finalizado - Plano "%s" (todos os pagamentos já foram realizados)',
+                $cycle->id,
+                $plan ? $plan->name : 'N/A'
+            ),
+            'amount' => 0,
+            'operation' => 'CREDIT',
+            'balance_before' => $user->balance_withdrawn,
+            'balance_after' => $user->balance_withdrawn,
+        ]);
         
-        if ($remainingPayment > 0) {
-            // Obter saldo antes para registrar no ledger
-            $balanceBefore = $user->balance_withdrawn;
-            
-            // Creditar o valor restante no saldo do usuário
-            $user->increment('balance_withdrawn', $remainingPayment);
-            $user->increment('total_earned', $remainingPayment);
-            
-            // Atualizar o ciclo
-            $cycle->increment('total_paid', $remainingPayment);
-            
-            // Obter saldo depois
-            $user->refresh();
-            $balanceAfter = $user->balance_withdrawn;
-            
-            // Registrar no ledger com informações completas
-            \App\Models\Ledger::create([
-                'user_id' => $user->id,
-                'type' => 'EARNING',
-                'reference_type' => Cycle::class,
-                'reference_id' => $cycle->id,
-                'description' => $description,
-                'amount' => $remainingPayment,
-                'operation' => 'CREDIT',
-                'balance_before' => $balanceBefore,
-                'balance_after' => $balanceAfter,
-            ]);
-            
-            echo "💰 Ciclo #{$cycle->id}: Creditado R$ " . number_format($remainingPayment, 2, ',', '.') . " (retorno final)\n";
-        } else {
-            // Mesmo sem pagamento adicional, criar registro no ledger informando a finalização
-            \App\Models\Ledger::create([
-                'user_id' => $user->id,
-                'type' => 'EARNING',
-                'reference_type' => Cycle::class,
-                'reference_id' => $cycle->id,
-                'description' => sprintf(
-                    'Ciclo #%d finalizado - Plano "%s" (todos os pagamentos já foram realizados)',
-                    $cycle->id,
-                    $plan ? $plan->name : 'N/A'
-                ),
-                'amount' => 0,
-                'operation' => 'CREDIT',
-                'balance_before' => $user->balance_withdrawn,
-                'balance_after' => $user->balance_withdrawn,
-            ]);
-            
-            echo "ℹ️  Ciclo #{$cycle->id}: Finalizado (todos os pagamentos já foram realizados)\n";
-        }
-        
-        // Finalizar o ciclo
+        // Finalizar o ciclo (sem adicionar nada aos saldos)
         $cycle->status = 'FINISHED';
         $cycle->save();
         
@@ -149,6 +96,7 @@ foreach ($cyclesToFinalize as $cycle) {
         $finalized++;
         
         echo "✅ Ciclo #{$cycle->id} finalizado - Usuário: {$user->name} - Plano: " . ($plan ? $plan->name : 'N/A') . "\n";
+        echo "   Dias pagos: {$cycle->days_paid}/{$cycle->duration_days} - Total pago: R$ " . number_format($cycle->total_paid, 2, ',', '.') . "\n";
         
     } catch (\Exception $e) {
         DB::rollBack();

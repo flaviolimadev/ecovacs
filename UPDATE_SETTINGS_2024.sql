@@ -30,3 +30,5 @@ WHERE key IN ('withdraw.min', 'withdraw.fee', 'withdraw.window');
 -- e já foram atualizadas no backend
 -- ========================================
 
+
+

@@ -103,3 +103,5 @@ $totalCommissionEarned = DB::table('commissions')
 
 **🎯 Após o deploy, a página /members deve funcionar perfeitamente!**
 
+
+

@@ -120,3 +120,5 @@ cd /app && bash deploy.sh
 
 **✅ Problema resolvido! Agora é só fazer commit e push.**
 
+
+

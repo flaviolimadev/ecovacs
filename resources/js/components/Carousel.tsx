@@ -85,3 +85,5 @@ const Carousel = ({ banners }: CarouselProps) => {
 
 export default Carousel;
 
+
+

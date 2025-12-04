@@ -55,3 +55,5 @@ echo "   1. Limpar cache: php artisan optimize:clear"
 echo "   2. Testar no site: https://ownerb3.pro"
 echo ""
 
+
+

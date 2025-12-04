@@ -83,3 +83,5 @@ crontab -e
 
 **Sempre limpe os caches após cada deploy!** A rota `/network/members` já existe no código, mas o Laravel usa cache de rotas que precisa ser limpo.
 
+
+

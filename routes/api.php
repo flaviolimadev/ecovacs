@@ -17,6 +17,7 @@ use App\Http\Controllers\API\V1\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\API\V1\Admin\PackageController;
 use App\Http\Controllers\API\V1\Admin\DepositController as AdminDepositController;
 use App\Http\Controllers\API\V1\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\API\V1\Admin\CycleController as AdminCycleController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -130,6 +131,16 @@ Route::prefix('v1')->group(function () {
             Route::get('/packages/stats', [PackageController::class, 'stats']);
             Route::get('/packages', [PackageController::class, 'index']);
             Route::get('/packages/{id}', [PackageController::class, 'show']);
+
+            // Ciclos/Investimentos (Cycles)
+            Route::get('/cycles/stats', [AdminCycleController::class, 'stats']);
+            Route::get('/cycles', [AdminCycleController::class, 'index']);
+            Route::get('/cycles/{id}', [AdminCycleController::class, 'show']);
+            Route::post('/cycles/{id}/activate', [AdminCycleController::class, 'activate']);
+            Route::post('/cycles/{id}/cancel', [AdminCycleController::class, 'cancel']);
+            Route::delete('/cycles/{id}', [AdminCycleController::class, 'destroy']);
+            Route::get('/cycles-filters/users', [AdminCycleController::class, 'usersList']);
+            Route::get('/cycles-filters/plans', [AdminCycleController::class, 'plansList']);
         });
 
         // Settings (TODO)
