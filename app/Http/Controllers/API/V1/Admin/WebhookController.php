@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\WebhookEvent;
+use App\Models\Deposit;
 use Illuminate\Http\Request;
 
 class WebhookController extends Controller
@@ -88,6 +89,11 @@ class WebhookController extends Controller
         $processed = WebhookEvent::where('status', 'processed')->count();
         $failed = WebhookEvent::where('status', 'failed')->count();
         $lateArrival = WebhookEvent::where('status', 'late_arrival')->count();
+        
+        // Contar depósitos PAID sem webhook (pagos manualmente aguardando webhook)
+        $paidWithoutWebhook = \App\Models\Deposit::where('status', 'PAID')
+            ->whereDoesntHave('webhookEvents')
+            ->count();
 
         return response()->json([
             'data' => [
@@ -96,6 +102,7 @@ class WebhookController extends Controller
                 'processed' => $processed,
                 'failed' => $failed,
                 'late_arrival' => $lateArrival,
+                'paid_without_webhook' => $paidWithoutWebhook,
             ]
         ]);
     }
@@ -137,6 +144,59 @@ class WebhookController extends Controller
                 'created_at' => $webhook->created_at->toIso8601String(),
                 'processed_at' => $webhook->processed_at?->toIso8601String(),
                 'is_late' => $webhook->status === 'late_arrival',
+            ]
+        ]);
+    }
+
+    /**
+     * Listar depósitos pagos sem webhook (aguardando confirmação da processadora)
+     */
+    public function paidWithoutWebhook(Request $request)
+    {
+        $query = Deposit::with(['user:id,name,email'])
+            ->where('status', 'PAID')
+            ->whereDoesntHave('webhookEvents')
+            ->orderBy('paid_at', 'desc');
+
+        // Busca
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                              ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('transaction_id', 'like', "%{$search}%")
+                  ->orWhere('order_id', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = $request->get('per_page', 20);
+        $deposits = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $deposits->map(function ($deposit) {
+                return [
+                    'id' => $deposit->id,
+                    'user' => [
+                        'id' => $deposit->user->id,
+                        'name' => $deposit->user->name,
+                        'email' => $deposit->user->email,
+                    ],
+                    'amount' => (float) $deposit->amount,
+                    'status' => $deposit->status,
+                    'transaction_id' => $deposit->transaction_id,
+                    'order_id' => $deposit->order_id,
+                    'paid_at' => $deposit->paid_at?->toIso8601String(),
+                    'created_at' => $deposit->created_at->toIso8601String(),
+                    'hours_since_paid' => $deposit->paid_at ? 
+                        now()->diffInHours($deposit->paid_at) : null,
+                ];
+            }),
+            'meta' => [
+                'current_page' => $deposits->currentPage(),
+                'last_page' => $deposits->lastPage(),
+                'per_page' => $deposits->perPage(),
+                'total' => $deposits->total(),
             ]
         ]);
     }

@@ -73,4 +73,12 @@ class Deposit extends Model
             'reference_type' => 'DEPOSIT',
         ]);
     }
+
+    /**
+     * Relacionamento com webhooks
+     */
+    public function webhookEvents()
+    {
+        return $this->hasMany(WebhookEvent::class);
+    }
 }

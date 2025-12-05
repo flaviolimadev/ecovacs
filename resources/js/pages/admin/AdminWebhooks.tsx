@@ -72,6 +72,23 @@ interface Stats {
   processed: number;
   failed: number;
   late_arrival: number;
+  paid_without_webhook: number;
+}
+
+interface PaidWithoutWebhook {
+  id: number;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  amount: number;
+  status: string;
+  transaction_id: string;
+  order_id: string;
+  paid_at: string;
+  created_at: string;
+  hours_since_paid: number;
 }
 
 export default function AdminWebhooks() {
@@ -79,8 +96,10 @@ export default function AdminWebhooks() {
   const { toast } = useToast();
 
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
+  const [paidWithoutWebhook, setPaidWithoutWebhook] = useState<PaidWithoutWebhook[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPaidWithoutWebhook, setShowPaidWithoutWebhook] = useState(false);
 
   // Filtros
   const [search, setSearch] = useState("");
@@ -99,7 +118,7 @@ export default function AdminWebhooks() {
 
   useEffect(() => {
     loadData();
-  }, [currentPage, search, selectedStatus, lateOnly]);
+  }, [currentPage, search, selectedStatus, lateOnly, showPaidWithoutWebhook]);
 
   const loadData = async () => {
     try {
@@ -119,11 +138,22 @@ export default function AdminWebhooks() {
       if (selectedStatus !== "all") params.status = selectedStatus;
       if (lateOnly) params.late_only = "true";
 
-      const webhooksRes = await api.get("/admin/webhooks", { params });
-      setWebhooks(webhooksRes.data.data);
-      setCurrentPage(webhooksRes.data.meta.current_page);
-      setTotalPages(webhooksRes.data.meta.last_page);
-      setTotal(webhooksRes.data.meta.total);
+      // Se está mostrando "Pagos sem Webhook"
+      if (showPaidWithoutWebhook) {
+        const paidRes = await api.get("/admin/webhooks/paid-without-webhook", { params });
+        setPaidWithoutWebhook(paidRes.data.data);
+        setWebhooks([]);
+        setCurrentPage(paidRes.data.meta.current_page);
+        setTotalPages(paidRes.data.meta.last_page);
+        setTotal(paidRes.data.meta.total);
+      } else {
+        const webhooksRes = await api.get("/admin/webhooks", { params });
+        setWebhooks(webhooksRes.data.data);
+        setPaidWithoutWebhook([]);
+        setCurrentPage(webhooksRes.data.meta.current_page);
+        setTotalPages(webhooksRes.data.meta.last_page);
+        setTotal(webhooksRes.data.meta.total);
+      }
     } catch (error: any) {
       console.error("Erro ao carregar dados:", error);
       toast({
@@ -214,7 +244,7 @@ export default function AdminWebhooks() {
 
         {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total</CardTitle>
@@ -242,7 +272,21 @@ export default function AdminWebhooks() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-orange-600">{stats.late_arrival}</div>
-                <p className="text-xs text-orange-600 mt-1">Pagos manualmente antes</p>
+                <p className="text-xs text-orange-600 mt-1">Webhook chegou tarde</p>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="border-2 border-yellow-200 bg-yellow-50 cursor-pointer hover:border-yellow-400 transition-colors"
+              onClick={() => setShowPaidWithoutWebhook(!showPaidWithoutWebhook)}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">🕐 Aguardando</CardTitle>
+                <Clock className="h-4 w-4 text-yellow-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-600">{stats.paid_without_webhook}</div>
+                <p className="text-xs text-yellow-600 mt-1">Pago mas sem webhook</p>
               </CardContent>
             </Card>
 
@@ -307,14 +351,30 @@ export default function AdminWebhooks() {
                 </Select>
               </div>
 
-              <div className="flex items-end">
+              <div className="flex items-end gap-2">
                 <Button
                   variant={lateOnly ? "default" : "outline"}
-                  onClick={() => setLateOnly(!lateOnly)}
+                  onClick={() => {
+                    setLateOnly(!lateOnly);
+                    setShowPaidWithoutWebhook(false);
+                  }}
                   className={lateOnly ? "bg-orange-600 hover:bg-orange-700" : ""}
+                  disabled={showPaidWithoutWebhook}
                 >
                   <AlertCircle className="w-4 h-4 mr-2" />
-                  {lateOnly ? "Mostrando Atrasados" : "Apenas Atrasados"}
+                  {lateOnly ? "Atrasados" : "Atrasados"}
+                </Button>
+                
+                <Button
+                  variant={showPaidWithoutWebhook ? "default" : "outline"}
+                  onClick={() => {
+                    setShowPaidWithoutWebhook(!showPaidWithoutWebhook);
+                    setLateOnly(false);
+                  }}
+                  className={showPaidWithoutWebhook ? "bg-yellow-600 hover:bg-yellow-700" : ""}
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  {showPaidWithoutWebhook ? "Aguardando" : "Aguardando"}
                 </Button>
               </div>
 
@@ -331,11 +391,76 @@ export default function AdminWebhooks() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Webhooks ({total} {total === 1 ? "registro" : "registros"})
+              {showPaidWithoutWebhook 
+                ? `Depósitos Pagos Sem Webhook (${total} ${total === 1 ? "registro" : "registros"})`
+                : `Webhooks (${total} ${total === 1 ? "registro" : "registros"})`
+              }
             </CardTitle>
+            {showPaidWithoutWebhook && (
+              <p className="text-sm text-yellow-600 mt-2">
+                ℹ️ Estes depósitos foram marcados como PAGOS manualmente, mas ainda não receberam confirmação da processadora.
+              </p>
+            )}
           </CardHeader>
           <CardContent>
-            <Table>
+            {showPaidWithoutWebhook ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Transaction ID</TableHead>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Pago em</TableHead>
+                    <TableHead>Tempo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paidWithoutWebhook.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        Nenhum depósito pago sem webhook
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paidWithoutWebhook.map((deposit) => (
+                      <TableRow key={deposit.id} className="bg-yellow-50">
+                        <TableCell className="font-medium">#{deposit.id}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium text-sm">{deposit.user.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {deposit.user.email}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-bold text-green-600">
+                            R$ {deposit.amount.toFixed(2)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs">{deposit.transaction_id || "N/A"}</code>
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs">{deposit.order_id || "N/A"}</code>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">{formatDate(deposit.paid_at)}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="bg-yellow-100">
+                            {deposit.hours_since_paid}h atrás
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            ) : (
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
@@ -416,6 +541,7 @@ export default function AdminWebhooks() {
                 )}
               </TableBody>
             </Table>
+            )}
 
             {/* Paginação */}
             {totalPages > 1 && (
