@@ -91,14 +91,22 @@ class WebhookController extends Controller
         $lateArrival = WebhookEvent::where('status', 'late_arrival')->count();
         
         // Contar depósitos PAID com webhook manual aguardando webhook real
-        $paidWithoutWebhook = \App\Models\Deposit::where('status', 'PAID')
+        $paidWithoutWebhookQuery = \App\Models\Deposit::where('status', 'PAID')
             ->whereHas('webhookEvents', function($q) {
                 $q->where('status', 'manual_pending_webhook');
             })
             ->whereDoesntHave('webhookEvents', function($q) {
                 $q->whereIn('status', ['processed', 'late_arrival']);
-            })
-            ->count();
+            });
+        
+        $paidWithoutWebhook = $paidWithoutWebhookQuery->count();
+        $paidWithoutWebhookTotal = $paidWithoutWebhookQuery->sum('amount');
+        
+        // Calcular valor total dos webhooks atrasados
+        $lateArrivalTotal = WebhookEvent::where('status', 'late_arrival')
+            ->whereNotNull('deposit_id')
+            ->join('deposits', 'webhook_events.deposit_id', '=', 'deposits.id')
+            ->sum('deposits.amount');
 
         return response()->json([
             'data' => [
@@ -107,7 +115,9 @@ class WebhookController extends Controller
                 'processed' => $processed,
                 'failed' => $failed,
                 'late_arrival' => $lateArrival,
+                'late_arrival_total' => (float) $lateArrivalTotal,
                 'paid_without_webhook' => $paidWithoutWebhook,
+                'paid_without_webhook_total' => (float) $paidWithoutWebhookTotal,
             ]
         ]);
     }

@@ -72,7 +72,9 @@ interface Stats {
   processed: number;
   failed: number;
   late_arrival: number;
+  late_arrival_total: number;
   paid_without_webhook: number;
+  paid_without_webhook_total: number;
 }
 
 interface PaidWithoutWebhook {
@@ -274,7 +276,10 @@ export default function AdminWebhooks() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-orange-600">{stats.late_arrival}</div>
-                <p className="text-xs text-orange-600 mt-1">Webhook chegou tarde</p>
+                <p className="text-xs text-orange-600 mt-1">
+                  Total: R$ {stats.late_arrival_total.toFixed(2)}
+                </p>
+                <p className="text-xs text-orange-600">Webhook chegou tarde</p>
               </CardContent>
             </Card>
 
@@ -288,7 +293,10 @@ export default function AdminWebhooks() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-yellow-600">{stats.paid_without_webhook}</div>
-                <p className="text-xs text-yellow-600 mt-1">Pago mas sem webhook</p>
+                <p className="text-xs text-yellow-600 mt-1">
+                  Total: R$ {stats.paid_without_webhook_total.toFixed(2)}
+                </p>
+                <p className="text-xs text-yellow-600">Pago mas sem webhook</p>
               </CardContent>
             </Card>
 
