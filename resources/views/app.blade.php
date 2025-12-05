@@ -46,7 +46,7 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
         
-        <!-- Meta Pixel Code -->
+        <!-- Pixel do Meta -->
         <script>
           !function(f,b,e,v,n,t,s)
           {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -57,12 +57,40 @@
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
 
-          fbq('init', '1482893007173147'); 
+          fbq('init', '552554990448130'); 
           fbq('track', 'PageView');
         </script>
+
+        <!-- Evento de Visualização Única -->
+        <script>
+        (function() {
+            // Chave de controle no navegador do usuário
+            const uniqueKey = "unique_view_sent";
+
+            // Verifica se já foi enviado
+            const hasViewed = localStorage.getItem(uniqueKey);
+
+            if (!hasViewed) {
+                // Marca como enviado
+                localStorage.setItem(uniqueKey, "true");
+
+                // Dispara o evento personalizado no Pixel
+                if (typeof fbq !== "undefined") {
+                    fbq('trackCustom', 'UniqueView', {
+                        unique: 1
+                    });
+                }
+
+                console.log("🔥 Evento UniqueView enviado");
+            } else {
+                console.log("Evento único já registrado. Não envia novamente.");
+            }
+        })();
+        </script>
+
         <noscript>
           <img height="1" width="1" style="display:none"
-               src="https://www.facebook.com/tr?id=1482893007173147&ev=PageView&noscript=1"/>
+          src="https://www.facebook.com/tr?id=552554990448130&ev=PageView&noscript=1"/>
         </noscript>
         <!-- End Meta Pixel Code -->
         
