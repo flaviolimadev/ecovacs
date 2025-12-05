@@ -99,8 +99,8 @@ class WebhookController extends Controller
                 $q->whereIn('status', ['processed', 'late_arrival']);
             });
         
-        $paidWithoutWebhook = $paidWithoutWebhookQuery->count();
-        $paidWithoutWebhookTotal = $paidWithoutWebhookQuery->sum('amount');
+        $paidWithoutWebhook = (clone $paidWithoutWebhookQuery)->count();
+        $paidWithoutWebhookTotal = (clone $paidWithoutWebhookQuery)->sum('amount');
         
         // Calcular valor total dos webhooks atrasados
         $lateArrivalTotal = WebhookEvent::where('status', 'late_arrival')
