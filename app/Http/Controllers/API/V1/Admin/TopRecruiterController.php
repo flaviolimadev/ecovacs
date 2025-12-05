@@ -21,10 +21,13 @@ class TopRecruiterController extends Controller
             ->withCount([
                 'referrals as total_network' // Total de pessoas na rede (diretos + todos os níveis)
             ])
-            ->having('total_network', '>', 0)
-            ->orderBy('total_network', 'desc')
-            ->limit(10)
             ->get()
+            ->filter(function ($user) {
+                return $user->total_network > 0;
+            })
+            ->sortByDesc('total_network')
+            ->take(10)
+            ->values()
             ->map(function ($user) {
                 // Calcular comissões totais
                 $totalCommissions = Ledger::where('user_id', $user->id)
