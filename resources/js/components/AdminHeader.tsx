@@ -1,4 +1,4 @@
-import { ArrowLeft, Users, DollarSign, Settings, Home, Package, BarChart3, TrendingUp, Activity, Webhook } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Settings, Home, Package, BarChart3, TrendingUp, Activity, Webhook, Crown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -51,6 +51,11 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
       label: "Webhooks",
       icon: Webhook,
       path: "/admin/webhooks",
+    },
+    {
+      label: "Top Recrutadores",
+      icon: Crown,
+      path: "/admin/top-recruiters",
     },
     {
       label: "Configurações",

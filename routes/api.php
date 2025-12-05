@@ -19,6 +19,7 @@ use App\Http\Controllers\API\V1\Admin\DepositController as AdminDepositControlle
 use App\Http\Controllers\API\V1\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\API\V1\Admin\CycleController as AdminCycleController;
 use App\Http\Controllers\API\V1\Admin\WebhookController as AdminWebhookController;
+use App\Http\Controllers\API\V1\Admin\TopRecruiterController as AdminTopRecruiterController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -151,6 +152,11 @@ Route::prefix('v1')->group(function () {
             Route::get('/webhooks/paid-without-webhook', [AdminWebhookController::class, 'paidWithoutWebhook']);
             Route::get('/webhooks', [AdminWebhookController::class, 'index']);
             Route::get('/webhooks/{id}', [AdminWebhookController::class, 'show']);
+
+            // Top Recrutadores (MLM)
+            Route::get('/top-recruiters/stats', [AdminTopRecruiterController::class, 'stats']);
+            Route::get('/top-recruiters/by-network', [AdminTopRecruiterController::class, 'byNetwork']);
+            Route::get('/top-recruiters/by-commissions', [AdminTopRecruiterController::class, 'byCommissions']);
         });
 
         // Settings (TODO)

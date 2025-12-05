@@ -29,6 +29,7 @@ import AdminPackages from "./pages/admin/AdminPackages";
 import AdminDeposits from "./pages/admin/AdminDeposits";
 import AdminCycles from "./pages/admin/AdminCycles";
 import AdminWebhooks from "./pages/admin/AdminWebhooks";
+import AdminTopRecruiters from "./pages/admin/AdminTopRecruiters";
 import "../css/app.css";
 
 const queryClient = new QueryClient();
@@ -197,6 +198,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminWebhooks />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/top-recruiters"
+              element={
+                <AdminRoute>
+                  <AdminTopRecruiters />
                 </AdminRoute>
               }
             />
