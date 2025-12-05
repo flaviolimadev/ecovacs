@@ -28,6 +28,7 @@ import AdminPlans from "./pages/admin/AdminPlans";
 import AdminPackages from "./pages/admin/AdminPackages";
 import AdminDeposits from "./pages/admin/AdminDeposits";
 import AdminCycles from "./pages/admin/AdminCycles";
+import AdminWebhooks from "./pages/admin/AdminWebhooks";
 import "../css/app.css";
 
 const queryClient = new QueryClient();
@@ -188,6 +189,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminCycles />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/webhooks"
+              element={
+                <AdminRoute>
+                  <AdminWebhooks />
                 </AdminRoute>
               }
             />

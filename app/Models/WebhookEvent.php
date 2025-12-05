@@ -57,5 +57,13 @@ class WebhookEvent extends Model
     {
         return $query->where('status', 'failed');
     }
+
+    /**
+     * Escopo para webhooks atrasados (chegaram depois do pagamento manual)
+     */
+    public function scopeLateArrival($query)
+    {
+        return $query->where('status', 'late_arrival');
+    }
 }
 

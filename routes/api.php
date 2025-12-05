@@ -18,6 +18,7 @@ use App\Http\Controllers\API\V1\Admin\PackageController;
 use App\Http\Controllers\API\V1\Admin\DepositController as AdminDepositController;
 use App\Http\Controllers\API\V1\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\API\V1\Admin\CycleController as AdminCycleController;
+use App\Http\Controllers\API\V1\Admin\WebhookController as AdminWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -144,6 +145,11 @@ Route::prefix('v1')->group(function () {
             Route::delete('/cycles/{id}', [AdminCycleController::class, 'destroy']);
             Route::get('/cycles-filters/users', [AdminCycleController::class, 'usersList']);
             Route::get('/cycles-filters/plans', [AdminCycleController::class, 'plansList']);
+
+            // Webhooks
+            Route::get('/webhooks/stats', [AdminWebhookController::class, 'stats']);
+            Route::get('/webhooks', [AdminWebhookController::class, 'index']);
+            Route::get('/webhooks/{id}', [AdminWebhookController::class, 'show']);
         });
 
         // Settings (TODO)

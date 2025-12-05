@@ -194,9 +194,18 @@ class WebhookController extends Controller
 
                     // Verificar novamente se status mudou (evitar race condition)
                     if ($deposit->status === 'PAID') {
-                        Log::info('Webhook Vizzion: depósito já está pago (race condition evitada)', [
+                        Log::info('Webhook Vizzion: depósito já está pago (webhook atrasado)', [
                             'deposit_id' => $deposit->id,
+                            'paid_at' => $deposit->paid_at,
                         ]);
+                        
+                        // Marcar webhook como atrasado
+                        $webhook->update([
+                            'status' => 'late_arrival',
+                            'error_message' => 'Pagamento já havia sido confirmado manualmente antes do webhook chegar',
+                            'processed_at' => now(),
+                        ]);
+                        
                         return;
                     }
 
