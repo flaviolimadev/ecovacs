@@ -103,10 +103,12 @@ class WebhookController extends Controller
         $paidWithoutWebhookTotal = (clone $paidWithoutWebhookQuery)->sum('amount');
         
         // Calcular valor total dos webhooks atrasados
-        $lateArrivalTotal = WebhookEvent::where('status', 'late_arrival')
+        $lateDepositIds = WebhookEvent::where('status', 'late_arrival')
             ->whereNotNull('deposit_id')
-            ->join('deposits', 'webhook_events.deposit_id', '=', 'deposits.id')
-            ->sum('deposits.amount');
+            ->pluck('deposit_id')
+            ->unique();
+        
+        $lateArrivalTotal = \App\Models\Deposit::whereIn('id', $lateDepositIds)->sum('amount');
 
         return response()->json([
             'data' => [
