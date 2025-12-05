@@ -190,6 +190,8 @@ export default function AdminWebhooks() {
       processed: { label: "Processado", className: "bg-green-500", icon: CheckCircle },
       failed: { label: "Falhou", className: "bg-red-500", icon: XCircle },
       late_arrival: { label: "Atrasado", className: "bg-orange-500", icon: AlertCircle },
+      manual_pending_webhook: { label: "Manual - Aguardando", className: "bg-yellow-500", icon: Clock },
+      manual_webhook_arrived: { label: "Manual - Webhook Chegou", className: "bg-purple-500", icon: CheckCircle },
     };
     const config = configs[status] || { label: status, className: "bg-gray-500", icon: Activity };
     const Icon = config.icon;
@@ -397,9 +399,16 @@ export default function AdminWebhooks() {
               }
             </CardTitle>
             {showPaidWithoutWebhook && (
-              <p className="text-sm text-yellow-600 mt-2">
-                ℹ️ Estes depósitos foram marcados como PAGOS manualmente, mas ainda não receberam confirmação da processadora.
-              </p>
+              <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <div className="flex items-start gap-2">
+                  <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-yellow-800">
+                    <p className="font-semibold mb-1">🕐 Depósitos Pagos Manualmente - Aguardando Webhook</p>
+                    <p>Estes depósitos foram <strong>marcados como PAGOS manualmente pelo admin</strong>, mas o webhook da processadora <strong>ainda não chegou</strong>.</p>
+                    <p className="mt-1">Quando o webhook chegar, será marcado como <strong className="text-orange-600">"Atrasado"</strong>.</p>
+                  </div>
+                </div>
+              </div>
             )}
           </CardHeader>
           <CardContent>

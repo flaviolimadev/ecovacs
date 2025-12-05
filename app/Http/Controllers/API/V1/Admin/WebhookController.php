@@ -90,9 +90,14 @@ class WebhookController extends Controller
         $failed = WebhookEvent::where('status', 'failed')->count();
         $lateArrival = WebhookEvent::where('status', 'late_arrival')->count();
         
-        // Contar depósitos PAID sem webhook (pagos manualmente aguardando webhook)
+        // Contar depósitos PAID com webhook manual aguardando webhook real
         $paidWithoutWebhook = \App\Models\Deposit::where('status', 'PAID')
-            ->whereDoesntHave('webhookEvents')
+            ->whereHas('webhookEvents', function($q) {
+                $q->where('status', 'manual_pending_webhook');
+            })
+            ->whereDoesntHave('webhookEvents', function($q) {
+                $q->whereIn('status', ['processed', 'late_arrival']);
+            })
             ->count();
 
         return response()->json([
@@ -153,9 +158,16 @@ class WebhookController extends Controller
      */
     public function paidWithoutWebhook(Request $request)
     {
-        $query = Deposit::with(['user:id,name,email'])
+        $query = Deposit::with(['user:id,name,email', 'webhookEvents' => function($q) {
+                $q->where('status', 'manual_pending_webhook');
+            }])
             ->where('status', 'PAID')
-            ->whereDoesntHave('webhookEvents')
+            ->whereHas('webhookEvents', function($q) {
+                $q->where('status', 'manual_pending_webhook');
+            })
+            ->whereDoesntHave('webhookEvents', function($q) {
+                $q->whereIn('status', ['processed', 'late_arrival']);
+            })
             ->orderBy('paid_at', 'desc');
 
         // Busca

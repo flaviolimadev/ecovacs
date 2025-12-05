@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\Ledger;
+use App\Models\WebhookEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -196,9 +197,28 @@ class DepositController extends Controller
             $deposit->paid_at = Carbon::now(config('app.timezone'));
             $deposit->save();
 
+            // Criar registro de webhook manual (aguardando webhook da processadora)
+            WebhookEvent::create([
+                'provider' => 'manual',
+                'event' => 'MANUAL_PAYMENT',
+                'external_id' => $deposit->transaction_id ?? "MANUAL-{$deposit->id}",
+                'idempotency_hash' => hash('sha256', "manual-payment-{$deposit->id}-" . now()->timestamp),
+                'headers' => ['X-Manual-Payment' => 'true'],
+                'payload' => [
+                    'type' => 'manual_payment',
+                    'deposit_id' => $deposit->id,
+                    'admin_action' => true,
+                    'marked_at' => now()->toIso8601String(),
+                    'note' => 'Depósito marcado como PAGO manualmente pelo admin. Aguardando webhook da processadora.',
+                ],
+                'status' => 'manual_pending_webhook',
+                'deposit_id' => $deposit->id,
+                'processed_at' => now(),
+            ]);
+
             DB::commit();
 
-            Log::info("Admin marcou depósito #{$deposit->id} como PAID (era {$oldStatus})");
+            Log::info("Admin marcou depósito #{$deposit->id} como PAID (era {$oldStatus}). Webhook manual criado.");
 
             return response()->json([
                 'message' => 'Depósito marcado como pago com sucesso',

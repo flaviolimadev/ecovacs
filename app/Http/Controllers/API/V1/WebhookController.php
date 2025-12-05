@@ -199,10 +199,35 @@ class WebhookController extends Controller
                             'paid_at' => $deposit->paid_at,
                         ]);
                         
-                        // Marcar webhook como atrasado
+                        // Verificar se há um registro de pagamento manual aguardando
+                        $manualWebhook = WebhookEvent::where('deposit_id', $deposit->id)
+                            ->where('status', 'manual_pending_webhook')
+                            ->first();
+                        
+                        $errorMessage = 'Pagamento já havia sido confirmado manualmente antes do webhook chegar';
+                        
+                        if ($manualWebhook) {
+                            // Atualizar o registro manual para indicar que o webhook chegou
+                            $manualWebhook->update([
+                                'status' => 'manual_webhook_arrived',
+                                'error_message' => 'Webhook da processadora chegou após pagamento manual',
+                                'payload' => array_merge($manualWebhook->payload ?? [], [
+                                    'webhook_arrived_at' => now()->toIso8601String(),
+                                    'webhook_id' => $webhook->id,
+                                    'delay_hours' => now()->diffInHours($deposit->paid_at),
+                                ]),
+                            ]);
+                            
+                            $errorMessage .= sprintf(
+                                ' (Delay: %d horas desde o pagamento manual)',
+                                now()->diffInHours($deposit->paid_at)
+                            );
+                        }
+                        
+                        // Marcar webhook real como atrasado
                         $webhook->update([
                             'status' => 'late_arrival',
-                            'error_message' => 'Pagamento já havia sido confirmado manualmente antes do webhook chegar',
+                            'error_message' => $errorMessage,
                             'processed_at' => now(),
                         ]);
                         
