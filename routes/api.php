@@ -148,9 +148,9 @@ Route::prefix('v1')->group(function () {
 
             // Webhooks
             Route::get('/webhooks/stats', [AdminWebhookController::class, 'stats']);
+            Route::get('/webhooks/paid-without-webhook', [AdminWebhookController::class, 'paidWithoutWebhook']);
             Route::get('/webhooks', [AdminWebhookController::class, 'index']);
             Route::get('/webhooks/{id}', [AdminWebhookController::class, 'show']);
-            Route::get('/webhooks/paid-without-webhook', [AdminWebhookController::class, 'paidWithoutWebhook']);
         });
 
         // Settings (TODO)
